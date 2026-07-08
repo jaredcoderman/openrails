@@ -37,7 +37,7 @@ namespace TdbDump
                 Console.WriteLine("Error writing tsection.dat: " + ex.Message);
                 return 1;
             }
-
+        
             // Write TrackNodes to TDB file
             try
             {
@@ -70,7 +70,28 @@ namespace TdbDump
                     writer.WriteBlockEnd();
                 }
 
+
                 Console.WriteLine("Wrote TrackNodes to: " + tdbPath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error writing tdb file: " + ex.Message);
+                return 1;
+            }
+
+            // Write DynamicTracks to World Files
+            try
+            {
+                // Add track nodes
+
+                List<TrackNode> nodes = track.Build();
+               var dynamicTracks = DynamicTrack.MakeDynamicTrackObjects(
+                    track.Build(),
+                    track.Primitives);
+                WorldWriter.WriteWorldFiles(dynamicTracks);
+                Console.WriteLine(dynamicTracks.Count + " HELLO");
+
+
                 return 0;
             }
             catch (Exception ex)

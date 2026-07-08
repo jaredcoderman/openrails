@@ -49,6 +49,8 @@
     <Compile Include="TDBWriter.cs" />
     <Compile Include="TrackBuilder.cs" />
     <Compile Include="TSectionWriter.cs" />
+    <Compile Include="WorldWriter.cs" />
+
 
 
 

@@ -3,244 +3,131 @@
     {
       "type": "straight",
       "radius": 0.0,
-      "angle": 849.877339,
+      "angle": 3632.477992,
       "clockwise": false,
-      "length": 849.88
+      "length": 3632.48
+    },
+    {
+      "type": "straight",
+      "radius": 0.0,
+      "angle": 982.337121,
+      "clockwise": false,
+      "length": 982.34
     },
     {
       "type": "curve",
-      "radius": 788.74,
-      "angle": 0.331295,
-      "clockwise": false
-    },
-    {
-      "type": "curve",
-      "radius": 360.72,
-      "angle": 0.679092,
-      "clockwise": false
-    },
-    {
-      "type": "curve",
-      "radius": 1092.64,
-      "angle": 0.398656,
+      "radius": 1226.46,
+      "angle": 0.302526,
       "clockwise": true
     },
     {
-      "type": "curve",
-      "radius": 345.55,
-      "angle": 0.801037,
-      "clockwise": true
+      "type": "straight",
+      "radius": 0.0,
+      "angle": 1448.970008,
+      "clockwise": false,
+      "length": 1448.97
     },
     {
       "type": "curve",
-      "radius": 1000.56,
-      "angle": 0.468243,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 885.07,
-      "angle": 0.441255,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 376.5,
-      "angle": 0.61819,
+      "radius": 48118.39,
+      "angle": 0.012685,
       "clockwise": false
     },
     {
       "type": "curve",
-      "radius": 7052.16,
-      "angle": 0.082115,
+      "radius": 17405.48,
+      "angle": 0.043061,
       "clockwise": false
     },
     {
       "type": "curve",
-      "radius": 993.43,
-      "angle": 0.768109,
+      "radius": 14160.9,
+      "angle": 0.109334,
       "clockwise": false
     },
     {
       "type": "curve",
-      "radius": 744.68,
-      "angle": 0.591757,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 1528.33,
-      "angle": 0.344912,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 4265.15,
-      "angle": 0.18217,
+      "radius": 1860.18,
+      "angle": 0.183401,
       "clockwise": false
     },
     {
       "type": "curve",
-      "radius": 929.27,
-      "angle": 0.39186,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 294.29,
-      "angle": 0.998855,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 3253.66,
-      "angle": 0.286991,
+      "radius": 1859.46,
+      "angle": 0.148032,
       "clockwise": false
     },
     {
       "type": "curve",
-      "radius": 340.66,
-      "angle": 0.541939,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 698.96,
-      "angle": 0.467523,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 590.47,
-      "angle": 0.50351,
-      "clockwise": false
-    },
-    {
-      "type": "curve",
-      "radius": 539.84,
-      "angle": 0.388432,
-      "clockwise": false
-    },
-    {
-      "type": "curve",
-      "radius": 517.73,
-      "angle": 0.426749,
-      "clockwise": false
-    },
-    {
-      "type": "curve",
-      "radius": 499.28,
-      "angle": 0.679716,
-      "clockwise": false
-    },
-    {
-      "type": "curve",
-      "radius": 857.23,
-      "angle": 0.437712,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 551.16,
-      "angle": 0.325916,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 478.83,
-      "angle": 0.408418,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 1675.6,
-      "angle": 0.280366,
-      "clockwise": false
-    },
-    {
-      "type": "curve",
-      "radius": 689.34,
-      "angle": 0.321935,
-      "clockwise": false
-    },
-    {
-      "type": "curve",
-      "radius": 1656.22,
-      "angle": 0.252489,
-      "clockwise": false
-    },
-    {
-      "type": "curve",
-      "radius": 331.09,
-      "angle": 0.528317,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 2088.07,
-      "angle": 0.22824,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 1568.4,
-      "angle": 0.254775,
-      "clockwise": false
-    },
-    {
-      "type": "curve",
-      "radius": 529.41,
-      "angle": 0.518627,
-      "clockwise": false
-    },
-    {
-      "type": "curve",
-      "radius": 46269.42,
-      "angle": 0.039345,
-      "clockwise": false
-    },
-    {
-      "type": "curve",
-      "radius": 1191.33,
-      "angle": 0.288206,
-      "clockwise": false
-    },
-    {
-      "type": "curve",
-      "radius": 45978.87,
-      "angle": 0.01129,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 451.12,
-      "angle": 0.878827,
-      "clockwise": true
-    },
-    {
-      "type": "curve",
-      "radius": 7468.16,
-      "angle": 0.087125,
-      "clockwise": false
-    },
-    {
-      "type": "curve",
-      "radius": 4447.63,
-      "angle": 0.137072,
+      "radius": 1793.05,
+      "angle": 0.226645,
       "clockwise": false
     },
     {
       "type": "straight",
       "radius": 0.0,
-      "angle": 1579.245709,
+      "angle": 1724.881711,
       "clockwise": false,
-      "length": 1579.25
+      "length": 1724.88
     },
     {
       "type": "curve",
-      "radius": 46723.73,
-      "angle": 0.006952,
+      "radius": 2042.18,
+      "angle": 0.166179,
+      "clockwise": true
+    },
+    {
+      "type": "straight",
+      "radius": 0.0,
+      "angle": 2739.778778,
+      "clockwise": false,
+      "length": 2739.78
+    },
+    {
+      "type": "curve",
+      "radius": 1748.14,
+      "angle": 0.600312,
       "clockwise": false
+    },
+    {
+      "type": "straight",
+      "radius": 0.0,
+      "angle": 1284.865053,
+      "clockwise": false,
+      "length": 1284.87
+    },
+    {
+      "type": "curve",
+      "radius": 1733.63,
+      "angle": 0.312312,
+      "clockwise": false
+    },
+    {
+      "type": "straight",
+      "radius": 0.0,
+      "angle": 2749.354255,
+      "clockwise": false,
+      "length": 2749.35
+    },
+    {
+      "type": "curve",
+      "radius": 1743.97,
+      "angle": 0.367651,
+      "clockwise": true
+    },
+    {
+      "type": "straight",
+      "radius": 0.0,
+      "angle": 5171.219489,
+      "clockwise": false,
+      "length": 5171.22
+    },
+    {
+      "type": "straight",
+      "radius": 0.0,
+      "angle": 1696.870099,
+      "clockwise": false,
+      "length": 1696.87
     }
   ]
 }

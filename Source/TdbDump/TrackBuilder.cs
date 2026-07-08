@@ -6,61 +6,6 @@ using Orts.Formats.Msts;
 
 namespace TdbDump
 {
-
-    public class PrimitiveFile
-    {
-        public List<TrackPrimitive> Segments { get; set; } = new List<TrackPrimitive>();
-    }
-
-    public class TrackPrimitive
-    {
-        public uint SectionIndex { get; set; }
-        public string Type { get; set; } = "";
-        public bool IsCurve => Type == "curve";
-        public float Length { get; set; }
-        public float Radius { get; set; }
-        public float Angle { get; set; }
-        public bool Clockwise { get; set; }
-        public float param1 { get; set; }
-        public float param2 { get; set; }
-    public float SignedAngle
-    {
-        get
-        {
-            return Clockwise ? -Angle : Angle;
-        }
-    }
-
-    public float LocalEndX
-    {
-        get
-        {
-            if (!IsCurve)
-                return 0;
-
-            // Must match Open Rails' own Traveller.cs curve math exactly:
-            //   sign = Math.Sign(SectionCurve.Angle)
-            //   LocalEndX = Radius * sign * (1 - cos(angle))
-            // Without this sign factor, left-hand curves bow the wrong way,
-            // desyncing our recorded node position from where Open Rails
-            // actually renders the curve ending -> visible track gaps.
-            float sign = Clockwise ? -1f : 1f;
-            return Radius * sign * (1f - (float)Math.Cos(Angle));
-        }
-    }
-
-    public float LocalEndZ
-    {
-        get
-        {
-            if (!IsCurve)
-                return Length;
-
-            return Radius * (float)Math.Sin(Angle);
-        }
-    }
-    }
-
     public class TrackBuilder
     {
         private float _x = 0;
