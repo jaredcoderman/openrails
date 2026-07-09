@@ -54,19 +54,32 @@ namespace TdbDump
                     }
                 }
 
-                List<TrackNode> nodes = track.Build();
+                // Get all nodes (vector nodes + end nodes)
+                List<object> allNodes = track.BuildAllNodes();
 
                 using (var writer = new STFWriter(tdbPath))
                 {
                     writer.WriteBlockStart("trackdb");
-                    writer.WriteBlockStart("tracknodes", nodes.Count);
+                    writer.WriteBlockStart("tracknodes", allNodes.Count);
 
-                    foreach (TrackNode node in nodes)
+                    foreach (object node in allNodes)
                     {
-                        TDBWriter.WriteTrackNode(writer, node);
+                        if (node is TrEndNode endNode)
+                        {
+                            TDBWriter.WriteEndNode(writer, endNode);
+                        }
+                        else if (node is TrackNode vectorNode)
+                        {
+                            TDBWriter.WriteVectorNode(writer, vectorNode);
+                        }
                     }
 
                     writer.WriteBlockEnd();
+                    
+                    // Write empty tritemtable
+                    writer.WriteBlockStart("tritemtable", 0);
+                    writer.WriteBlockEnd();
+
                     writer.WriteBlockEnd();
                 }
 

@@ -45,7 +45,7 @@ namespace TdbDump
                 // Write file atomically: write to temp then move
                 string tempPath = filePath + ".tmp";
                 using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
-                using (var sw = new StreamWriter(fs, System.Text.Encoding.ASCII))
+                using (var sw = new StreamWriter(fs, System.Text.Encoding.Unicode))
                 {
                     // Exact ASCII header for uncompressed world text files
                     sw.WriteLine("SIMISA@@@@@@@@@@JINX0w0t______");
@@ -57,14 +57,25 @@ namespace TdbDump
 
                     foreach (var track in group)
                     {
+                        // Apply TSRE5 coordinate transformations
+                        // Negate X, keep Z positive
+                        float posX = -track.X;
+                        float posY = defaultY;
+                        float posZ = track.Z;
+                        
+                        float resultQx = track.Qx;
+                        float resultQy = track.Qy;
+                        float resultQz = -track.Qz;  // Negate Z component of quaternion
+                        float resultQw = track.Qw;
+
                         sw.WriteLine("  Dyntrack (");
                         sw.WriteLine("    UiD ( " + ((int)track.UiD).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
                         sw.WriteLine("    SectionIdx ( " + ((int)track.SectionIdx).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
                         sw.WriteLine("    Elevation ( " + ((int)track.Elevation).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
                         sw.WriteLine("    CollideFlags ( " + ((int)track.CollideFlags).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
                         sw.WriteLine("    StaticFlags ( " + ((int)track.StaticFlags).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
-                        sw.WriteLine("    Position ( " + track.X.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + defaultY.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + track.Z.ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
-                        sw.WriteLine("    QDirection ( " + track.Qx.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + track.Qy.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + track.Qz.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + track.Qw.ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
+                        sw.WriteLine("    Position ( " + posX.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + posY.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + posZ.ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
+                        sw.WriteLine("    QDirection ( " + resultQx.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + resultQy.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + resultQz.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + resultQw.ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
                         sw.WriteLine("    VDbId ( " + ((int)track.VdbId).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
 
                         sw.WriteLine("    TrackSections (");

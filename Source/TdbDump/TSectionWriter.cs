@@ -27,8 +27,8 @@ namespace TdbDump
             )
         {
             writer.WriteBlockStart("TrackSection");
-
-            writer.WriteNoLabel(string.Format("SectionCurve ( 0 ) {0} {1} {2}",
+            writer.WriteNoLabel(string.Format("SectionCurve ( {0} ) {1} {2} {3}",
+             primitive.IsCurve ? 1 : 0,
              primitive.SectionIndex, 
              primitive.SignedAngle, 
              primitive.Radius));

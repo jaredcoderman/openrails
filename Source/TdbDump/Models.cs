@@ -20,6 +20,25 @@ namespace TdbDump
         }
     }
 
+    public class TrEndNode
+    {
+        public int Id { get; set; }
+        public int TileX { get; set; }
+        public int TileZ { get; set; }
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Z { get; set; }
+        public float AX { get; set; } = 0;
+        public float AY { get; set; } = 0;
+        public float AZ { get; set; } = 0;
+        public List<TrPin> Pins { get; private set; }
+
+        public TrEndNode()
+        {
+            Pins = new List<TrPin>();
+        }
+    }
+
     public class TrVectorSection
     {
         public uint SectionIndex { get; set; }
@@ -32,7 +51,7 @@ namespace TdbDump
         public int TileX { get; set; } = 0;
         public int TileZ { get; set; } = 0;
         public float X { get; set; }
-        public float Y { get; set; }
+        public float Y { get; set; } = 1000;
         public float Z { get; set; }
 
         public float AX { get; set; } = 0;
@@ -151,23 +170,24 @@ namespace TdbDump
 
             var dynamicTracks = new List<DynamicTrack>();
 
-            for (int i = 0; i < nodes.Count; i += 5)
+            // Create one DynamicTrack per node
+            for (int i = 0; i < nodes.Count; i++)
             {
                 DynamicTrack track = new DynamicTrack();
 
-                var firstSection = nodes[i].Section;
-                if (firstSection == null)
+                var nodeSection = nodes[i].Section;
+                if (nodeSection == null)
                     continue;
 
-                track.X = -firstSection.X;
-                track.Y = firstSection.Y;
-                track.Z = firstSection.Z;
+                track.X = -nodeSection.X;
+                track.Y = nodeSection.Y;
+                track.Z = nodeSection.Z;
 
                 float qx, qy, qz, qw;
 
                 ConvertEulerToQuaternion(
-                    firstSection.AY,
-                    firstSection.AX,
+                    nodeSection.AY,
+                    nodeSection.AX,
                     out qx,
                     out qy,
                     out qz,
@@ -178,25 +198,17 @@ namespace TdbDump
                 track.Qz = qz;
                 track.Qw = qw;
                 track.UiD = (uint)nodes[i].Id;
-                track.SectionIdx = firstSection.SectionIndex;
-                track.TileX = firstSection.TileX;
-                track.TileZ = firstSection.TileZ;
+                track.SectionIdx = nodeSection.SectionIndex;
+                track.TileX = nodeSection.TileX;
+                track.TileZ = nodeSection.TileZ;
                 track.VdbId = 0;
                 track.CollideFlags = 0;
                 track.StaticFlags = 0;
                 track.Elevation = 0;
 
-                int count = Math.Min(5, nodes.Count - i);
-
-                for (int j = 0; j < count; j++)
+                // Add the actual primitive section
+                if (primitiveLookup.TryGetValue(nodeSection.SectionIndex, out var primitive))
                 {
-                    var section = nodes[i + j].Section;
-                    if (section == null)
-                        continue;
-
-                    if (!primitiveLookup.TryGetValue(section.SectionIndex, out var primitive))
-                        continue;
-
                     track.TrackSections.Add(new TrackPrimitive
                     {
                         SectionIndex = primitive.SectionIndex,
@@ -210,12 +222,19 @@ namespace TdbDump
                     });
                 }
 
+                // Pad with 4 empty sections (param1=0, param2=0)
                 while (track.TrackSections.Count < 5)
                 {
                     track.TrackSections.Add(new TrackPrimitive
                     {
                         SectionIndex = 0,
-                        Type = "straight"
+                        Type = "straight",
+                        Length = 0,
+                        Radius = 0,
+                        Angle = 0,
+                        Clockwise = false,
+                        param1 = 0,
+                        param2 = 0
                     });
                 }
 
