@@ -95,21 +95,19 @@ namespace TdbDump
             // Write DynamicTracks to World Files
             try
             {
-                // Add track nodes
-
-                List<TrackNode> nodes = track.Build();
+                // Get the vector nodes (before end nodes are added) for DynamicTrack creation
+                List<TrackNode> vectorNodes = track.Build();
                var dynamicTracks = DynamicTrack.MakeDynamicTrackObjects(
-                    track.Build(),
+                    vectorNodes,
                     track.Primitives);
                 WorldWriter.WriteWorldFiles(dynamicTracks);
-                Console.WriteLine(dynamicTracks.Count + " HELLO");
-
+                Console.WriteLine(dynamicTracks.Count + " dynamic tracks written");
 
                 return 0;
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error writing tdb file: " + ex.Message);
+                Console.WriteLine("Error writing world files: " + ex.Message);
                 return 1;
             }
         }

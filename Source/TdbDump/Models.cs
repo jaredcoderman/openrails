@@ -12,10 +12,13 @@ namespace TdbDump
 
         public TrVectorSection Section { get; set; }
 
+        public List<TrVectorSection> Sections { get; set; }
+
         public List<TrPin> Pins { get; private set; }
 
         public TrackNode()
         {
+            Sections = new List<TrVectorSection>();
             Pins = new List<TrPin>();
         }
     }
@@ -197,7 +200,7 @@ namespace TdbDump
                 track.Qy = qy;
                 track.Qz = qz;
                 track.Qw = qw;
-                track.UiD = (uint)nodes[i].Id;
+                track.UiD = (uint)nodeSection.WorldFileUiD;
                 track.SectionIdx = nodeSection.SectionIndex;
                 track.TileX = nodeSection.TileX;
                 track.TileZ = nodeSection.TileZ;

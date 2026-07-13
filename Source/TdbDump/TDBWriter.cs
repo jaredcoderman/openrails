@@ -20,26 +20,30 @@ namespace TdbDump
             {
                 writer.WriteBlockStart("trvectornode");
 
-                writer.WriteBlockStart("trvectorsections", 1);
+                var sections = node.Sections != null && node.Sections.Count > 0
+                    ? node.Sections
+                    : new System.Collections.Generic.List<TrVectorSection> { node.Section };
+                writer.WriteBlockStart("trvectorsections", sections.Count);
 
-                writer.WriteNoLabel(node.Section.ToTdbString());
+                foreach (var section in sections)
+                {
+                    writer.WriteNoLabel(section.ToTdbString());
+                }
 
+                writer.WriteBlockEnd();
+
+                writer.WriteBlockStart("tritemrefs", 0);
                 writer.WriteBlockEnd();
 
                 writer.WriteBlockEnd();
             }
 
-            // Write TrPins with actual pin data
-            // Count input and output pins: input pins come first, then output pins
-            // For a vector node, typically: 1 input, 1 output (or similar pattern)
+            // Write TrPins in side order. Inpins/Outpins identify the parent
+            // node's side; TrPin.Direction identifies the side on the linked
+            // node and must not be used to count these entries.
             if (node.Pins != null && node.Pins.Count > 0)
             {
-                // Separate pins into input and output
-                // Based on typical track node patterns, first pin is usually input, rest are output
-                int inPinCount = 1;
-                int outPinCount = node.Pins.Count - 1;
-                
-                writer.WriteBlockStart("trpins", inPinCount.ToString() + " " + outPinCount.ToString());
+                writer.WriteBlockStart("trpins", "1 1");
                 
                 foreach (var pin in node.Pins)
                 {
@@ -83,26 +87,18 @@ namespace TdbDump
                 node.AZ.ToString(System.Globalization.CultureInfo.InvariantCulture)));
             writer.WriteBlockEnd();
 
-            // Write TrPins
+            // Write TrPins - End nodes should have exactly 1 input pin and 0 output pins
+            writer.WriteBlockStart("trpins", "1 0");
+            
             if (node.Pins != null && node.Pins.Count > 0)
             {
-                int inPinCount = Math.Min(1, node.Pins.Count);  // End nodes typically have 1 input pin
-                int outPinCount = Math.Max(0, node.Pins.Count - inPinCount);
-                
-                writer.WriteBlockStart("trpins", inPinCount.ToString() + " " + outPinCount.ToString());
-                
                 foreach (var pin in node.Pins)
                 {
                     writer.WriteProperty("TrPin", pin.Node.ToString() + " " + pin.Pin.ToString());
                 }
+            }
 
-                writer.WriteBlockEnd();
-            }
-            else
-            {
-                writer.WriteBlockStart("trpins", "0 0");
-                writer.WriteBlockEnd();
-            }
+            writer.WriteBlockEnd();
 
             writer.WriteBlockEnd();
         }

@@ -22,90 +22,91 @@ namespace TdbDump
             const int baseX = -12842;
             const int baseZ = 14734;
 
-            var groups = tracks.GroupBy(t =>
+            // For now, write ALL tracks to the base tile with transformed local coordinates
+            // This avoids tile-mismatch issues
+            const int targetWorldTileX = baseX;
+            const int targetWorldTileZ = baseZ;
+
+            string signX = targetWorldTileX < 0 ? "-" : "+";
+            string signZ = targetWorldTileZ < 0 ? "-" : "+";
+            int absX = Math.Abs(targetWorldTileX);
+            int absZ = Math.Abs(targetWorldTileZ);
+
+            string fileName = string.Format(System.Globalization.CultureInfo.InvariantCulture, "w{0}{1:000000}{2}{3:000000}.w", signX, absX, signZ, absZ);
+            string filePath = Path.Combine(worldDir, fileName);
+
+            // Write file atomically: write to temp then move
+            string tempPath = filePath + ".tmp";
+            using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (var sw = new StreamWriter(fs, System.Text.Encoding.Unicode))
             {
-                int wx = baseX + t.TileX;
-                int wz = baseZ + t.TileZ;
-                return (wx, wz);
-            });
+                // Exact ASCII header for uncompressed world text files
+                sw.WriteLine("SIMISA@@@@@@@@@@JINX0w0t______");
+                sw.WriteLine();
 
-            foreach (var group in groups)
-            {
-                int worldX = group.Key.wx;
-                int worldZ = group.Key.wz;
+                // Begin Tr_Worldfile block
+                sw.WriteLine("Tr_Worldfile (");
+                sw.WriteLine("  VDbIdCount ( 0 )");
 
-                string signX = worldX < 0 ? "-" : "+";
-                string signZ = worldZ < 0 ? "-" : "+";
-                int absX = Math.Abs(worldX);
-                int absZ = Math.Abs(worldZ);
-
-                string fileName = string.Format(System.Globalization.CultureInfo.InvariantCulture, "w{0}{1:000000}{2}{3:000000}.w", signX, absX, signZ, absZ);
-                string filePath = Path.Combine(worldDir, fileName);
-
-                // Write file atomically: write to temp then move
-                string tempPath = filePath + ".tmp";
-                using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
-                using (var sw = new StreamWriter(fs, System.Text.Encoding.Unicode))
+                foreach (var track in tracks)
                 {
-                    // Exact ASCII header for uncompressed world text files
-                    sw.WriteLine("SIMISA@@@@@@@@@@JINX0w0t______");
-                    sw.WriteLine();
+                    // Convert tile coordinates to local coordinates within the base tile
+                    // If a track is at tile (-12843, 14733), that's 1 tile west and 1 tile south of base (-12842, 14734)
+                    int tileOffsetX = track.TileX - targetWorldTileX;  // Number of tiles away in X
+                    int tileOffsetZ = track.TileZ - targetWorldTileZ;  // Number of tiles away in Z
+                    
+                    // Convert to world coordinates
+                    float worldX = tileOffsetX * 2048f + track.X;
+                    float worldY = defaultY;
+                    float worldZ = tileOffsetZ * 2048f + track.Z;
 
-                    // Begin Tr_Worldfile block
-                    sw.WriteLine("Tr_Worldfile (");
-                    sw.WriteLine("  VDbIdCount ( 0 )");
+                    // Apply coordinate transformation (negate X, keep Z positive)
+                    float posX = -worldX;
+                    float posY = worldY;
+                    float posZ = worldZ;
+                    
+                    float resultQx = track.Qx;
+                    float resultQy = track.Qy;
+                    float resultQz = -track.Qz;  // Negate Z component of quaternion
+                    float resultQw = track.Qw;
 
-                    foreach (var track in group)
+                    sw.WriteLine("  Dyntrack (");
+                    sw.WriteLine("    UiD ( " + ((int)track.UiD).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
+                    sw.WriteLine("    SectionIdx ( " + ((int)track.SectionIdx).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
+                    sw.WriteLine("    Elevation ( " + ((int)track.Elevation).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
+                    sw.WriteLine("    CollideFlags ( " + ((int)track.CollideFlags).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
+                    sw.WriteLine("    StaticFlags ( " + ((int)track.StaticFlags).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
+                    sw.WriteLine("    Position ( " + posX.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + posY.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + posZ.ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
+                    sw.WriteLine("    QDirection ( " + resultQx.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + resultQy.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + resultQz.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + resultQw.ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
+                    sw.WriteLine("    VDbId ( " + ((int)track.VdbId).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
+
+                    sw.WriteLine("    TrackSections (");
+                    foreach (var section in track.TrackSections)
                     {
-                        // Apply TSRE5 coordinate transformations
-                        // Negate X, keep Z positive
-                        float posX = -track.X;
-                        float posY = defaultY;
-                        float posZ = track.Z;
-                        
-                        float resultQx = track.Qx;
-                        float resultQy = track.Qy;
-                        float resultQz = -track.Qz;  // Negate Z component of quaternion
-                        float resultQw = track.Qw;
-
-                        sw.WriteLine("  Dyntrack (");
-                        sw.WriteLine("    UiD ( " + ((int)track.UiD).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
-                        sw.WriteLine("    SectionIdx ( " + ((int)track.SectionIdx).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
-                        sw.WriteLine("    Elevation ( " + ((int)track.Elevation).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
-                        sw.WriteLine("    CollideFlags ( " + ((int)track.CollideFlags).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
-                        sw.WriteLine("    StaticFlags ( " + ((int)track.StaticFlags).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
-                        sw.WriteLine("    Position ( " + posX.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + posY.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + posZ.ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
-                        sw.WriteLine("    QDirection ( " + resultQx.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + resultQy.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + resultQz.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + resultQw.ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
-                        sw.WriteLine("    VDbId ( " + ((int)track.VdbId).ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
-
-                        sw.WriteLine("    TrackSections (");
-                        foreach (var section in track.TrackSections)
-                        {
-                            int curveFlag = section.IsCurve ? 1 : 0;
-                            float param1 = section.IsCurve ? section.SignedAngle : section.Length;
-                            float param2 = section.IsCurve ? section.Radius : 0f;
-                            sw.WriteLine("      TrackSection (");
-                            sw.WriteLine("        SectionCurve ( " + curveFlag.ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
-                            sw.WriteLine("        " + section.SectionIndex.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + param1.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + param2.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                            sw.WriteLine("      )");
-                        }
-                        sw.WriteLine("    )"); // TrackSections
-
-                        sw.WriteLine("  )"); // Dyntrack
+                        int curveFlag = section.IsCurve ? 1 : 0;
+                        float param1 = section.IsCurve ? section.SignedAngle : section.Length;
+                        float param2 = section.IsCurve ? section.Radius : 0f;
+                        sw.WriteLine("      TrackSection (");
+                        sw.WriteLine("        SectionCurve ( " + curveFlag.ToString(System.Globalization.CultureInfo.InvariantCulture) + " )");
+                        sw.WriteLine("        " + section.SectionIndex.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + param1.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + param2.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                        sw.WriteLine("      )");
                     }
+                    sw.WriteLine("    )"); // TrackSections
 
-                    sw.WriteLine(")"); // Tr_Worldfile
-                    sw.Flush();
+                    sw.WriteLine("  )"); // Dyntrack
                 }
 
-                // Replace destination file atomically
-                if (File.Exists(filePath))
-                    File.Replace(tempPath, filePath, null);
-                else
-                    File.Move(tempPath, filePath);
-
-                Console.WriteLine("Wrote world file: " + filePath);
+                sw.WriteLine(")"); // Tr_Worldfile
+                sw.Flush();
             }
+
+            // Replace destination file atomically
+            if (File.Exists(filePath))
+                File.Replace(tempPath, filePath, null);
+            else
+                File.Move(tempPath, filePath);
+
+            Console.WriteLine("Wrote world file: " + filePath);
         }
     }
 }
