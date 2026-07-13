@@ -1,0 +1,2128 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Complete guide to the Python Curve Fitter, TdbDump tool, and Open Rails file formats">
+      
+      
+      
+      
+        <link rel="prev" href="../trackbuilder/">
+      
+      
+        <link rel="next" href="../../formats/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Writers - Open Rails Track Builder Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#writers-details" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Open Rails Track Builder Documentation" class="md-header__button md-logo" aria-label="Open Rails Track Builder Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Open Rails Track Builder Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Writers
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../quick_start/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quick Start
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../curve_fitter_overview/" class="md-tabs__link">
+          
+  
+  
+  Python Curve Fitter
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../tdbdump_overview/" class="md-tabs__link">
+          
+  
+  
+  TdbDump Tool
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../formats/" class="md-tabs__link">
+          
+  
+  
+  File Formats
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../concepts/coordinates/" class="md-tabs__link">
+          
+  
+  
+  Open Rails Concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../deep_dives/pin_semantics/" class="md-tabs__link">
+          
+  
+  
+  Technical Deep Dives
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../full_walkthrough/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Full Pipeline Walkthrough
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../troubleshooting/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Troubleshooting
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../glossary/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Glossary
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Open Rails Track Builder Documentation" class="md-nav__button md-logo" aria-label="Open Rails Track Builder Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Open Rails Track Builder Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quick_start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python Curve Fitter
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Python Curve Fitter
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../curve_fitter_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../curve_input/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Input Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../curve_output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../curve_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TdbDump Tool
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    TdbDump Tool
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tdbdump_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tdbdump_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trackbuilder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TrackBuilder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Writers
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Writers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#writer-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writer Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tdbwriter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TDBWriter
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TDBWriter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#output-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worldwriter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WorldWriter
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="WorldWriter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#output-format_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-methods_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pathwriter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PathWriter
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PathWriter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#output-format_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-methods_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extending-writers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extending Writers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File Formats
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    File Formats
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formats/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formats/tdb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Track Database (.tdb)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formats/pat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Path Files (.pat)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formats/world/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    World Files (.w)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formats/srv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Service Files (.srv)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formats/act/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Activity Files (.act)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formats/consist/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consist Files (.con)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Rails Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Open Rails Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/coordinates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coordinate Systems
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/pins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pin Connections
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/track_sections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Track Sections
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/uids/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UIDs and References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Deep Dives
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Technical Deep Dives
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deep_dives/pin_semantics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pin Semantics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deep_dives/quaternions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quaternions and Rotations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deep_dives/tsre5_comparison.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TSRE5 vs Open Rails
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deep_dives/tile_system.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    World File Tile System
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../full_walkthrough/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Full Pipeline Walkthrough
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="writers-details">Writers Details</h1>
+<p>The writer components transform TrackBuilder output into various file formats.</p>
+<h2 id="writer-architecture">Writer Architecture</h2>
+<div class="highlight"><pre><span></span><code>TDBWriter ──→ .tdb (STF format)
+WorldWriter ──→ .w (World geometry)
+PathWriter ──→ .pat (Path waypoints)
+</code></pre></div>
+<h2 id="tdbwriter">TDBWriter</h2>
+<p>Generates the <code>.tdb</code> (Track Database) file in SIMISA Text Format (STF).</p>
+<h3 id="output-format">Output Format</h3>
+<div class="highlight"><pre><span></span><code>SIMISA@@@@@@@@@@JINX0t0t______
+
+trackdb (
+    tracknodes ( 3
+        tracknode ( 1
+            uid ( 0 0 0 0 0 0 0 0 0 0 0 0 )
+            trendnode ( )
+            trpins ( 1 0
+                TrPin ( 2 1 )
+            )
+        )
+        tracknode ( 2
+            trvectornode (
+                trvectorsections ( 25
+                    50001 0 0 0 0 0 1 00 0 0 0 0 0 0 0 0
+                    50002 0 0 0 0 0 1 00 0 0 100 0 0 0 0 0
+                    ...more sections...
+                )
+                tritemrefs ( 0 )
+            )
+            trpins ( 1 1
+                TrPin ( 1 0 )
+                TrPin ( 3 1 )
+            )
+        )
+        tracknode ( 3
+            uid ( 0 0 0 0 0 0 0 0 0 0 0 0 )
+            trendnode ( )
+            trpins ( 1 0
+                TrPin ( 2 0 )
+            )
+        )
+    )
+    tritemtable ( 0 )
+)
+</code></pre></div>
+<h3 id="key-methods">Key Methods</h3>
+<div class="highlight"><pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">TDBWriter</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Write</span><span class="p">(</span><span class="n">TrackNode</span><span class="p">[]</span><span class="w"> </span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">filename</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">writer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamWriter</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">writer</span><span class="p">);</span>
+<span class="w">            </span><span class="n">WriteTrackDB</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span><span class="w"> </span><span class="n">nodes</span><span class="p">);</span>
+<span class="w">            </span><span class="n">WriteFooter</span><span class="p">(</span><span class="n">writer</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteHeader</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;SIMISA@@@@@@@@@@JINX0t0t______&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteTrackDB</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">TrackNode</span><span class="p">[]</span><span class="w"> </span><span class="n">nodes</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;trackdb (&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;    tracknodes ( {nodes.Length - 1}&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// -1 for null at [0]</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nodes</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">WriteTrackNode</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">i</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    tritemtable ( 0 )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;)&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteTrackNode</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">TrackNode</span><span class="w"> </span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">id</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;        tracknode ( {id}&quot;</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">node</span><span class="p">.</span><span class="n">TrEndNode</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="k">null</span><span class="p">)</span>
+<span class="w">            </span><span class="n">WriteEndNode</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="p">);</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="nf">if</span><span class="w"> </span><span class="p">(</span><span class="n">node</span><span class="p">.</span><span class="n">TrVectorNode</span><span class="p">)</span>
+<span class="w">            </span><span class="n">WriteVectorNode</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="p">);</span>
+
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;        )&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteEndNode</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">TrackNode</span><span class="w"> </span><span class="n">node</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;            uid ( 0 0 0 0 0 0 0 0 0 0 0 0 )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;            trendnode ( )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">WritePins</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteVectorNode</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">TrackNode</span><span class="w"> </span><span class="n">node</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;            trvectornode (&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;                trvectorsections ( {node.Sections.Count}&quot;</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">foreach</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">section</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">node</span><span class="p">.</span><span class="n">Sections</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">WriteVectorSection</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">section</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;                )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;                tritemrefs ( 0 )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;            )&quot;</span><span class="p">);</span>
+
+<span class="w">        </span><span class="n">WritePins</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteVectorSection</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">TrVectorSection</span><span class="w"> </span><span class="n">section</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Format: SectionIndex TileX TileZ X Y Z AX AY AZ WFNameX WFNameZ WorldFileUiD</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">$&quot;                    {section.SectionIndex} &quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">$&quot;{section.TileX} {section.TileZ} &quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">$&quot;{section.X.ToString(&quot;</span><span class="n">F1</span><span class="s">&quot;)} {section.Y.ToString(&quot;</span><span class="n">F1</span><span class="s">&quot;)} {section.Z.ToString(&quot;</span><span class="n">F1</span><span class="s">&quot;)} &quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">$&quot;{section.AX.ToString(&quot;</span><span class="n">F6</span><span class="s">&quot;)} {section.AY.ToString(&quot;</span><span class="n">F6</span><span class="s">&quot;)} {section.AZ.ToString(&quot;</span><span class="n">F6</span><span class="s">&quot;)} &quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">$&quot;{section.WFNameX} {section.WFNameZ} &quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">section</span><span class="p">.</span><span class="n">WorldFileUiD</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;X&quot;</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WritePins</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">TrackNode</span><span class="w"> </span><span class="n">node</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Calculate inpins/outpins based on pin directions</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">inPins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="p">.</span><span class="n">Pins</span><span class="p">.</span><span class="n">Count</span><span class="p">(</span><span class="n">p</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">Direction</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">outPins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="p">.</span><span class="n">Pins</span><span class="p">.</span><span class="n">Count</span><span class="p">(</span><span class="n">p</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">Direction</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            trpins ( {inPins} {outPins}&quot;</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">foreach</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">pin</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">node</span><span class="p">.</span><span class="n">Pins</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;                TrPin ( {pin.Node} {pin.Direction} )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;            )&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="worldwriter">WorldWriter</h2>
+<p>Generates <code>.w</code> (World) files containing dynamic track objects.</p>
+<h3 id="output-format_1">Output Format</h3>
+<div class="highlight"><pre><span></span><code>SIMISA@@@@@@@@@@JINX0W0t______
+
+Dyntrack (
+    Tr_WorldFile (
+        Serial ( 1 )
+        TrackObj (
+            SectionIdx ( 50001 )
+            Elevation ( 100 )
+            CollideFlags ( 7 )
+            StaticFlags ( 0 )
+            Position ( -433 100 25 )
+            QDirection ( 0 0.707107 0 0.707107 )
+            VDbId ( 2 0 0 )
+        )
+        DyntrackObj (
+            SectionIdx ( 50001 )
+            Elevation ( 100 )
+            CollideFlags ( 7 )
+            StaticFlags ( 0 )
+            Position ( -433 100 25 )
+            QDirection ( 0 0.707107 0 0.707107 )
+            VDbId ( 2 0 0 )
+            TrackSections ( 1
+                TrackSection ( 50001 0 0 0 0 0 1 00 0 0 0 0 0 0 0 0 )
+            )
+        )
+    )
+)
+</code></pre></div>
+<h3 id="key-methods_1">Key Methods</h3>
+<div class="highlight"><pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">WorldWriter</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Write</span><span class="p">(</span><span class="n">TrackNode</span><span class="p">[]</span><span class="w"> </span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">outputDir</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Group sections by tile</span>
+<span class="w">        </span><span class="kt">var</span><span class="w"> </span><span class="n">tileGroups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GroupSectionsByTile</span><span class="p">(</span><span class="n">nodes</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">foreach</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">tileGroup</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">tileGroups</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="kt">var</span><span class="w"> </span><span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WorldFileNameFromTile</span><span class="p">(</span><span class="n">tileGroup</span><span class="p">.</span><span class="n">Key</span><span class="p">);</span>
+<span class="w">            </span><span class="n">WriteWorldFile</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="w"> </span><span class="n">tileGroup</span><span class="p">.</span><span class="n">Value</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="nf">WorldFileNameFromTile</span><span class="p">((</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">z</span><span class="p">)</span><span class="w"> </span><span class="n">tile</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">$&quot;w-{tile.x:D6}{tile.z:D6}.w&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteWorldFile</span><span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="n">filename</span><span class="p">,</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">TrVectorSection</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sections</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">writer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamWriter</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;SIMISA@@@@@@@@@@JINX0W0t______&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">();</span>
+<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Dyntrack (&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    Tr_WorldFile (&quot;</span><span class="p">);</span>
+
+<span class="w">            </span><span class="k">foreach</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">section</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">sections</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">WriteDyntrackObj</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span><span class="w"> </span><span class="n">section</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    )&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;)&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteDyntrackObj</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">TrVectorSection</span><span class="w"> </span><span class="n">section</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Apply coordinate transformation for TSRE5 compatibility</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">posX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">section</span><span class="p">.</span><span class="n">X</span><span class="p">;</span><span class="w">  </span><span class="c1">// Negate X</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">posZ</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">section</span><span class="p">.</span><span class="n">Z</span><span class="p">;</span><span class="w">   </span><span class="c1">// Keep Z positive</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">posY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">section</span><span class="p">.</span><span class="n">Y</span><span class="p">;</span>
+
+<span class="w">        </span><span class="c1">// Convert Euler angles to quaternion</span>
+<span class="w">        </span><span class="kt">var</span><span class="w"> </span><span class="n">quat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EulerToQuaternion</span><span class="p">(</span><span class="n">section</span><span class="p">.</span><span class="n">AX</span><span class="p">,</span><span class="w"> </span><span class="n">section</span><span class="p">.</span><span class="n">AY</span><span class="p">,</span><span class="w"> </span><span class="n">section</span><span class="p">.</span><span class="n">AZ</span><span class="p">);</span>
+
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;        DyntrackObj (&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            SectionIdx ( {section.SectionIndex} )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            Elevation ( {posY} )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            CollideFlags ( 7 )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            StaticFlags ( 0 )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            Position ( {posX} {posY} {posZ} )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            QDirection ( {quat.X} {quat.Y} {quat.Z} {quat.W} )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            VDbId ( {section.WorldFileUiD} 0 0 )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;            TrackSections ( 1&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">$&quot;                TrackSection ( {section.SectionIndex} &quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="c1">// ... write section data ...</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;)&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;            )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;        )&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="n">Quaternion</span><span class="w"> </span><span class="nf">EulerToQuaternion</span><span class="p">(</span><span class="kt">float</span><span class="w"> </span><span class="n">ax</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">ay</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">az</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Convert Euler angles (roll, pitch, yaw) to quaternion</span>
+<span class="w">        </span><span class="c1">// Using ZYX convention as per Open Rails</span>
+
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">cy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MathF</span><span class="p">.</span><span class="n">Cos</span><span class="p">(</span><span class="n">ay</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">sy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MathF</span><span class="p">.</span><span class="n">Sin</span><span class="p">(</span><span class="n">ay</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">cp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MathF</span><span class="p">.</span><span class="n">Cos</span><span class="p">(</span><span class="n">ax</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">sp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MathF</span><span class="p">.</span><span class="n">Sin</span><span class="p">(</span><span class="n">ax</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">cr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MathF</span><span class="p">.</span><span class="n">Cos</span><span class="p">(</span><span class="n">az</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">sr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MathF</span><span class="p">.</span><span class="n">Sin</span><span class="p">(</span><span class="n">az</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">Quaternion</span><span class="p">(</span>
+<span class="w">            </span><span class="n">sr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">cr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sy</span><span class="p">,</span><span class="w">  </span><span class="c1">// X</span>
+<span class="w">            </span><span class="n">cr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cy</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">sr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sy</span><span class="p">,</span><span class="w">  </span><span class="c1">// Y</span>
+<span class="w">            </span><span class="n">cr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">sr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cy</span><span class="p">,</span><span class="w">  </span><span class="c1">// Z</span>
+<span class="w">            </span><span class="n">cr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cy</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">sr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sy</span><span class="w">   </span><span class="c1">// W</span>
+<span class="w">        </span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="pathwriter">PathWriter</h2>
+<p>Generates <code>.pat</code> (Path) files with waypoints and navigation.</p>
+<h3 id="output-format_2">Output Format</h3>
+<div class="highlight"><pre><span></span><code>SIMISA@@@@@@@@@@JINX0P0t______
+
+Serial ( 1 )
+
+TrackPDPs (
+    TrackPDP ( -12842 14734 0 0 0 2 0 )
+    TrackPDP ( -12842 14734 100 0 0 2 0 )
+    TrackPDP ( -12842 14734 200 0 0 2 0 )
+)
+
+TrackPath (
+    TrPathName ( TestTrack )
+    Name ( &quot;Test Track&quot; )
+    TrPathStart ( Start )
+    TrPathEnd ( End )
+    TrPathNodes ( 3
+        TrPathNode ( 00000000 1 4294967295 0 )
+        TrPathNode ( 00000000 2 4294967295 1 )
+        TrPathNode ( 00000000 4294967295 4294967295 2 )
+    )
+)
+</code></pre></div>
+<h3 id="key-methods_2">Key Methods</h3>
+<div class="highlight"><pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">PathWriter</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Write</span><span class="p">(</span><span class="n">TrackNode</span><span class="p">[]</span><span class="w"> </span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">filename</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Extract all sections</span>
+<span class="w">        </span><span class="kt">var</span><span class="w"> </span><span class="n">allSections</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nodes</span>
+<span class="w">            </span><span class="p">.</span><span class="n">Where</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">TrVectorNode</span><span class="p">)</span>
+<span class="w">            </span><span class="p">.</span><span class="n">SelectMany</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">Sections</span><span class="p">)</span>
+<span class="w">            </span><span class="p">.</span><span class="n">ToList</span><span class="p">();</span>
+
+<span class="w">        </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">writer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamWriter</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;SIMISA@@@@@@@@@@JINX0P0t______&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">();</span>
+<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Serial ( 1 )&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">();</span>
+
+<span class="w">            </span><span class="n">WriteTrackPDPs</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span><span class="w"> </span><span class="n">allSections</span><span class="p">);</span>
+<span class="w">            </span><span class="n">WriteTrackPath</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span><span class="w"> </span><span class="n">allSections</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteTrackPDPs</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">TrVectorSection</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sections</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;TrackPDPs (&quot;</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">sections</span><span class="p">.</span><span class="n">Count</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="kt">var</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sections</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">            </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;    TrackPDP ( {s.TileX} {s.TileZ} {s.X.ToString(&quot;</span><span class="n">F1</span><span class="s">&quot;)} {s.Y.ToString(&quot;</span><span class="n">F1</span><span class="s">&quot;)} {s.Z.ToString(&quot;</span><span class="n">F1</span><span class="s">&quot;)} 2 0 )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;)&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteTrackPath</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">TrVectorSection</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sections</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;TrackPath (&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    TrPathName ( TestTrack )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    Name ( \&quot;Test Track\&quot; )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    TrPathStart ( Start )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    TrPathEnd ( End )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;    TrPathNodes ( {sections.Count}&quot;</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">sections</span><span class="p">.</span><span class="n">Count</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="kt">uint</span><span class="w"> </span><span class="n">nextNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">sections</span><span class="p">.</span><span class="n">Count</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="p">)(</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">;</span>
+<span class="w">            </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;        TrPathNode ( 00000000 {i} {nextNode} {i} )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    )&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;)&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="extending-writers">Extending Writers</h2>
+<p>To add a new file format:</p>
+<ol>
+<li>
+<p>Create new writer class:
+<div class="highlight"><pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">MyFormatWriter</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Write</span><span class="p">(</span><span class="n">TrackNode</span><span class="p">[]</span><span class="w"> </span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">filename</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></p>
+</li>
+<li>
+<p>Integrate into Program.cs:
+<div class="highlight"><pre><span></span><code><span class="kt">var</span><span class="w"> </span><span class="n">myWriter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">MyFormatWriter</span><span class="p">();</span>
+<span class="n">myWriter</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="n">trackNodes</span><span class="p">,</span><span class="w"> </span><span class="n">outputPath</span><span class="p">);</span>
+</code></pre></div></p>
+</li>
+</ol>
+<h2 id="error-handling">Error Handling</h2>
+<p>All writers include error checking:</p>
+<div class="highlight"><pre><span></span><code><span class="k">try</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">writer</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="n">filename</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;✓ Generated {filename}&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">ex</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;✗ Failed to generate {filename}: {ex.Message}&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">throw</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
