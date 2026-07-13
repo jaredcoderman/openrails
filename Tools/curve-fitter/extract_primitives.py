@@ -10,6 +10,7 @@ Unified primitive format:
 """
 
 import json
+import subprocess
 import numpy as np
 from config import (
     GEOJSON_FILE,
@@ -269,6 +270,24 @@ def main():
     print(f"\nExported to {PRIMITIVES_OUTPUT}:")
     print(json.dumps(export_data, indent=2))
     
+    # Build and run C# TdbDump project
+    try:
+        openrails_path = r'C:\Users\jared\main\openrails\Source\TdbDump\primitives.json'
+        with open(openrails_path, 'w') as f:
+            json.dump(export_data, f, indent=2)
+        print(f"\nAlso exported to {openrails_path}")
+        
+        print("\n" + "=" * 80)
+        print("STEP 6: Building C# project")
+        print("=" * 80)
+        
+        subprocess.run(
+            r'cd /d C:\Users\jared\main\openrails\Source\TdbDump && dotnet build -c Debug && .\bin\Debug\TdbDump.exe',
+            shell=True,
+            check=True
+        )
+    except Exception as e:
+        print(f"\nWarning: Could not build C# project: {e}")
     
     print("\n" + "=" * 80)
     print("COMPLETE")
