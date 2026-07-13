@@ -26,7 +26,7 @@ Main method that generates the complete TDB structure.
 ```csharp
 public void BuildAllNodes()
 {
-    // Step 1: Create start end node
+    // Step 1: Create start end nodes
     var startEndNode = new TrackNode 
     { 
         Id = 1,
