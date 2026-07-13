@@ -8,15 +8,28 @@ This tool processes GeoJSON railroad network data and segments polylines into op
 
 ## Files
 
-- **`extract_primitives.py`** - Main entry point. Loads GeoJSON, segments polylines, and exports JSON primitives
+- **`main.py`** - Entry point. Orchestrates primitive extraction + C# build/run
+- **`extract_primitives.py`** - Core extraction logic. Importable for reuse
 - **`circle_fitter.py`** - Core algorithms for coordinate conversion, circle/line fitting, and segmentation
 - **`config.py`** - Centralized configuration (tolerances, file paths, parameters)
 
 ## Usage
 
 ```bash
+# Main workflow - extract primitives AND run C# TdbDump
+python main.py
+
+# Or extract primitives only (without C# integration)
 python extract_primitives.py
 ```
+
+**`main.py`** - Recommended entry point. Orchestrates:
+1. Primitive extraction from GeoJSON
+2. Export to C# TdbDump project
+3. Build C# project
+4. Run TdbDump.exe
+
+**`extract_primitives.py`** - Can be used standalone to just extract primitives without C# integration. Also importable as a module.
 
 Configuration is managed in `config.py`:
 - `GEOJSON_FILE` - Input GeoJSON file path
@@ -36,6 +49,27 @@ Configuration is managed in `config.py`:
 4. **Long Straight Splitting** - Breaks straights exceeding 2048m tile limit
 5. **Primitive Extraction** - Generates unified primitive format for C#
 6. **JSON Export** - Outputs to `primitives.json`
+
+## Architecture
+
+```
+main.py (Orchestrator)
+  ├─ extract_primitives() [extract_primitives.py]
+  │  ├─ Load GeoJSON
+  │  ├─ Coordinate conversion [circle_fitter.py]
+  │  ├─ Segmentation [circle_fitter.py]
+  │  └─ Return export_data
+  │
+  └─ build_and_run_tdbdump(export_data)
+     ├─ Export to C# project
+     ├─ Build C# solution
+     └─ Run TdbDump.exe
+```
+
+**Separation of Concerns:**
+- `extract_primitives.py` - Focuses purely on curve fitting and primitive extraction
+- `main.py` - Orchestrates the workflow and C# integration
+- Both can be used independently
 
 ## Algorithm Details
 
