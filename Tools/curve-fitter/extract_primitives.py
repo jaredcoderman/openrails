@@ -2,7 +2,7 @@
 Extract Primitive Parameters from Fitted Segments (Straight + Curves)
 =====================================================================
 
-Exports both straight line and circular arc primitives to JSON.
+This module extracts both straight line and circular arc primitives to JSON.
 
 Unified primitive format:
 - Straight: type="straight", radius=length, angle=0, clockwise=false
@@ -10,7 +10,6 @@ Unified primitive format:
 """
 
 import json
-import subprocess
 import numpy as np
 from config import (
     GEOJSON_FILE,
@@ -155,7 +154,21 @@ def extract_primitive_from_segment(segment, segment_number):
         }
 
 
-def main():
+def extract_primitives():
+    """
+    Extract primitives from railroad GeoJSON data.
+    
+    Pipeline:
+    1. Load GeoJSON railroad data
+    2. Extract target feature and convert coordinates
+    3. Segment polyline using model selection
+    4. Split long straights to respect tile limits
+    5. Extract primitive parameters
+    6. Export to JSON
+    
+    Returns:
+        dict: Export data with segments in Open Rails format
+    """
     # Load data
     print("=" * 80)
     print("STEP 1: Loading data")
@@ -270,29 +283,8 @@ def main():
     print(f"\nExported to {PRIMITIVES_OUTPUT}:")
     print(json.dumps(export_data, indent=2))
     
-    # Build and run C# TdbDump project
-    try:
-        openrails_path = r'C:\Users\jared\main\openrails\Source\TdbDump\primitives.json'
-        with open(openrails_path, 'w') as f:
-            json.dump(export_data, f, indent=2)
-        print(f"\nAlso exported to {openrails_path}")
-        
-        print("\n" + "=" * 80)
-        print("STEP 6: Building C# project")
-        print("=" * 80)
-        
-        subprocess.run(
-            r'cd /d C:\Users\jared\main\openrails\Source\TdbDump && dotnet build -c Debug && .\bin\Debug\TdbDump.exe',
-            shell=True,
-            check=True
-        )
-    except Exception as e:
-        print(f"\nWarning: Could not build C# project: {e}")
-    
-    print("\n" + "=" * 80)
-    print("COMPLETE")
-    print("=" * 80)
+    return export_data
 
 
 if __name__ == '__main__':
-    main()
+    extract_primitives()
