@@ -1,0 +1,63 @@
+site_name: Open Rails Track Builder Documentation
+site_description: Complete guide to the Python Curve Fitter, TdbDump tool, and Open Rails file formats
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.arithmatex:
+      generic: true
+  - admonition
+  - attr_list
+  - md_in_html
+
+docs_dir: track_builder_docs
+site_dir: site
+
+nav:
+  - Home: index.md
+  - Quick Start: quick_start.md
+  - Python Curve Fitter:
+      - Overview: pipeline/curve_fitter_overview.md
+      - Input Format: pipeline/curve_input.md
+      - Output Format: pipeline/curve_output.md
+      - Usage Examples: pipeline/curve_examples.md
+  - TdbDump Tool:
+      - Overview: pipeline/tdbdump_overview.md
+      - Architecture: pipeline/tdbdump_architecture.md
+      - TrackBuilder: pipeline/trackbuilder.md
+      - Writers: pipeline/writers.md
+  - File Formats:
+      - Overview: formats/README.md
+      - Track Database (.tdb): formats/tdb.md
+      - Path Files (.pat): formats/pat.md
+      - World Files (.w): formats/world.md
+      - Service Files (.srv): formats/srv.md
+      - Activity Files (.act): formats/act.md
+      - Consist Files (.con): formats/consist.md
+  - Open Rails Concepts:
+      - Coordinate Systems: concepts/coordinates.md
+      - Pin Connections: concepts/pins.md
+      - Track Sections: concepts/track_sections.md
+      - UIDs and References: concepts/uids.md
+  - Technical Deep Dives:
+      - Pin Semantics: deep_dives/pin_semantics.md
+      - Quaternions and Rotations: deep_dives/quaternions.md
+      - TSRE5 vs Open Rails: deep_dives/tsre5_comparison.md
+      - World File Tile System: deep_dives/tile_system.md
+  - Full Pipeline Walkthrough: pipeline/full_walkthrough.md
+  - Troubleshooting: troubleshooting.md
+  - Glossary: glossary.md

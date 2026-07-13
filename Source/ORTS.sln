@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.1.32210.238
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11626.88 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunActivity", "RunActivity\RunActivity.csproj", "{9BE44F64-417D-4AA6-AF4D-2A6A0CBC814D}"
 EndProject
@@ -58,6 +58,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiPlayerServer", "MultiPlayerServer\MultiPlayerServer.csproj", "{A86A52C2-07B9-47A6-BCF4-622440E1A64E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimetableEditor", "Contrib\TimetableEditor\TimetableEditor.csproj", "{C3CC640C-80F5-4A69-9467-7F17CC0C6B41}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TdbDump", "TdbDump\TdbDump.csproj", "{D2E4A845-0EC3-4D4C-BC46-D3F6ED863F44}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -177,6 +179,10 @@ Global
 		{C3CC640C-80F5-4A69-9467-7F17CC0C6B41}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C3CC640C-80F5-4A69-9467-7F17CC0C6B41}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C3CC640C-80F5-4A69-9467-7F17CC0C6B41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2E4A845-0EC3-4D4C-BC46-D3F6ED863F44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2E4A845-0EC3-4D4C-BC46-D3F6ED863F44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2E4A845-0EC3-4D4C-BC46-D3F6ED863F44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2E4A845-0EC3-4D4C-BC46-D3F6ED863F44}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

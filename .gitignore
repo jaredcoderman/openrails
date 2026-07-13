@@ -327,6 +327,19 @@ paket-files/
 __pycache__/
 *.pyc
 
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv
+.env
+
+# pip-related files
+*.egg-info/
+dist/
+build/
+
+
 # Cake - Uncomment if you are using it
 # tools/**
 # !tools/packages.config
