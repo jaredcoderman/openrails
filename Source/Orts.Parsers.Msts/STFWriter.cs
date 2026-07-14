@@ -17,6 +17,14 @@ namespace Orts.Parsers.Msts
         /// Constructor - opens a file for writing.
         /// </summary>
         public STFWriter(string filePath)
+            : this(filePath, "T0t")
+        {
+        }
+
+        /// <summary>
+        /// Constructor with an STF file-type suffix in the header.
+        /// </summary>
+        public STFWriter(string filePath, string headerSuffix)
         {
             string directory = Path.GetDirectoryName(filePath);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
@@ -24,15 +32,15 @@ namespace Orts.Parsers.Msts
                 Directory.CreateDirectory(directory);
             }
             writer = new StreamWriter(filePath, false, Encoding.Unicode);
-            WriteHeader();
+            WriteHeader(headerSuffix);
         }
 
         /// <summary>
         /// Write the SIMISA header that all STF files need.
         /// </summary>
-        private void WriteHeader()
+        private void WriteHeader(string headerSuffix)
         {
-            writer.WriteLine("SIMISA@@@@@@@@@@JINX0T0t______");
+            writer.WriteLine("SIMISA@@@@@@@@@@JINX0" + headerSuffix + "______");
             writer.WriteLine();
         }
 
