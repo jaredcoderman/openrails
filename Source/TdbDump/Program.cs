@@ -19,8 +19,6 @@ namespace TdbDump
             string basePath = @"C:\Users\jared\ORRoutes\BNSF Starter Route - Copy\ROUTES\BNSF_Scenic";
             string tsectionPath = Path.Combine(basePath, "tsection.dat");
             string tdbPath = Path.Combine(basePath, "BNSF_Scenic.tdb");
-            const string pathId = "TestPat";
-            const string serviceId = "TestSRV";
 
             TrackBuilder track = new TrackBuilder();
 
@@ -98,74 +96,15 @@ namespace TdbDump
                 return 1;
             }
 
-            // Write a player path through the generated track sections.
+            // Write the generated path, service, and activity files.
             try
             {
-                string pathsDirectory = Path.Combine(basePath, "PATHS");
-                string patPath = Path.Combine(pathsDirectory, "TestPat.pat");
                 TrackNode[] sectionNodes = track.Build().ToArray();
-                TrEndNode endNode = allNodes.OfType<TrEndNode>().Last();
-
-                PATWriter.Write(
-                    patPath,
-                    sectionNodes,
-                    endNode,
-                    pathId,
-                    "Test Track",
-                    "Start",
-                    "End");
-
-                Console.WriteLine("Wrote path to: " + patPath);
+                ScenarioWriter.Write(basePath, sectionNodes, allNodes);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error writing pat file: " + ex.Message);
-                return 1;
-            }
-
-            // Write the service that references the generated PAT file.
-            try
-            {
-                string servicesDirectory = Path.Combine(basePath, "SERVICES");
-                string srvPath = Path.Combine(servicesDirectory, serviceId + ".srv");
-
-                SRVWriter.Write(
-                    srvPath,
-                    "Test Track",
-                    "BNSF Manifest (60 cars)",
-                    pathId);
-
-                Console.WriteLine("Wrote service to: " + srvPath);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error writing srv file: " + ex.Message);
-                return 1;
-            }
-
-            // Write an activity that uses the generated service and TDB
-            // endpoints for its restricted speed zone.
-            try
-            {
-                string activitiesDirectory = Path.Combine(basePath, "ACTIVITIES");
-                string actPath = Path.Combine(activitiesDirectory, "TestActivity.act");
-                TrEndNode startNode = allNodes.OfType<TrEndNode>().First();
-                TrEndNode endNode = allNodes.OfType<TrEndNode>().Last();
-
-                ACTWriter.Write(
-                    actPath,
-                    startNode,
-                    endNode,
-                    "BNSF_Scenic",
-                    "Test Track AUTO",
-                    serviceId,
-                    "TesawdawdtTrack");
-
-                Console.WriteLine("Wrote activity to: " + actPath);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error writing act file: " + ex.Message);
+                Console.WriteLine("Error writing scenario files: " + ex.Message);
                 return 1;
             }
 
