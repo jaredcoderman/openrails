@@ -1,10 +1,8 @@
 # Curve Input Format
 
-The curve fitter reads **GeoJSON files containing real railroad network coordinates**.
+## GeoJSON
 
-## Input Source
-
-GeoJSON file format with railroad polylines:
+NTAD-style FeatureCollection. Each feature needs an `OBJECTID` and a `LineString` or `MultiLineString` (longest part used).
 
 ```json
 {
@@ -12,134 +10,42 @@ GeoJSON file format with railroad polylines:
   "features": [
     {
       "type": "Feature",
-      "properties": {
-        "OBJECTID": 12345,
-        "railroad_name": "BNSF Main Line"
-      },
+      "properties": { "OBJECTID": 1101 },
       "geometry": {
         "type": "LineString",
-        "coordinates": [
-          [-120.5, 38.5],
-          [-120.501, 38.501],
-          [-120.502, 38.502],
-          ...more coordinates...
-        ]
+        "coordinates": [[-110.4, 47.0], [-110.39, 47.01]]
       }
     }
   ]
 }
 ```
 
-**Coordinates format**: `[longitude, latitude]` pairs (standard GeoJSON)
+Coordinates are `[longitude, latitude]`. The network extractor reverses vertex order so travel direction matches the historical single-OBJECTID convention.
 
-## Configuration (config.py)
+## OBJECTID list (`bbox_objectids.txt`)
 
-Before running, configure these parameters:
+One integer per line; `#` comments allowed. Built by hand or by `select_bbox_objectids.py` using corners in that script (same bbox idea as the network extract).
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `GEOJSON_FILE` | str | Path to input GeoJSON file |
-| `TARGET_OBJECTID` | int | Which railroad segment to process (OBJECTID value) |
-| `STRAIGHT_TOLERANCE` | float | RMS perpendicular error tolerance for line fitting (meters) |
-| `CIRCLE_TOLERANCE` | float | RMS radial error tolerance for circle fitting (meters) |
-| `FLIP_X_COORDINATES` | bool | Mirror X-coordinates for local coordinate system (true/false) |
-| `PRIMITIVES_OUTPUT` | str | Output JSON file path for primitives |
+## `config.py`
 
-### Tolerance Values
+| Parameter | Used by | Description |
+|-----------|---------|-------------|
+| `GEOJSON_FILE` | all extracts | GeoJSON path relative to `Tools/curve-fitter` |
+| `TARGET_OBJECTID` | `extract_primitives.py` | Single feature |
+| `STRAIGHT_TOLERANCE` | fit | RMS perpendicular error (m) for lines |
+| `CIRCLE_TOLERANCE` | fit | RMS radial error (m) for arcs |
+| `FLIP_X_COORDINATES` | local frame | Negate easting before origin |
+| `MAX_STRAIGHT_LENGTH` | split | Cap straight length (default 2048) |
+| `PRIMITIVES_OUTPUT` | single-ID | Output filename |
 
-These determine how "tight" the fitting is:
+Tighter tolerances → more segments, closer to source vertices. Looser → fewer, smoother primitives.
 
-- **Smaller values** (e.g., 0.5m) = More segments, closer to original
-- **Larger values** (e.g., 2.0m) = Fewer segments, more generalized
+## Bbox selection
 
-Example config:
+`select_bbox_objectids.py` keeps an OBJECTID if **any** vertex lies inside the lat/lon rectangle from `CORNER_A` / `CORNER_B`. Edit those corners when changing study area, then re-run extract.
 
-```python
-GEOJSON_FILE = r"C:\data\railroad_network.geojson"
-TARGET_OBJECTID = 12345
-STRAIGHT_TOLERANCE = 1.0  # 1 meter RMS error for lines
-CIRCLE_TOLERANCE = 1.5    # 1.5 meter RMS error for curves
-FLIP_X_COORDINATES = False
-PRIMITIVES_OUTPUT = "primitives.json"
-```
+## Density tips
 
-## Coordinate System
-
-### Input Coordinates
-- **Format**: Latitude/Longitude (WGS84)
-- **Projection**: Automatically detected based on first coordinate
-- **UTM Zone**: Calculated from longitude
-
-### Internal Conversion
-The fitter converts to **local Cartesian (UTM)** for processing:
-- All distances in meters
-- Local X-Y coordinate system
-- Allows precise distance/angle calculations
-
-### Optional X-Flip
-If your coordinate system needs mirroring:
-```python
-FLIP_X_COORDINATES = True  # Negates all X values
-```
-
-## Data Quality Notes
-
-For best results, the GeoJSON railroad data should:
-- Have sufficient point density (points every ~10-50 meters)
-- Follow actual track geometry closely
-- Include both straight sections and curves
-- Be free of large jumps or missing segments
-- Represent a continuous path
-
-## Example: Real Railroad Data
-
-A typical railroad polyline with 50 points representing 2km of track:
-
-```json
-{
-  "properties": {"OBJECTID": 1, "name": "Test Track"},
-  "geometry": {
-    "type": "LineString",
-    "coordinates": [
-      [-122.500, 47.650],
-      [-122.501, 47.651],
-      [-122.502, 47.652],
-      [-122.503, 47.653],
-      [-122.504, 47.654],
-      ...46 more points...
-    ]
-  }
-}
-```
-
-After conversion to UTM and fitting:
-- Segments 0-15 fit to straight line
-- Segments 15-35 fit to circular arc (R=500m)
-- Segments 35-50 fit to straight line
-
-## Running the Fitter
-
-```bash
-cd Tools\curve-fitter
-python extract_primitives.py
-```
-
-Or use the venv:
-
-```bash
-cd Tools\curve-fitter
-.\Scripts\Activate.ps1
-python extract_primitives.py
-```
-
-This reads config.py settings and processes the GeoJSON file.
-
-## Output Location
-
-Primitives are written to the path specified in config.py:
-
-```python
-PRIMITIVES_OUTPUT = "primitives.json"  # Relative to current directory
-```
-
-See [Curve Output Format](curve_output.md) for what the output contains.
+- Sparse polylines underfit curves; densify or loosen circle tolerance carefully.
+- Tiny 2-point stubs are valid (exported as one straight).
+- Degenerate zero-length pairs fail and appear under `error` in the network JSON.

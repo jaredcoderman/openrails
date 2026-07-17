@@ -1,145 +1,76 @@
 # TdbDump Overview
 
-TdbDump is the C# tool that converts curve fitter output into Open Rails track files.
+C# tool (`Source/TdbDump`) that converts curve-fitter output into Open Rails route files.
 
 ## Purpose
 
-TdbDump transforms abstract track data into Open Rails format:
+| Input | Outputs |
+|-------|---------|
+| `bbox_network_local.json` (preferred) or `primitives.json` | `BNSF_Scenic.tdb`, `tsection.dat`, `WORLD/w-*.w`, optional scenario set for first free-ended feature |
 
-- **Input**: Curve fitter output (JSON)
-- **Output**: 
-  - `.tdb` (Track Database)
-  - `.pat` (Path/Track waypoints)
-  - `.w` (World geometry files)
-  - `.act` (Activity template)
+Route paths are currently hard-coded in `Program.cs` (BNSF Scenic copy). Adjust there for another route.
 
 ## Architecture
 
 ```
-Input (JSON)
-    ↓
-Models.cs (Data structures)
-    ↓
-TrackBuilder (Generate TDB structure)
-    ↓
-TDBWriter (Write .tdb file)
-WorldWriter (Write .w files)
-PathWriter (Write .pat file)
-    ↓
-Output Files
+bbox_network_local.json
+        ↓
+TrackBuilder (load → place → snap → junctions → pins)
+        ↓
+    ┌───┼───────────────┐
+    ↓   ↓               ↓
+TSection  TDBWriter   WorldWriter (DynTracks from chains)
+Writer    (+ junctions)
 ```
 
-## Key Components
+## Key components
 
-### Models.cs
-Defines data structures:
-- `TrackNode` - Nodes in the track database
-- `TrVectorSection` - Individual track sections
-- `TrPin` - Connections between nodes
-- `TrEndNode` - Track terminus points
-- `DynamicTrack` - World file track objects
-
-### TrackBuilder.cs
-Constructs the TDB node structure:
-- Converts sections into `TrVectorNode` entries
-- Creates `TrEndNode` entries at start/end
-- Establishes pin connections
-- Calculates tile coordinates and UIDs
-
-### Writers
-Generate output files:
-- `TDBWriter` - `.tdb` file format
-- `WorldWriter` - `.w` file format
-- `PathWriter` - `.pat` file format
+| File | Role |
+|------|------|
+| `Program.cs` | Load builder, write tsection/tdb/world/scenario |
+| `TrackBuilder.cs` | Network graph construction |
+| `Models.cs` | Nodes, chains, primitives, DynTrack helpers |
+| `TDBWriter.cs` | End / vector / junction nodes |
+| `TSectionWriter.cs` | Dynamic `TrackSection` / `SectionCurve` entries |
+| `WorldWriter.cs` | Dyntrack objects into one base-tile `.w` |
+| `ScenarioWriter.cs` | PAT/ACT/SRV for first feature when possible |
 
 ## Workflow
 
-1. **Load input data**
-   ```csharp
-   var trackData = JsonConvert.DeserializeObject<TrackData>(inputJson);
-   ```
+```csharp
+var track = new TrackBuilder();           // finds network or legacy JSON
+var allNodes = track.BuildAllNodes();     // snap + junctions + pins
 
-2. **Build node structure**
-   ```csharp
-   var builder = new TrackBuilder(trackData);
-   var nodes = builder.BuildAllNodes();
-   ```
+TSectionWriter.UpdateTSectionDat(…, track.Primitives);
+// write each TrEndNode / TrJunctionNode / TrackNode
+DynamicTrack.MakeDynamicTrackObjects(track.Chains, track.Primitives);
+WorldWriter.WriteWorldFiles(…);
+```
 
-3. **Write outputs**
-   ```csharp
-   var tdbWriter = new TDBWriter();
-   tdbWriter.Write(nodes, "output.tdb");
-   
-   var worldWriter = new WorldWriter();
-   worldWriter.Write(nodes, "world/");
-   ```
+## Node kinds in the TDB
+
+- **TrVectorNode** — one per OBJECTID chain; many `TrVectorSection`s.
+- **TrEndNode** — free tips not consumed by a link or junction.
+- **TrJunctionNode** — 3-way geo cluster (stem + main + diverging).
+
+Counts: e.g. 39 features → 39 vectors + ends + junctions ≈ 40+ TDB nodes.
+
+## World files
+
+One DynTrack per **section** (not one packed object for an entire vector). Positions come from post-reshape `chain.Sections`, so junction tip fixes appear in the world file as well as the TDB.
 
 ## Configuration
 
-Base tile coordinates (editable in TrackBuilder):
-```csharp
-_tileX = -12842;  // Tile X
-_tileZ = 14734;   // Tile Z
-```
+- Input search: `bbox_network_local.json`, else `primitives.json` (working directory / known paths via `FindInputFile`).
+- Base tile: `(-12842, 14734)` in TrackBuilder / WorldWriter.
+- Default elevation for world: ~1000 m (flat placeholder).
 
-These determine where track appears in the world.
+## Integration
 
-## Output Files
+After a successful run, reload Track Viewer (**Ctrl+R**) or launch the route in Open Rails. Prefer TDB for topology checks; world is for mesh/DynTrack visuals.
 
-### track.tdb
-```
-trackdb (
-    tracknodes (
-        tracknode (
-            trvectornode (
-                trvectorsections ( ... )
-            )
-            trpins ( ... )
-        )
-    )
-)
-```
+## Next
 
-### w-012842+014734.w
-```
-Dyntrack (
-    Tr_WorldFile (
-        TrackObj (
-            ...
-        )
-        DyntrackObj (
-            ...
-        )
-    )
-)
-```
-
-### track.pat
-```
-Serial ( 1 )
-TrackPDPs ( ... )
-TrackPath (
-    TrPathName ( TrackName )
-    TrPathNodes ( ... )
-)
-```
-
-## Integration with Open Rails
-
-Copy generated files to your route:
-
-```
-ROUTES/MyRoute/
-├── tdb.dat               # Generated .tdb
-├── PATHS/
-│   └── TrackName.pat     # Generated .pat
-└── WORLD/
-    └── w-012842+014734.w # Generated .w
-```
-
-## Next Steps
-
-See:
-- [TrackBuilder Details](trackbuilder.md)
-- [Writers Details](writers.md)
-- [Full Pipeline Walkthrough](full_walkthrough.md)
+- [TrackBuilder](trackbuilder.md)
+- [Architecture](tdbdump_architecture.md)
+- [Writers](writers.md)

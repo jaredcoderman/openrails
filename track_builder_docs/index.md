@@ -1,44 +1,54 @@
 # Open Rails Track Builder Documentation
 
-Welcome to the comprehensive documentation for the Open Rails Track Builder pipeline!
+Pipeline for turning real railroad GeoJSON into Open Rails track data (TDB, tsection, world DynTracks).
 
-## What is This?
+## What This Pipeline Does
 
-This documentation covers the complete pipeline for generating Open Rails track data:
+1. **Curve fitter** (`Tools/curve-fitter`) — Fits NTAD/GeoJSON polylines to straight + circular-arc primitives in a shared local meter frame.
+2. **TdbDump / TrackBuilder** (`Source/TdbDump`) — Places one TDB vector chain per OBJECTID, snaps endpoints, builds 3-way junctions, writes route files.
+3. **Verify** — Track Viewer (TDB, Ctrl+R) and/or Open Rails world DynTracks.
 
-1. **Python Curve Fitter** - Generates smooth track curves from mathematical definitions
-2. **TdbDump Tool** - Converts curve data into Open Rails track database format
-3. **Open Rails File Formats** - Understanding how track data is stored and interpreted
+## Current Workflow (Network)
+
+```
+GeoJSON (NTAD BNSF lines)
+        ↓
+select_bbox_objectids.py  →  bbox_objectids.txt
+        ↓
+extract_bbox_network.py   →  bbox_network_local.json (+ QGIS geojson)
+        ↓
+copy JSON → Source/TdbDump/bin/Debug/
+        ↓
+TdbDump.exe               →  .tdb / tsection.dat / WORLD/*.w
+        ↓
+Track Viewer Ctrl+R  (or load route in OR)
+```
+
+Single-OBJECTID `extract_primitives.py` → `primitives.json` still works as a legacy path.
 
 ## Quick Navigation
 
-- **Just getting started?** → Head to [Quick Start](quick_start.md)
-- **Want to understand the full pipeline?** → See [Full Pipeline Walkthrough](pipeline/full_walkthrough.md)
-- **Need to know about a specific file format?** → Check [File Formats](formats/tdb.md)
-- **Having issues?** → Visit [Troubleshooting](troubleshooting.md)
+| Goal | Doc |
+|------|-----|
+| Run it now | [Quick Start](quick_start.md) |
+| End-to-end example | [Full Pipeline Walkthrough](pipeline/full_walkthrough.md) |
+| Fitter details | [Curve Fitter Overview](pipeline/curve_fitter_overview.md) |
+| TrackBuilder / junctions | [TrackBuilder Details](pipeline/trackbuilder.md) |
+| File formats | [formats/](formats/tdb.md) |
+| Stuck? | [Troubleshooting](troubleshooting.md) |
 
-## Project Structure
+## Project Layout
 
 ```
 openrails/
-├── Program/
-│   ├── CurveFitter/          # Python curve fitting tool
-│   └── ...
-├── Source/
-│   └── TdbDump/              # C# tool for generating TDB files
-└── track_builder_docs/       # This documentation
+├── Tools/curve-fitter/     # Python fit + bbox network extract
+├── Source/TdbDump/         # C# TrackBuilder + writers
+└── track_builder_docs/     # This documentation
 ```
 
-## Key Concepts
+## Key Ideas
 
-- **Tile Coordinates**: Track positions are referenced by world tiles (TileX, TileZ)
-- **World Coordinates**: Within each tile, precise X, Y, Z positions
-- **TrVectorSection**: Individual track sections with curve data
-- **Pin Connections**: How track nodes link together
-- **UIDs**: Universal identifiers for referencing track sections in world files
-
-## Getting Help
-
-- Check the [Glossary](glossary.md) for terminology
-- See [Pin Connections](concepts/pins.md) for connectivity details
-- Review [Troubleshooting](troubleshooting.md) for common errors
+- **One OBJECTID → one TDB vector node** (chain of sections), not one mega-polyline for the whole route.
+- **Snap on GeoJSON ends** (not reconstructed ends) so topology matches QGIS even when chained reconstruction drifts.
+- **3-way clusters → TrJunctionNode**; tip geometry is reshaped onto geo headings so spurs diverge instead of overlapping the through line.
+- **Tiles**: Base tile for BNSF Scenic work is `(-12842, 14734)`; local coords within 2048 m tiles.

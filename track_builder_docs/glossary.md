@@ -21,9 +21,17 @@ Key terminology used throughout Open Rails track building.
 - References shapes from TRAINSET folder
 
 **Curve Fitter**
-- Python tool that converts curve definitions to track geometry
-- Takes curve radius, length, elevation as input
-- Outputs position and rotation for each track section
+- Python tools under `Tools/curve-fitter`
+- Fit GeoJSON polylines to straight + circular-arc primitives
+- Network path: `extract_bbox_network.py` → `bbox_network_local.json`
+
+**FeatureChain**
+- One OBJECTID’s reconstructed sections plus geo start/end poses
+- Becomes one TDB vector node
+
+**Geo endpoint**
+- True polyline end from source GeoJSON (local meters)
+- Used for snap/junction matching (not drifted reconstructed ends)
 
 ### D
 
@@ -111,29 +119,26 @@ Key terminology used throughout Open Rails track building.
 - Contains track nodes and pin connections
 
 **TrEndNode**
-- Track node marking start or end of segment
-- Has 1 input, 0 output pins
-- References a UID
+- Free terminus when an endpoint is not linked or junctioned
 
 **TrJunctionNode**
-- Track node where track splits or merges
-- Typically 3 pins (1 input, 2 outputs for Y-junction)
-- References a UID
+- 3-way switch (`trpins` 1 in + 2 out: stem, main, diverging)
+- From a geo endpoint cluster; tips reshaped onto geo headings
+- `ShapeIndex` often 0 until a switch mesh is assigned
 
 **TrPin**
 - Connection between track nodes
-- Contains: node ID and direction (0 or 1)
-- Must be reciprocal
+- Contains: node ID and direction (0 or 1) on the *linked* node
+- Must be reciprocal (except junction-owned sides)
 
 **TrVectorNode**
-- Track node containing curved sections
-- Has 1 input, 1 output pins
-- Contains multiple TrVectorSections
+- One per OBJECTID feature chain; many `TrVectorSection`s
+- Pins to ends, neighbor vectors, and/or a junction
 
 **TrVectorSection**
-- Individual track section within a TrVectorNode
-- Contains position, rotation, curve data
-- References SectionIndex and WorldFileUiD
+- One section row in a vector node
+- Position, rotation, SectionIndex, WorldFileUiD
+
 
 ### U
 

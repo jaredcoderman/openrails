@@ -1,160 +1,87 @@
 # Curve Output Format
 
-The curve fitter produces **primitives** - simplified representations of straight lines and curves fitted to the railroad coordinate data.
+## Primary: `bbox_network_local.json`
 
-## Output Structure
+Written by `extract_bbox_network.py`. This is what TrackBuilder loads first.
 
 ```json
 {
-  "segments": [
+  "crs": {
+    "epsg": 32612,
+    "origin_easting": …,
+    "origin_northing": …,
+    "flip_x": false,
+    "axes": "x=easting-ish (after flip), z=northing"
+  },
+  "source": {
+    "geojson": "….geojson",
+    "objectid_list": "bbox_objectids.txt",
+    "bbox_corners_latlon": [[lat, lon], [lat, lon]]
+  },
+  "features": [
     {
-      "type": "straight",
-      "radius": 0.0,
-      "angle": 2048.5,
-      "clockwise": false,
-      "length": 2048.5
-    },
-    {
-      "type": "curve",
-      "radius": 500.0,
-      "angle": 0.785398,
-      "clockwise": true,
-      "length": 392.7
-    },
-    {
-      "type": "straight",
-      "radius": 0.0,
-      "angle": 1500.25,
-      "clockwise": false,
-      "length": 1500.25
+      "objectid": 2017,
+      "vertex_count": 120,
+      "start": { "x": 100.0, "z": 200.0, "ay": -0.54 },
+      "end": { "x": 500.0, "z": 80.0 },
+      "points_local": [[100.0, 200.0], …],
+      "fit": { "rms_error": 0.4, "max_error": 1.2, "endpoint_error": 0.8 },
+      "primitives": [
+        {
+          "type": "straight",
+          "length": 64.2,
+          "radius": 0.0,
+          "angle": 64.2,
+          "clockwise": false,
+          "start": { "x": 100.0, "z": 200.0, "ay": -0.54 }
+        },
+        {
+          "type": "curve",
+          "radius": 176.38,
+          "angle": 0.991214,
+          "clockwise": true,
+          "start": { "x": …, "z": …, "ay": … }
+        }
+      ]
     }
   ]
 }
 ```
 
-## Primitive Types
+### Per-feature fields
 
-### Straight Primitive
+| Field | Role |
+|-------|------|
+| `objectid` | Stable ID → one TDB vector chain |
+| `start` / `end` | Geo polyline ends in local meters (`ay` = travel heading at start) |
+| `points_local` | Full polyline for geo heading at either end / debug |
+| `primitives[]` | Fitted sections; each has absolute `start` pose |
+| `error` | Present instead of primitives if fit failed |
 
-```json
-{
-  "type": "straight",
-  "radius": 0.0,
-  "angle": 1500.25,
-  "clockwise": false,
-  "length": 1500.25
-}
-```
+### Primitive fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `type` | string | Always "straight" |
-| `radius` | float | Always 0.0 for straight |
-| `angle` | float | Length along the straight section (meters) |
-| `clockwise` | bool | False for straights |
-| `length` | float | Same as angle - distance traveled (meters) |
+| Field | Straight | Curve |
+|-------|----------|-------|
+| `type` | `"straight"` | `"curve"` |
+| `length` | meters | omitted (use `radius * angle`) |
+| `radius` | `0` | meters |
+| `angle` | same as length (legacy) | sweep radians |
+| `clockwise` | false | true = OR right-hand sign convention |
+| `start` | `{x,z,ay}` on shared frame | same |
 
-### Curve Primitive
+Heading `ay` uses Open Rails–style yaw: `atan2(dx, dz)` with `0` along +Z.
 
-```json
-{
-  "type": "curve",
-  "radius": 500.0,
-  "angle": 0.785398,
-  "clockwise": true,
-  "length": 392.7
-}
-```
+Also written: `bbox_network.geojson` (WGS84) for QGIS — not consumed by TdbDump.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `type` | string | Always "curve" |
-| `radius` | float | Circle radius in meters |
-| `angle` | float | Arc sweep angle in radians (0 to 2π) |
-| `clockwise` | bool | True = right turn, False = left turn |
-| `length` | float | Arc length traveled (radius × angle) |
+## Legacy: `primitives.json`
 
-## How Primitives Are Generated
+From `extract_primitives.py` (one OBJECTID). Shape is a flat `segments` / primitive list without multi-feature CRS. TrackBuilder still accepts it via `BuildFromLegacyPrimitives` when no network JSON is found.
 
-### 1. Coordinate Conversion
-Real railroad coordinates (lat/lon) → Local Cartesian (UTM) in meters
+## How TdbDump uses this
 
-### 2. Model Fitting
-For each segment:
-- **Fit straight line** using PCA
-- **Fit circular arc** using Taubin's method
-- **Select winner** based on RMS error vs tolerance
+1. Prefer `bbox_network_local.json` beside the exe (or discoverable path).
+2. Place each primitive from its `start` pose (chained continuity within a feature).
+3. Keep geo start/end (and headings from `points_local`) for snap + junction tip reshape.
+4. Assign section indices into `tsection.dat` (`SectionCurve` style entries).
 
-### 3. Arc Parameter Calculation
-For curves, compute:
-- **Center point**: From least-squares circle fit
-- **Radius**: Distance from center to points
-- **Angles**: `arctan2()` from center to start/end points
-- **Sweep angle**: Total rotation (radians)
-- **Direction**: Clockwise if cross product < 0
-
-### 4. Splitting Long Straights
-Any straight > 2048m is split into multiple primitives (Open Rails tile limit)
-
-## Example Workflow
-
-**Input: GeoJSON railroad coordinates (50 points, ~2km)**
-
-```
-Point sequence: (lat1, lon1) → (lat2, lon2) → ... → (lat50, lon50)
-
-Convert to Cartesian: (x1, y1) → (x2, y2) → ... → (x50, y50)
-
-Fit segments:
-├─ Points 0-15: Fit line → RMS error 0.3m ✓ (< 1.0m tolerance)
-│  Output: {"type": "straight", "length": 500}
-│
-├─ Points 15-35: Fit circle (R=450m) → RMS error 0.8m ✓ (< 1.5m tolerance)
-│  Output: {"type": "curve", "radius": 450, "angle": 0.524, "clockwise": true}
-│
-└─ Points 35-50: Fit line → RMS error 0.2m ✓ (< 1.0m tolerance)
-   Output: {"type": "straight", "length": 300}
-
-Final primitives.json:
-[
-  {"type": "straight", "length": 500},
-  {"type": "curve", "radius": 450, "angle": 0.524, "clockwise": true},
-  {"type": "straight", "length": 300}
-]
-```
-
-## Key Differences from Input
-
-| Aspect | Input | Output |
-|--------|-------|--------|
-| **Source** | Real coordinates (lat/lon) | Fitted primitives |
-| **Detail level** | Per-vertex points | Generalized segments |
-| **Position data** | Yes (full coordinates) | No (primitives only) |
-| **World coords** | None | None (TdbDump adds these) |
-| **Rotation data** | None | Curve angles only |
-
-## What TdbDump Does Next
-
-The primitives are consumed by TdbDump to:
-
-1. **Calculate world coordinates**
-   - Starting position (base tile + offset)
-   - For each primitive, compute endpoint position
-
-2. **Calculate rotations**
-   - Starting heading (0° East)
-   - For each primitive, update heading based on angle
-   - Generate Euler angles (AX, AY, AZ)
-
-3. **Generate TDB entries**
-   - Create TrVectorSection for each primitive
-   - Set SectionIndex, tile coordinates, position, rotation
-
-4. **Generate world geometry**
-   - Create DynTrackObj with primitives
-   - Set position and quaternion rotation
-
-5. **Generate path waypoints**
-   - Create TrackPDP for each primitive endpoint
-
-See [TdbDump Overview](tdbdump_overview.md) for the next step in the pipeline.
+See [TrackBuilder](trackbuilder.md).

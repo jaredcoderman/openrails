@@ -42,6 +42,30 @@ namespace TdbDump
         }
     }
 
+    /// <summary>
+    /// 3-way switch topology. Pins are ordered as OR expects: 1 in + 2 out
+    /// (trpins header "1 2"), stem then main then diverging.
+    /// </summary>
+    public class TrJunctionNode
+    {
+        public int Id { get; set; }
+        public uint ShapeIndex { get; set; } = 0;
+        public int TileX { get; set; }
+        public int TileZ { get; set; }
+        public float X { get; set; }
+        public float Y { get; set; } = 1000;
+        public float Z { get; set; }
+        public float AX { get; set; } = 0;
+        public float AY { get; set; } = 0;
+        public float AZ { get; set; } = 0;
+        public List<TrPin> Pins { get; private set; }
+
+        public TrJunctionNode()
+        {
+            Pins = new List<TrPin>();
+        }
+    }
+
     public class TrVectorSection
     {
         public uint SectionIndex { get; set; }
@@ -122,6 +146,9 @@ namespace TdbDump
         public NetworkPoint Start { get; set; }
         public NetworkPoint End { get; set; }
         public List<TrackPrimitive> Primitives { get; set; } = new List<TrackPrimitive>();
+
+        [Newtonsoft.Json.JsonProperty("points_local")]
+        public List<List<float>> PointsLocal { get; set; }
     }
 
     public class NetworkPoint
@@ -141,6 +168,9 @@ namespace TdbDump
         public float GeoStartZ { get; set; }
         public float GeoEndX { get; set; }
         public float GeoEndZ { get; set; }
+        /// <summary>Travel heading at the geo start / into the geo end.</summary>
+        public float GeoStartAy { get; set; }
+        public float GeoEndAy { get; set; }
 
         public float StartX { get; set; }
         public float StartZ { get; set; }

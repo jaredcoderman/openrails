@@ -88,6 +88,17 @@ namespace TdbDump
                 + orphanReseats + " orphan reseats, "
                 + activeChains.Count + " features");
 
+            // Junctions reshape tip geometry on chains — must run before we
+            // snapshot vector section lists for the TDB write.
+            var junctionSides = new Dictionary<EndpointKey, (int JunctionId, int JunctionSide)>();
+            int junctionsCreated = CreateJunctionNodes(
+                activeChains, links, allNodes, ref nextId, junctionSides);
+            if (junctionsCreated > 0)
+            {
+                Console.WriteLine(
+                    "Junctions: " + junctionsCreated + " TrJunctionNode(s) for 3-way clusters");
+            }
+
             foreach (var chain in activeChains)
             {
                 foreach (var sectionNode in chain.Sections)
@@ -121,52 +132,12 @@ namespace TdbDump
                 EndpointKey startKey = new EndpointKey(chain.ObjectId, isStart: true);
                 EndpointKey endKey = new EndpointKey(chain.ObjectId, isStart: false);
 
-                if (links.TryGetValue(startKey, out EndpointLink startLink))
-                {
-                    // Connect to the other vector's matching side.
-                    vector.Pins.Add(new TrPin(startLink.OtherVectorId, startLink.OtherIsStart ? 0 : 1));
-                }
-                else
-                {
-                    int endNodeId = nextId++;
-                    var first = chain.Sections[0].Section;
-                    var startEnd = new TrEndNode
-                    {
-                        Id = endNodeId,
-                        TileX = first.TileX,
-                        TileZ = first.TileZ,
-                        X = first.X,
-                        Y = first.Y,
-                        Z = first.Z,
-                        AY = first.AY,
-                    };
-                    startEnd.Pins.Add(new TrPin(chain.VectorNodeId, 1));
-                    vector.Pins.Add(new TrPin(endNodeId, 1));
-                    allNodes.Add(startEnd);
-                }
-
-                if (links.TryGetValue(endKey, out EndpointLink endLink))
-                {
-                    vector.Pins.Add(new TrPin(endLink.OtherVectorId, endLink.OtherIsStart ? 0 : 1));
-                }
-                else
-                {
-                    int endNodeId = nextId++;
-                    PlaceWorld(chain.EndX, chain.EndZ, out int endTileX, out int endTileZ, out float endLocalX, out float endLocalZ);
-                    var end = new TrEndNode
-                    {
-                        Id = endNodeId,
-                        TileX = endTileX,
-                        TileZ = endTileZ,
-                        X = endLocalX,
-                        Y = chain.Sections[0].Section.Y,
-                        Z = endLocalZ,
-                        AY = chain.EndAy,
-                    };
-                    end.Pins.Add(new TrPin(chain.VectorNodeId, 0));
-                    vector.Pins.Add(new TrPin(endNodeId, 1));
-                    allNodes.Add(end);
-                }
+                WireVectorSide(
+                    chain, vector, startKey, isStart: true,
+                    links, junctionSides, allNodes, ref nextId);
+                WireVectorSide(
+                    chain, vector, endKey, isStart: false,
+                    links, junctionSides, allNodes, ref nextId);
 
                 allNodes.Add(vector);
             }
@@ -175,12 +146,490 @@ namespace TdbDump
             return allNodes.OrderBy(NodeId).ToList();
         }
 
+        private void WireVectorSide(
+            FeatureChain chain,
+            TrackNode vector,
+            EndpointKey key,
+            bool isStart,
+            Dictionary<EndpointKey, EndpointLink> links,
+            Dictionary<EndpointKey, (int JunctionId, int JunctionSide)> junctionSides,
+            List<object> allNodes,
+            ref int nextId)
+        {
+            if (junctionSides.TryGetValue(key, out var junction))
+            {
+                // Junction pin Direction is 0 for the stem (in) and 1 for either out.
+                int directionOnJunction = junction.JunctionSide == 0 ? 0 : 1;
+                vector.Pins.Add(new TrPin(junction.JunctionId, directionOnJunction));
+                return;
+            }
+
+            if (links.TryGetValue(key, out EndpointLink link))
+            {
+                vector.Pins.Add(new TrPin(link.OtherVectorId, link.OtherIsStart ? 0 : 1));
+                return;
+            }
+
+            int endNodeId = nextId++;
+            if (isStart)
+            {
+                var first = chain.Sections[0].Section;
+                var startEnd = new TrEndNode
+                {
+                    Id = endNodeId,
+                    TileX = first.TileX,
+                    TileZ = first.TileZ,
+                    X = first.X,
+                    Y = first.Y,
+                    Z = first.Z,
+                    AY = first.AY,
+                };
+                startEnd.Pins.Add(new TrPin(chain.VectorNodeId, 1));
+                vector.Pins.Add(new TrPin(endNodeId, 1));
+                allNodes.Add(startEnd);
+            }
+            else
+            {
+                PlaceWorld(chain.EndX, chain.EndZ, out int endTileX, out int endTileZ, out float endLocalX, out float endLocalZ);
+                var end = new TrEndNode
+                {
+                    Id = endNodeId,
+                    TileX = endTileX,
+                    TileZ = endTileZ,
+                    X = endLocalX,
+                    Y = chain.Sections[0].Section.Y,
+                    Z = endLocalZ,
+                    AY = chain.EndAy,
+                };
+                end.Pins.Add(new TrPin(chain.VectorNodeId, 0));
+                vector.Pins.Add(new TrPin(endNodeId, 1));
+                allNodes.Add(end);
+            }
+        }
+
+        /// <summary>
+        /// Replace 3-way geo clusters with TrJunctionNodes. Removes any greedy 1:1
+        /// links among the cluster so those ends pin through the junction instead.
+        /// </summary>
+        private int CreateJunctionNodes(
+            List<FeatureChain> chains,
+            Dictionary<EndpointKey, EndpointLink> links,
+            List<object> allNodes,
+            ref int nextId,
+            Dictionary<EndpointKey, (int JunctionId, int JunctionSide)> junctionSides)
+        {
+            var clusters = FindGeoEndpointClusters(chains);
+            int created = 0;
+
+            foreach (var cluster in clusters)
+            {
+                if (cluster.Count != 3)
+                {
+                    Console.WriteLine(
+                        "Skipping " + cluster.Count
+                        + "-way cluster (only 3-way junctions implemented)");
+                    continue;
+                }
+
+                // Drop pairwise links inside the cluster — junction owns topology.
+                foreach (var ep in cluster)
+                {
+                    var key = new EndpointKey(ep.ObjectId, ep.IsStart);
+                    if (!links.TryGetValue(key, out EndpointLink link))
+                        continue;
+                    links.Remove(key);
+                    links.Remove(new EndpointKey(link.OtherObjectId, link.OtherIsStart));
+                }
+
+                if (!AssignJunctionRoles(cluster, out var stem, out var main, out var diverging))
+                    continue;
+
+                // Rebuild each leg's tip on the geo heading so the spur keeps
+                // its diverge angle. The diverging leg gets a longer rewrite —
+                // fitted spur curves often swing into the through line before
+                // the tip, which draws as overlapping track at the T.
+                float jx = stem.IsStart ? stem.Chain.StartX : stem.Chain.EndX;
+                float jz = stem.IsStart ? stem.Chain.StartZ : stem.Chain.EndZ;
+                ReshapeJunctionApproach(stem.Chain, stem.IsStart, jx, jz,
+                    stem.IsStart ? stem.Chain.GeoStartAy : stem.Chain.GeoEndAy,
+                    approachMeters: 60f);
+                ReshapeJunctionApproach(main.Chain, main.IsStart, jx, jz,
+                    main.IsStart ? main.Chain.GeoStartAy : main.Chain.GeoEndAy,
+                    approachMeters: 60f);
+                ReshapeJunctionApproach(diverging.Chain, diverging.IsStart, jx, jz,
+                    diverging.IsStart ? diverging.Chain.GeoStartAy : diverging.Chain.GeoEndAy,
+                    approachMeters: 160f);
+
+                jx = stem.IsStart ? stem.Chain.StartX : stem.Chain.EndX;
+                jz = stem.IsStart ? stem.Chain.StartZ : stem.Chain.EndZ;
+                float jay = stem.IsStart ? stem.Chain.StartAy : stem.Chain.EndAy;
+                PlaceWorld(jx, jz, out int tileX, out int tileZ, out float localX, out float localZ);
+
+                int junctionId = nextId++;
+                var junction = new TrJunctionNode
+                {
+                    Id = junctionId,
+                    ShapeIndex = 0,
+                    TileX = tileX,
+                    TileZ = tileZ,
+                    X = localX,
+                    Y = stem.Chain.Sections[0].Section.Y,
+                    Z = localZ,
+                    AY = jay,
+                };
+
+                // Pin order: in (stem), out0 (main), out1 (diverging).
+                junction.Pins.Add(new TrPin(stem.Chain.VectorNodeId, stem.IsStart ? 0 : 1));
+                junction.Pins.Add(new TrPin(main.Chain.VectorNodeId, main.IsStart ? 0 : 1));
+                junction.Pins.Add(new TrPin(diverging.Chain.VectorNodeId, diverging.IsStart ? 0 : 1));
+                allNodes.Add(junction);
+
+                junctionSides[new EndpointKey(stem.ObjectId, stem.IsStart)] = (junctionId, 0);
+                junctionSides[new EndpointKey(main.ObjectId, main.IsStart)] = (junctionId, 1);
+                junctionSides[new EndpointKey(diverging.ObjectId, diverging.IsStart)] = (junctionId, 2);
+
+                Console.WriteLine(
+                    "  Junction " + junctionId
+                    + ": stem oid " + stem.ObjectId + (stem.IsStart ? "S" : "E")
+                    + ", main oid " + main.ObjectId + (main.IsStart ? "S" : "E")
+                    + ", div oid " + diverging.ObjectId + (diverging.IsStart ? "S" : "E"));
+                created++;
+            }
+
+            return created;
+        }
+
+        private struct ClusterEndpoint
+        {
+            public int ObjectId;
+            public bool IsStart;
+            public FeatureChain Chain;
+            public float Gx;
+            public float Gz;
+        }
+
+        private static List<List<ClusterEndpoint>> FindGeoEndpointClusters(List<FeatureChain> chains)
+        {
+            var endpoints = new List<ClusterEndpoint>();
+            foreach (var chain in chains)
+            {
+                endpoints.Add(new ClusterEndpoint
+                {
+                    ObjectId = chain.ObjectId,
+                    IsStart = true,
+                    Chain = chain,
+                    Gx = chain.GeoStartX,
+                    Gz = chain.GeoStartZ,
+                });
+                endpoints.Add(new ClusterEndpoint
+                {
+                    ObjectId = chain.ObjectId,
+                    IsStart = false,
+                    Chain = chain,
+                    Gx = chain.GeoEndX,
+                    Gz = chain.GeoEndZ,
+                });
+            }
+
+            int n = endpoints.Count;
+            var parent = Enumerable.Range(0, n).ToArray();
+            int Find(int i)
+            {
+                while (parent[i] != i)
+                {
+                    parent[i] = parent[parent[i]];
+                    i = parent[i];
+                }
+                return i;
+            }
+            void Union(int i, int j)
+            {
+                int ri = Find(i), rj = Find(j);
+                if (ri != rj)
+                    parent[rj] = ri;
+            }
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = i + 1; j < n; j++)
+                {
+                    if (endpoints[i].ObjectId == endpoints[j].ObjectId)
+                        continue;
+                    if (Distance(endpoints[i].Gx, endpoints[i].Gz, endpoints[j].Gx, endpoints[j].Gz)
+                        <= EndpointSnapMeters)
+                        Union(i, j);
+                }
+            }
+
+            var groups = new Dictionary<int, List<ClusterEndpoint>>();
+            for (int i = 0; i < n; i++)
+            {
+                int root = Find(i);
+                if (!groups.TryGetValue(root, out var list))
+                {
+                    list = new List<ClusterEndpoint>();
+                    groups[root] = list;
+                }
+                list.Add(endpoints[i]);
+            }
+
+            return groups.Values.Where(g => g.Count >= 3).ToList();
+        }
+
+        /// <summary>
+        /// Through-route = pair whose outward headings are most opposite; that
+        /// pair becomes stem(in)+main(out0), remaining leg is diverging(out1).
+        /// </summary>
+        private static bool AssignJunctionRoles(
+            List<ClusterEndpoint> cluster,
+            out ClusterEndpoint stem,
+            out ClusterEndpoint main,
+            out ClusterEndpoint diverging)
+        {
+            stem = default;
+            main = default;
+            diverging = default;
+            if (cluster.Count != 3)
+                return false;
+
+            float OutX(ClusterEndpoint ep)
+            {
+                float ay = ep.IsStart ? ep.Chain.StartAy : ep.Chain.EndAy;
+                // Start at junction: leaves along StartAy. End at junction: arrived
+                // along EndAy, so outward from junction is the reverse.
+                return ep.IsStart ? (float)Math.Sin(ay) : -(float)Math.Sin(ay);
+            }
+            float OutZ(ClusterEndpoint ep)
+            {
+                float ay = ep.IsStart ? ep.Chain.StartAy : ep.Chain.EndAy;
+                return ep.IsStart ? (float)Math.Cos(ay) : -(float)Math.Cos(ay);
+            }
+
+            int bestI = 0, bestJ = 1;
+            float bestDot = float.MaxValue;
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = i + 1; j < 3; j++)
+                {
+                    float dot = OutX(cluster[i]) * OutX(cluster[j]) + OutZ(cluster[i]) * OutZ(cluster[j]);
+                    if (dot < bestDot)
+                    {
+                        bestDot = dot;
+                        bestI = i;
+                        bestJ = j;
+                    }
+                }
+            }
+
+            // Prefer the End-side of the through pair as stem (arrival into points).
+            ClusterEndpoint a = cluster[bestI];
+            ClusterEndpoint b = cluster[bestJ];
+            if (a.IsStart && !b.IsStart)
+            {
+                stem = b;
+                main = a;
+            }
+            else if (!a.IsStart && b.IsStart)
+            {
+                stem = a;
+                main = b;
+            }
+            else
+            {
+                stem = a;
+                main = b;
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                if (i != bestI && i != bestJ)
+                {
+                    diverging = cluster[i];
+                    break;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Strip tip sections covering <paramref name="approachMeters"/> and
+        /// replace them with one straight on the geo approach heading so
+        /// turnouts keep their diverge angle (and spur arcs don't cross through).
+        /// </summary>
+        private void ReshapeJunctionApproach(
+            FeatureChain chain,
+            bool isStart,
+            float junctionX,
+            float junctionZ,
+            float travelAy,
+            float approachMeters)
+        {
+            if (chain.Sections.Count == 0 || approachMeters < 1f)
+                return;
+
+            float dirX = (float)Math.Sin(travelAy);
+            float dirZ = (float)Math.Cos(travelAy);
+
+            // Drop tip sections until we've cleared the approach window,
+            // always leaving at least one section for the far end of the feature.
+            float covered = 0f;
+            int removeCount = 0;
+            if (isStart)
+            {
+                for (int i = 0; i < chain.Sections.Count - 1; i++)
+                {
+                    covered += SectionArcLength(chain.Sections[i]);
+                    removeCount++;
+                    if (covered >= approachMeters)
+                        break;
+                }
+            }
+            else
+            {
+                for (int i = chain.Sections.Count - 1; i >= 1; i--)
+                {
+                    covered += SectionArcLength(chain.Sections[i]);
+                    removeCount++;
+                    if (covered >= approachMeters)
+                        break;
+                }
+            }
+
+            if (removeCount == 0)
+            {
+                // Single-section chain: just rewrite it as the tip straight.
+                removeCount = 1;
+                covered = approachMeters;
+            }
+
+            float approachLen = Math.Max(40f, Math.Min(approachMeters, Math.Max(covered, approachMeters)));
+
+            if (isStart)
+            {
+                float tipEndX = junctionX + approachLen * dirX;
+                float tipEndZ = junctionZ + approachLen * dirZ;
+
+                TrackNode tipNode = chain.Sections[0];
+                if (!_primitives.TryGetValue(tipNode.Section.SectionIndex, out TrackPrimitive tipPrim))
+                    return;
+
+                for (int i = 0; i < removeCount; i++)
+                    chain.Sections.RemoveAt(0);
+
+                if (chain.Sections.Count == 0)
+                {
+                    ReseatSectionAsStraight(tipNode, tipPrim, junctionX, junctionZ, tipEndX, tipEndZ);
+                    chain.Sections.Add(tipNode);
+                    chain.StartX = junctionX;
+                    chain.StartZ = junctionZ;
+                    chain.StartAy = travelAy;
+                    chain.EndX = tipEndX;
+                    chain.EndZ = tipEndZ;
+                    chain.EndAy = travelAy;
+                    return;
+                }
+
+                // Remainder starts at the former tip-follow joint; pull it onto
+                // the new tip end, then reinsert the tip.
+                AdjustChainStartToTarget(chain, tipEndX, tipEndZ);
+                ReseatSectionAsStraight(tipNode, tipPrim, junctionX, junctionZ, tipEndX, tipEndZ);
+                chain.Sections.Insert(0, tipNode);
+                chain.StartX = junctionX;
+                chain.StartZ = junctionZ;
+                chain.StartAy = travelAy;
+                UpdateChainEndFromLastSection(chain);
+                return;
+            }
+
+            float tipStartX = junctionX - approachLen * dirX;
+            float tipStartZ = junctionZ - approachLen * dirZ;
+
+            TrackNode endTip = chain.Sections[chain.Sections.Count - 1];
+            if (!_primitives.TryGetValue(endTip.Section.SectionIndex, out TrackPrimitive endPrim))
+                return;
+
+            for (int i = 0; i < removeCount; i++)
+                chain.Sections.RemoveAt(chain.Sections.Count - 1);
+
+            if (chain.Sections.Count == 0)
+            {
+                ReseatSectionAsStraight(endTip, endPrim, tipStartX, tipStartZ, junctionX, junctionZ);
+                chain.Sections.Add(endTip);
+                chain.StartX = tipStartX;
+                chain.StartZ = tipStartZ;
+                chain.StartAy = travelAy;
+                chain.EndX = junctionX;
+                chain.EndZ = junctionZ;
+                chain.EndAy = travelAy;
+                return;
+            }
+
+            UpdateChainEndFromLastSection(chain);
+            CloseJointToPose(chain, tipStartX, tipStartZ);
+            ReseatSectionAsStraight(endTip, endPrim, tipStartX, tipStartZ, junctionX, junctionZ);
+            chain.Sections.Add(endTip);
+            chain.EndX = junctionX;
+            chain.EndZ = junctionZ;
+            chain.EndAy = travelAy;
+        }
+
+        private float SectionArcLength(TrackNode node)
+        {
+            if (!_primitives.TryGetValue(node.Section.SectionIndex, out TrackPrimitive prim))
+                return 0f;
+            return prim.IsCurve ? prim.Radius * Math.Abs(prim.Angle) : prim.Length;
+        }
+
+        private void UpdateChainEndFromLastSection(FeatureChain chain)
+        {
+            if (chain.Sections.Count == 0)
+                return;
+            TrackNode last = chain.Sections[chain.Sections.Count - 1];
+            if (!_primitives.TryGetValue(last.Section.SectionIndex, out TrackPrimitive prim))
+                return;
+            GetSectionWorldEnd(last, prim, out float ex, out float ez);
+            chain.EndX = ex;
+            chain.EndZ = ez;
+            if (prim.IsCurve)
+                chain.EndAy = last.Section.AY + prim.SignedAngle;
+            else
+                chain.EndAy = last.Section.AY;
+        }
+
+        private static void GetSectionWorldEnd(
+            TrackNode node,
+            TrackPrimitive prim,
+            out float worldX,
+            out float worldZ)
+        {
+            SectionWorldStart(node.Section, out float sx, out float sz);
+            float ay = node.Section.AY;
+            if (!prim.IsCurve)
+            {
+                worldX = sx + prim.Length * (float)Math.Sin(ay);
+                worldZ = sz + prim.Length * (float)Math.Cos(ay);
+                return;
+            }
+
+            float dx =
+                prim.LocalEndX * (float)Math.Cos(ay) +
+                prim.LocalEndZ * (float)Math.Sin(ay);
+            float dz =
+               -prim.LocalEndX * (float)Math.Sin(ay) +
+                prim.LocalEndZ * (float)Math.Cos(ay);
+            worldX = sx + dx;
+            worldZ = sz + dz;
+        }
+
         private static int NodeId(object node)
         {
             if (node is TrackNode vector)
                 return vector.Id;
             if (node is TrEndNode end)
                 return end.Id;
+            if (node is TrJunctionNode junction)
+                return junction.Id;
             return 0;
         }
 
@@ -851,37 +1300,25 @@ namespace TdbDump
                     GeoStartZ = feature.Start.Z,
                     GeoEndX = feature.End != null ? feature.End.X : feature.Start.X,
                     GeoEndZ = feature.End != null ? feature.End.Z : feature.Start.Z,
+                    GeoStartAy = feature.Start.Ay,
+                    GeoEndAy = feature.Start.Ay,
                 };
+                SetGeoApproachHeadings(chain, feature);
                 bool firstPrimitive = true;
 
                 foreach (var primitive in feature.Primitives)
                 {
-                    if (primitive.Start != null)
+                    // Place from a continuous running pose. Snapping each section to
+                    // its independent fitted Start inserted angled joint fillers
+                    // (visible zigzags on T approaches like OBJECTID 2017). Endpoint
+                    // align + reseat still pin features together after the chain.
+                    if (firstPrimitive && primitive.Start != null)
                     {
-                        if (firstPrimitive)
-                        {
-                            _x = primitive.Start.X;
-                            _z = primitive.Start.Z;
-                            _ay = primitive.Start.Ay;
-                        }
-                        else
-                        {
-                            // Fitted starts are authoritative. Chaining LocalEnd alone
-                            // drifts tens of meters (e.g. OBJECTID 2017 ~64m), which
-                            // shows up as gaps / parallel miss on T approaches.
-                            chain.EndX = _x;
-                            chain.EndZ = _z;
-                            chain.EndAy = _ay;
-                            CloseJointToPose(chain, primitive.Start.X, primitive.Start.Z);
-                            AdoptPoseOrKeepContinuity(
-                                chain,
-                                primitive.Start.X,
-                                primitive.Start.Z,
-                                primitive.Start.Ay);
-                        }
+                        _x = primitive.Start.X;
+                        _z = primitive.Start.Z;
+                        _ay = primitive.Start.Ay;
                     }
 
-                    // Allocate after any joint fillers so indices stay unique.
                     sectionIndex = NextSectionIndex();
                     primitive.SectionIndex = sectionIndex;
                     _primitives[sectionIndex] = primitive;
@@ -903,14 +1340,9 @@ namespace TdbDump
                 chain.EndX = _x;
                 chain.EndZ = _z;
                 chain.EndAy = _ay;
-                // Land on the true GeoJSON end when possible without destroying
-                // a trailing curve (chord reseat opened the remaining holes).
-                CloseJointToPose(chain, chain.GeoEndX, chain.GeoEndZ);
-                if (Distance(chain.EndX, chain.EndZ, chain.GeoEndX, chain.GeoEndZ) < 0.01f)
-                {
-                    // already on geo end
-                }
-                // chain.End* already updated by CloseJointToPose when it bridged
+                // Do not reseat onto GeoEnd here — reconstruction drift makes
+                // that a sharp kink at the tip (2017 into the T). Cluster/link
+                // align pins endpoints after the chain is built.
 
                 if (chain.Sections.Count > 0)
                     _chains.Add(chain);
@@ -923,6 +1355,27 @@ namespace TdbDump
                 "Loaded network from " + path + ": "
                 + _chains.Count + " features, "
                 + _primitives.Count + " sections");
+        }
+
+        private static void SetGeoApproachHeadings(FeatureChain chain, NetworkFeature feature)
+        {
+            chain.GeoStartAy = feature.Start != null ? feature.Start.Ay : 0f;
+            chain.GeoEndAy = chain.GeoStartAy;
+
+            var pts = feature.PointsLocal;
+            if (pts == null || pts.Count < 2)
+                return;
+
+            // Start travel heading: first segment.
+            float x0 = pts[0][0], z0 = pts[0][1];
+            float x1 = pts[1][0], z1 = pts[1][1];
+            chain.GeoStartAy = (float)Math.Atan2(x1 - x0, z1 - z0);
+
+            // End arrival heading: last segment.
+            int n = pts.Count;
+            float xa = pts[n - 2][0], za = pts[n - 2][1];
+            float xb = pts[n - 1][0], zb = pts[n - 1][1];
+            chain.GeoEndAy = (float)Math.Atan2(xb - xa, zb - za);
         }
 
         private void BuildFromLegacyPrimitives(string path)

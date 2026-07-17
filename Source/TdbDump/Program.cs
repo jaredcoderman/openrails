@@ -68,6 +68,10 @@ namespace TdbDump
                         {
                             TDBWriter.WriteEndNode(writer, endNode);
                         }
+                        else if (node is TrJunctionNode junctionNode)
+                        {
+                            TDBWriter.WriteJunctionNode(writer, junctionNode);
+                        }
                         else if (node is TrackNode vectorNode)
                         {
                             TDBWriter.WriteVectorNode(writer, vectorNode);

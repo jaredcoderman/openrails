@@ -1,224 +1,93 @@
 # TdbDump Architecture
 
-Deep dive into the internal architecture of TdbDump.
+How the C# side is wired today.
 
-## Component Diagram
+## Component diagram
 
 ```
-┌─────────────────────────────────────────────────┐
-│           Program.cs (Entry Point)              │
-└──────────────┬──────────────────────────────────┘
-               │ Parses arguments
-               ↓
-┌─────────────────────────────────────────────────┐
-│      Input Handler (Reads JSON curve data)      │
-└──────────────┬──────────────────────────────────┘
-               │
-               ↓
-┌─────────────────────────────────────────────────┐
-│         Models.cs (Data Structures)             │
-│  ┌────────────────────────────────────────────┐ │
-│  │ - TrackNode / TrVectorSection              │ │
-│  │ - TrPin / TrEndNode                        │ │
-│  │ - DynamicTrack / WorldFile                 │ │
-│  └────────────────────────────────────────────┘ │
-└──────────────┬──────────────────────────────────┘
-               │
-               ↓
-┌─────────────────────────────────────────────────┐
-│       TrackBuilder.cs (TDB Generation)          │
-│  ┌────────────────────────────────────────────┐ │
-│  │ BuildAllNodes() → TrackNode[] with pins    │ │
-│  │ CalculateTiles() → TileX, TileZ            │ │
-│  │ CalculateUIDs() → Unique identifiers       │ │
-│  └────────────────────────────────────────────┘ │
-└──────────────┬──────────────────────────────────┘
-               │
-        ┌──────┼──────┬──────────┐
-        ↓      ↓      ↓          ↓
-     TDB     World  Path      Activity
-    Writer   Writer Writer    Template
-        │      │      │          │
-        ↓      ↓      ↓          ↓
-    .tdb    .w    .pat        .act
+┌──────────────────────────────────────────┐
+│ Program.cs                               │
+│  TrackBuilder → writers → route files    │
+└──────────────────┬───────────────────────┘
+                   ↓
+┌──────────────────────────────────────────┐
+│ TrackBuilder                             │
+│  BuildFromNetwork / LegacyPrimitives     │
+│  BuildAllNodes:                          │
+│    links → align → reseat → junctions    │
+│    → UID → vector snapshot → pin wire    │
+└──────────────────┬───────────────────────┘
+                   ↓
+     ┌─────────────┼──────────────┬────────────┐
+     ↓             ↓              ↓            ↓
+ TSectionWriter  TDBWriter   WorldWriter  ScenarioWriter
+     ↓             ↓              ↓            ↓
+ tsection.dat   .tdb          WORLD/*.w   .pat/.act/.srv*
 ```
 
-## Data Flow
+\*Scenario write is best-effort for the first chain with two free ends.
 
-### 1. Input Parsing
+## Data model (`Models.cs`)
+
+```
+NetworkLocalFile
+  crs, features[] → NetworkFeature
+                      objectid, start/end, points_local, primitives[]
+
+FeatureChain
+  ObjectId, Sections[], Geo* poses, Start/End reconstructed, VectorNodeId
+
+TrackPrimitive
+  SectionIndex, Type, Length/Radius/Angle/Clockwise, Start pose
+
+TrackNode          — vector (Id, Sections, Pins)
+TrEndNode          — terminus
+TrJunctionNode     — 3-way (ShapeIndex, pose, Pins ordered stem/main/div)
+TrVectorSection    — one TDB section row + WorldFileUiD
+TrPin(Node, Pin)   — Pin = direction on the *linked* node
+```
+
+## Load path
 
 ```csharp
-// Read JSON from curve fitter
-var json = File.ReadAllText(inputPath);
-var trackData = JsonConvert.DeserializeObject<TrackData>(json);
-
-// trackData contains:
-// - base_tile_x, base_tile_z
-// - sections[] with X, Y, Z, AX, AY, AZ, radius, length
+new TrackBuilder()
+  → FindInputFile("bbox_network_local.json")
+    ?? FindInputFile("primitives.json")
+  → BuildFromNetwork  or  BuildFromLegacyPrimitives
 ```
 
-### 2. Model Construction
+Network path registers every primitive into `_primitives` with a unique `SectionIndex` (from 40001 upward) and builds `_chains`.
 
-Models.cs defines:
+## BuildAllNodes stages
 
-```csharp
-public class TrackNode
-{
-    public int Id;
-    public List<TrVectorSection> Sections;
-    public List<TrPin> Pins;
-}
+1. **ID reserve** — vector ids 1..N for chains.
+2. **Geo links** — endpoints within 25 m.
+3. **Align** — multi-way clusters, then connected components.
+4. **Reseat** — close residual gaps without twin reverse straights.
+5. **Junctions** — 3-way only; reshape tips; add `TrJunctionNode` into `allNodes`.
+6. **UIDs** — unique `WorldFileUiD` per section for DynTracks.
+7. **Snapshot** — `TrackNode.Sections` copied from chain (must be post-reshape).
+8. **Wire** — junction / link / end pins.
+9. **Order** — sort by node id for stable TDB.
 
-public class TrVectorSection
-{
-    public int SectionIndex;
-    public int TileX, TileZ;
-    public float X, Y, Z;
-    public float AX, AY, AZ;
-    public uint WorldFileUiD;
-}
+## Writers
 
-public class TrPin
-{
-    public int Node;      // Linked node ID
-    public int Direction; // 0 or 1 (linked node's side)
-}
-```
+- **TSectionWriter** — `SectionCurve ( 0|1 ) index length|angle radius` style dynamic sections for every primitive (including reseated tips).
+- **TDBWriter** — `WriteEndNode`, `WriteVectorNode`, `WriteJunctionNode`.
+- **WorldWriter** — packs all DynTracks into base tile `w-012842+014734.w` with MSTS X negation on write.
+- **DynamicTrack.MakeDynamicTrackObjects** — iterates `chain.Sections` only (orphaned removed tip sections are not written).
 
-### 3. TrackBuilder Processing
+## Pin / junction semantics
 
-```csharp
-public class TrackBuilder
-{
-    // Input: JSON section data
-    // Output: Valid TDB node structure
-    
-    public TrackNode[] BuildAllNodes()
-    {
-        // 1. Create start TrEndNode (ID 1)
-        // 2. Create single TrVectorNode (ID 2) with all sections
-        // 3. Create end TrEndNode (ID 3)
-        // 4. Set up reciprocal pin connections
-        // 5. Calculate coordinates, tiles, UIDs
-        // 6. Return complete node array
-    }
-}
-```
+Unchanged Open Rails rules: pin direction names the **linked** node’s side. Junctions use header `1 2` (one in, two out). See [Pin Connections](../concepts/pins.md) and [Pin Semantics](../deep_dives/pin_semantics.md).
 
-Key algorithm:
+## Extension points
 
-```
-For each input section:
-  - Accumulate position and rotation
-  - Calculate which tile it falls into
-  - Create TrVectorSection entry
-  - Set tile coordinates (TileX, TileZ)
-  - Set local coordinates (X, Y, Z)
-  - Set rotation angles (AX, AY, AZ)
-  - Assign unique UID
-
-Create start/end nodes with pins pointing to vector node
-Set vector node pins pointing back to end nodes
-```
-
-### 4. Output Generation
-
-Each writer takes the node array and generates files:
-
-**TDBWriter**
-```csharp
-public void Write(TrackNode[] nodes, string filename)
-{
-    // Generate STF format:
-    // trackdb (
-    //     tracknodes ( count
-    //         tracknode ( id
-    //             trvectornode ( ... )
-    //             trpins ( inCount outCount
-    //                 TrPin ( linkId direction )
-    //             )
-    //         )
-    //     )
-    // )
-}
-```
-
-**WorldWriter**
-```csharp
-public void Write(TrackNode[] nodes, string outputDir)
-{
-    // Generate DynTrack objects for world files
-    // For each section, create DyntrackObj with:
-    // - Position (negated Z for TSRE5 compatibility)
-    // - Quaternion rotation
-    // - Reference to TDB via UiD
-}
-```
-
-**PathWriter**
-```csharp
-public void Write(TrackNode[] nodes, string filename)
-{
-    // Generate .pat file with TrackPDPs and TrPathNodes
-    // Each TrackPDP = one waypoint on path
-    // TrPathNodes link them together
-}
-```
-
-## Key Design Decisions
-
-### Single Vector Node
-Instead of one node per section, all sections go into **one TrVectorNode**. This:
-- Allows MapViewer to use optimized rendering path
-- Avoids accessing UiD on vector nodes (they don't have one)
-- Matches expected MSTS structure
-
-### Pin Reciprocity
-Every pin connection is bidirectional:
-- If Node A pins to Node B, Node B must pin back to Node A
-- Directions specify which side of the target node
-- Side 0 = "input", Side 1 = "output" (conceptually)
-
-### Coordinate Transformation
-- TSRE5 expects negated Z for compatibility
-- X coordinate sign handling for proper orientation
-- Quaternion adjustments for 180-degree Y rotation
-
-### Tile Management
-- All sections may span multiple tiles
-- Each section's TileX, TileZ indicates its home tile
-- Local X, Z are relative within that tile (0-2048)
-
-## Extending TdbDump
-
-To add new features:
-
-1. **Add to Models.cs** - New data structure
-2. **Update TrackBuilder** - Calculate or populate new structure
-3. **Update Writers** - Output new fields
-4. **Update Program.cs** - Accept new options
-
-Example: Adding super-elevation:
-
-```csharp
-// Models.cs
-public class TrVectorSection
-{
-    public float BankingAngle;  // New field
-}
-
-// TrackBuilder.cs
-section.BankingAngle = inputSection.banking ?? 0;
-
-// TDBWriter.cs
-writer.Write($"{section.BankingAngle} ");
-```
-
-## Performance Considerations
-
-- Sections are batched into single VectorNode for efficiency
-- Tile calculations use modulo arithmetic
-- Pin arrays pre-allocated based on node count
-- File I/O buffered
-
-Typical performance: ~100K sections in <5 seconds.
+| Want | Where |
+|------|--------|
+| Different route path | `Program.cs` constants |
+| Snap radius | `EndpointSnapMeters` |
+| Tip lengths at turnouts | `ReshapeJunctionApproach` call sites |
+| N-way switches | `CreateJunctionNodes` (currently 3 only) |
+| Switch meshes | `TrJunctionNode.ShapeIndex` + shapes |
+| Full-network paths | Scenario / path stitching (not done) |

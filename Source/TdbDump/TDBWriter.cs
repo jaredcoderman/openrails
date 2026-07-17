@@ -102,5 +102,45 @@ namespace TdbDump
 
             writer.WriteBlockEnd();
         }
+
+        public static void WriteJunctionNode(
+            STFWriter writer,
+            TrJunctionNode node)
+        {
+            writer.WriteBlockStart("tracknode", node.Id);
+
+            // OR parser: ReadString() then ShapeIndex. Empty label + shape 0 for
+            // DynTrack-only routes (no physical switch mesh yet).
+            writer.WriteNoLabel(string.Format(
+                System.Globalization.CultureInfo.InvariantCulture,
+                "trjunctionnode ( dynamic {0} )",
+                node.ShapeIndex));
+
+            writer.WriteBlockStart("uid");
+            writer.WriteNoLabel(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "{0} {1} {2} 1 {3} {4} {5} {6} {7} {8} {9} {10}",
+                node.TileX,
+                node.TileZ,
+                node.Id,
+                node.TileX,
+                node.TileZ,
+                node.X.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                node.Y.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                node.Z.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                node.AX.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                node.AY.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                node.AZ.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+            writer.WriteBlockEnd();
+
+            // OR expectedPins for junctions: total=3, inpins=1, outpins=2.
+            writer.WriteBlockStart("trpins", "1 2");
+            foreach (var pin in node.Pins)
+            {
+                writer.WriteProperty("TrPin", pin.Node.ToString() + " " + pin.Pin.ToString());
+            }
+            writer.WriteBlockEnd();
+
+            writer.WriteBlockEnd();
+        }
     }
 }

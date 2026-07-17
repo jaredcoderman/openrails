@@ -1,152 +1,98 @@
 # Quick Start Guide
 
-Get track data from railroad coordinates to Open Rails in minutes!
+GeoJSON railroad lines → Open Rails TDB in a few steps.
 
-## The Pipeline
+## Pipeline
 
 ```
-Real railroad GeoJSON
-        ↓
-Curve Fitter (Python)
-        ↓
-primitives.json
-        ↓
-TdbDump (C#)
-        ↓
-.tdb, .pat, .w files
-        ↓
-Copy to route
-        ↓
-Load in Open Rails
+NTAD GeoJSON
+    → select OBJECTIDs (bbox)
+    → fit network (shared local meters)
+    → TdbDump
+    → .tdb + tsection.dat + WORLD/*.w
+    → Track Viewer Ctrl+R
 ```
 
-## Step 1: Get Railroad Data
+## Prerequisites
 
-You need GeoJSON with real railroad coordinates (lat/lon).
+- Python 3 + `numpy`, `pyproj` (curve-fitter venv under `Tools/curve-fitter` if you use it)
+- .NET SDK (build `Source/TdbDump`)
+- Route folder already configured in `Source/TdbDump/Program.cs` (default: BNSF Scenic copy)
 
-**Example sources:**
-- Survey data
-- OpenStreetMap railway data
-- Your own GPS traces
-- Other mapping data
-
-File format:
-```json
-{
-  "type": "FeatureCollection",
-  "features": [{
-    "properties": {"OBJECTID": 1},
-    "geometry": {
-      "type": "LineString",
-      "coordinates": [[-122.5, 47.65], [-122.501, 47.651], ...]
-    }
-  }]
-}
-```
-
-## Step 2: Configure Curve Fitter
+## Step 1 — Configure fitter
 
 Edit `Tools/curve-fitter/config.py`:
 
 ```python
-GEOJSON_FILE = r"C:\path\to\your\railroad_data.geojson"
-TARGET_OBJECTID = 1  # Which segment to process
-STRAIGHT_TOLERANCE = 1.0  # Fit tolerance in meters
-CIRCLE_TOLERANCE = 1.5
+GEOJSON_FILE = 'NTAD_....geojson'   # in the curve-fitter folder
+STRAIGHT_TOLERANCE = 0.1
+CIRCLE_TOLERANCE = 1.0
+FLIP_X_COORDINATES = False
 ```
 
-## Step 3: Run Curve Fitter
+## Step 2 — Choose OBJECTIDs
 
-```bash
+Either edit `Tools/curve-fitter/bbox_objectids.txt` (one ID per line), or:
+
+```powershell
 cd Tools\curve-fitter
-.\Scripts\Activate.ps1
-python extract_primitives.py
+py -3 select_bbox_objectids.py
 ```
 
-Creates `primitives.json` with curve/straight segments.
+That writes IDs whose vertices fall in the lat/lon box defined in the script.
 
-## Step 4: Run TdbDump
+## Step 3 — Fit the network
 
-```bash
-cd Source\TdbDump
-dotnet run -- generate
+```powershell
+cd Tools\curve-fitter
+py -3 extract_bbox_network.py
 ```
 
-Generates:
-- `.tdb` file (track database)
-- `.pat` file (path waypoints)
-- `.w` files (world geometry)
+Produces:
 
-## Step 5: Integrate into Route
+| File | Use |
+|------|-----|
+| `bbox_network_local.json` | Input for TdbDump |
+| `bbox_network.geojson` | Drop in QGIS to verify selection |
 
-Copy files to your route:
+## Step 4 — Run TdbDump
 
-```
-ROUTES/MyRoute/
-├── tdb.dat                   ← Generated .tdb
-├── PATHS/
-│   └── Track.pat            ← Generated .pat
-└── WORLD/
-    └── w-012842+014734.w    ← Generated .w
+```powershell
+copy Tools\curve-fitter\bbox_network_local.json Source\TdbDump\bin\Debug\
+dotnet build Source\TdbDump -c Debug
+cd Source\TdbDump\bin\Debug
+.\TdbDump.exe
 ```
 
-## Step 6: Create Service & Activity Files
+Writes into the route path hard-coded in `Program.cs`:
 
-**Service** (`ROUTES/MyRoute/SERVICES/Track.srv`):
-```
-SIMISA@@@@@@@@@@JINX0S0t______
+- `…/BNSF_Scenic.tdb`
+- `…/tsection.dat`
+- `…/WORLD/w-012842+014734.w`
 
-Service (
-    Serial ( 1 )
-    Name ( "Track Service" )
-    PathID ( Track )
-    TrainConfig ( BNSF_Manifest )
-)
-```
+Console should mention endpoint snap counts and any `TrJunctionNode` created.
 
-**Activity** (`ROUTES/MyRoute/ACTIVITIES/TestActivity.act`):
-```
-SIMISA@@@@@@@@@@JINX0a0t______
+## Step 5 — Verify
 
-Tr_Activity (
-    Serial ( 1 )
-    Tr_Activity_Header (
-        RouteID ( MyRoute )
-        Name ( "Test Track" )
-        Description ( "Testing generated track" )
-        StartTime ( 9 0 0 )
-        Season ( 1 )
-        Weather ( 0 )
-        PathID ( Track )
-    )
-    Tr_Activity_File (
-        Player_Service_Definition ( Track_Service
-            Player_Traffic_Definition ( 79200 )
-        )
-        NextServiceUID ( 1 )
-        NextActivityObjectUID ( 32768 )
-        Events ( )
-    )
-)
+1. Open the route in **Track Viewer**.
+2. Press **Ctrl+R** to reload the TDB.
+3. Compare junctions / diverge angles to QGIS (`bbox_network.geojson`).
+
+Scenario `.pat` / `.act` generation is still first-feature-only when that feature still has two free ends; networked junctions often skip scenario write — topology in the TDB is the main deliverable.
+
+## Legacy single-feature path
+
+```powershell
+# config.py TARGET_OBJECTID = …
+py -3 extract_primitives.py          # → primitives.json
+# place primitives.json next to TdbDump.exe (or only network JSON present)
+.\TdbDump.exe
 ```
 
-## Step 7: Test in Open Rails
+TdbDump prefers `bbox_network_local.json` when present.
 
-1. Launch Open Rails
-2. Select your route
-3. Select the activity
-4. Click "Start"
-5. Train should appear on your generated track!
+## Next
 
-## Key Concepts
-
-- **Curve Fitter**: Takes real railroad coordinates, fits them to straight lines and circular arcs
-- **TdbDump**: Converts primitives to Open Rails format with world coordinates
-- **Primitives**: Simplified representations (radius, angle) not full position data
-
-## Next Steps
-
-- Learn more: [Full Pipeline Walkthrough](pipeline/full_walkthrough.md)
-- Reference: [File Formats](formats/tdb.md)
-- Debug: [Troubleshooting](troubleshooting.md)
-- Understand: [Concepts](concepts/coordinates.md)
+- [Full Walkthrough](pipeline/full_walkthrough.md)
+- [TrackBuilder](pipeline/trackbuilder.md) (snap, junctions, tip reshape)
+- [Troubleshooting](troubleshooting.md)

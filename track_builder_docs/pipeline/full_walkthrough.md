@@ -1,370 +1,106 @@
 # Full Pipeline Walkthrough
 
-Follow real railroad data from GeoJSON through to loading in Open Rails.
+Real NTAD lines → fitted network → TDB with junctions.
 
-## Step-by-Step Example
+## 1. Pick a study area
 
-### 1. Prepare GeoJSON Railroad Data
+Edit corners in `select_bbox_objectids.py` / `extract_bbox_network.py` if needed, then:
 
-You have a GeoJSON file with real railroad coordinates (`railroad_data.geojson`):
-
-```json
-{
-  "type": "FeatureCollection",
-  "features": [{
-    "type": "Feature",
-    "properties": {"OBJECTID": 1, "name": "Test Track"},
-    "geometry": {
-      "type": "LineString",
-      "coordinates": [
-        [-122.500, 47.650],
-        [-122.501, 47.651],
-        [-122.502, 47.652],
-        [-122.503, 47.653],
-        [-122.504, 47.654],
-        [-122.505, 47.655],
-        ... 50+ more coordinate pairs representing ~2km of track ...
-      ]
-    }
-  }]
-}
-```
-
-This represents real railroad coordinates that we'll fit to straight lines and curves.
-
-### 2. Configure Curve Fitter
-
-Edit `Tools/curve-fitter/config.py`:
-
-```python
-GEOJSON_FILE = r"C:\data\railroad_data.geojson"
-TARGET_OBJECTID = 1
-STRAIGHT_TOLERANCE = 1.0  # 1 meter RMS error for line fitting
-CIRCLE_TOLERANCE = 1.5    # 1.5 meter RMS error for circle fitting
-FLIP_X_COORDINATES = False
-PRIMITIVES_OUTPUT = "primitives.json"
-```
-
-### 3. Run Curve Fitter
-
-```bash
+```powershell
 cd Tools\curve-fitter
-.\Scripts\Activate.ps1
-python extract_primitives.py
+py -3 select_bbox_objectids.py
 ```
 
-The curve fitter:
-1. Converts lat/lon to local Cartesian (UTM) coordinates in meters
-2. Fits straight lines using PCA
-3. Fits circular arcs using Taubin's method
-4. Selects best fit (straight or curve) for each segment
-5. Produces `primitives.json`
+Or hand-edit `bbox_objectids.txt`.
 
-**Output** (`primitives.json`):
+## 2. Fit
 
-```json
-{
-  "segments": [
-    {
-      "type": "straight",
-      "radius": 0.0,
-      "angle": 500.0,
-      "clockwise": false,
-      "length": 500.0
-    },
-    {
-      "type": "curve",
-      "radius": 450.0,
-      "angle": 0.785398,
-      "clockwise": true,
-      "length": 353.5
-    },
-    {
-      "type": "straight",
-      "radius": 0.0,
-      "angle": 1000.0,
-      "clockwise": false,
-      "length": 1000.0
-    }
-  ]
-}
+```powershell
+py -3 extract_bbox_network.py
 ```
 
-This means:
-- 500m straight section
-- 45-degree curve (π/4 radians) with 450m radius turning right
-- 1000m straight section
+Check QGIS with `bbox_network.geojson`. Skim `bbox_network_local.json` for `error` features and high `fit.rms_error`.
 
-### 4. Run TdbDump
+## 3. Build route files
 
-```bash
-cd Source\TdbDump
-dotnet run
+```powershell
+copy bbox_network_local.json ..\..\Source\TdbDump\bin\Debug\
+dotnet build ..\..\Source\TdbDump -c Debug
+cd ..\..\Source\TdbDump\bin\Debug
+.\TdbDump.exe
 ```
 
-TdbDump reads `primitives.json` and:
-1. **Loads** the primitives
-2. **Calculates** world coordinates and rotations
-3. **Builds** TDB node structure (TrackBuilder)
-4. **Writes** three files:
-   - `track.tdb` (track database with TrVectorSections)
-   - `w-012842+014734.w` (world geometry)
-   - `track.pat` (path waypoints)
-
-### 5. Generated TDB Content
-
-`track.tdb` contains:
+Example console:
 
 ```
-trackdb (
-    tracknodes ( 3
-        tracknode ( 1
-            uid ( 0 0 0 0 0 0 0 0 0 0 0 0 )
-            trendnode ( )
-            trpins ( 1 0
-                TrPin ( 2 1 )
-            )
-        )
-        tracknode ( 2
-            trvectornode (
-                trvectorsections ( 3
-                    50001 -12842 14734 0 100 0 0 0 0 -12842 14734 2
-                    50002 -12842 14734 500 100 0 0 0.785398 0 -12842 14734 2
-                    50003 -12842 14734 1000 150 500 0 1.5707963 0 -12842 14734 2
-                )
-                tritemrefs ( 0 )
-            )
-            trpins ( 1 1
-                TrPin ( 1 0 )
-                TrPin ( 3 1 )
-            )
-        )
-        tracknode ( 3
-            uid ( 0 0 0 0 0 0 0 0 0 0 0 0 )
-            trendnode ( )
-            trpins ( 1 0
-                TrPin ( 2 0 )
-            )
-        )
-    )
-    tritemtable ( 0 )
-)
+Loaded network …: 39 features, 304 sections
+Endpoint snap (25m geo): 74 links, 36 chains translated, …
+  Junction 40: stem oid 1101E, main oid 1865S, div oid 2017E
+Junctions: 1 TrJunctionNode(s) for 3-way clusters
+Wrote TrackSections to: …\tsection.dat
+Wrote TrackNodes to: …\BNSF_Scenic.tdb (39 features, 43 TDB nodes)
+… dynamic tracks written
 ```
 
-Three nodes:
-- Node 1: Start TrEndNode
-- Node 2: TrVectorNode with 3 TrVectorSections (one per primitive)
-- Node 3: End TrEndNode
-
-### 6. Generated World File
-
-`w-012842+014734.w` contains DynTrack objects:
+## 4. What TrackBuilder did
 
 ```
-Dyntrack (
-    Tr_WorldFile (
-        Serial ( 1 )
-        DyntrackObj (
-            SectionIdx ( 50001 )
-            Elevation ( 100 )
-            CollideFlags ( 7 )
-            Position ( 0 100 0 )
-            QDirection ( 0 0 0 1 )
-            VDbId ( 2 0 0 )
-            TrackSections ( 3
-                TrackSection ( 50001 -12842 14734 0 100 0 0 0 0 0 0 0 0 0 0 )
-                TrackSection ( 50002 -12842 14734 500 100 0 0 0.785398 0 0 0 0 0 0 0 )
-                TrackSection ( 50003 -12842 14734 1000 150 500 0 1.5707963 0 0 0 0 0 0 0 )
-            )
-        )
-    )
-)
+Per OBJECTID: place sections from primitive start poses
+        ↓
+Match geo endpoints within 25 m → pairwise links
+        ↓
+Align chains (multi-way clusters first, then trees)
+        ↓
+Reseat residual gaps (no reverse twin straights)
+        ↓
+3-way clusters → TrJunctionNode + tip reshape on geo headings
+        ↓
+Wire pins (junction / neighbor vector / TrEndNode)
+        ↓
+Write tsection + tdb + DynTracks
 ```
 
-DynTrackObj references Node 2 via VDbId, containing all 3 track sections.
+## 5. Verify in Track Viewer
 
-### 7. Generated Path File
+1. Open the route.
+2. **Ctrl+R** reloads TDB (do this after every TdbDump run).
+3. At T-junctions, through and diverge should separate like QGIS — not cross as an “X” at the frog.
 
-`track.pat` contains waypoints for each primitive endpoint:
+World DynTracks use the same chain section lists after junction reshape.
 
-```
-TrackPDPs (
-    TrackPDP ( -12842 14734 0 100 0 2 0 )
-    TrackPDP ( -12842 14734 500 100 0 2 0 )
-    TrackPDP ( -12842 14734 1000 150 500 2 0 )
-)
+## 6. Scenario files (optional / limited)
 
-TrackPath (
-    TrPathName ( TestTrack )
-    Name ( "Test Track" )
-    TrPathStart ( Start )
-    TrPathEnd ( End )
-    TrPathNodes ( 3
-        TrPathNode ( 00000000 0 1 4294967295 )
-        TrPathNode ( 00000000 1 2 4294967295 )
-        TrPathNode ( 00000000 2 4294967295 4294967295 )
-    )
-)
-```
+`Program.cs` still tries `ScenarioWriter` for the **first** feature only, and only if that chain still has two free `TrEndNode`s. Fully snapped / junctioned networks often skip this. Paths across the whole graph are not stitched yet.
 
-### 8. Copy to Route
+## Data flow
 
 ```
-ROUTES/BNSF_Scenic/
-├── tdb.dat                          ← Copy/merge track.tdb
-├── PATHS/
-│   └── TestTrack.pat               ← Copy track.pat
-└── WORLD/
-    └── w-012842+014734.w           ← Copy .w file
+GeoJSON OBJECTIDs
+    → shared local (x,z) + primitives with start poses
+    → FeatureChain per OBJECTID
+    → TrackNodes + TrJunctionNodes + TrEndNodes
+    → BNSF_Scenic.tdb + tsection.dat + WORLD/w-*.w
 ```
 
-### 9. Create Service File
+## Checklist
 
-Create `ROUTES/BNSF_Scenic/SERVICES/TestService.srv`:
+- [ ] `bbox_objectids.txt` matches the area you care about
+- [ ] Extract finished without unexpected `error` features
+- [ ] JSON copied next to `TdbDump.exe` before run
+- [ ] Console shows expected feature count and junctions
+- [ ] Track Viewer Ctrl+R shows connected topology
+- [ ] Turnout diverge matches QGIS (not overlapping spur)
 
-```
-SIMISA@@@@@@@@@@JINX0S0t______
+## Common failures
 
-Service (
-    Serial ( 1 )
-    Name ( "Test Service" )
-    PathID ( TestTrack )
-    TrainConfig ( BNSF_Manifest )
-)
-```
+| Symptom | Likely cause |
+|---------|----------------|
+| Missing short stubs | Old fitter dropped 2-point features — use current `extract_bbox_network.py` |
+| Long duplicated straights | Reverse/collinear fillers (fixed — use reseat path) |
+| Spur crosses through at T | Tip reshape not applied / old TDB — rebuild after latest TrackBuilder |
+| Scenario skipped | First feature has no free ends — expected for dense snap |
 
-### 10. Create Activity File
+## Next
 
-Create `ROUTES/BNSF_Scenic/ACTIVITIES/TestActivity.act`:
-
-```
-SIMISA@@@@@@@@@@JINX0a0t______
-
-Tr_Activity (
-    Serial ( 1 )
-    Tr_Activity_Header (
-        RouteID ( BNSF_Scenic )
-        Name ( "Test Activity" )
-        Description ( "Testing generated track" )
-        StartTime ( 9 0 0 )
-        Season ( 1 )
-        Weather ( 0 )
-        PathID ( TestTrack )
-    )
-    Tr_Activity_File (
-        Player_Service_Definition ( TestService
-            Player_Traffic_Definition ( 79200 )
-        )
-        NextServiceUID ( 1 )
-        NextActivityObjectUID ( 32768 )
-        Events ( )
-    )
-)
-```
-
-### 11. Load in Open Rails
-
-```
-1. Launch Open Rails
-2. Select route: BNSF_Scenic
-3. Select activity: TestActivity
-4. Click "Start"
-5. Train should load on your generated track
-6. Use controls to move along the track
-```
-
-## Data Flow Diagram
-
-```
-Real railroad GeoJSON
-    │ (lat/lon coordinates)
-    ↓
-Curve Fitter (Python)
-    │ • Convert coords to Cartesian
-    │ • Fit lines and circles
-    │ • Select best primitives
-    ↓
-primitives.json
-    │ (radius, angle, clockwise)
-    ↓
-TdbDump (C#)
-    │ • Calculate world coordinates
-    │ • Build track nodes
-    │ • Write TDB structure
-    ↓
-    ├─ track.tdb (TrVectorSections with calcs)
-    ├─ w-012842+014734.w (DynTrackObj)
-    └─ track.pat (TrackPDP waypoints)
-    ↓
-Copy to route
-    ↓
-    ├─ Services/TestService.srv
-    ├─ Activities/TestActivity.act
-    └─ Consists (existing)
-    ↓
-Open Rails loads
-    │
-    ↓
-Track appears in game
-```
-
-## File Dependencies
-
-```
-Activity (.act)
-    ├─ RouteID ──→ Route folder
-    │
-    └─ Player_Service_Definition ( TestService )
-        ├─ Loads SERVICES/TestService.srv
-        │   ├─ PathID ( TestTrack ) ──→ PATHS/TestTrack.pat
-        │   │   └─ TrackPDPs match TDB coordinates
-        │   └─ TrainConfig ( BNSF_Manifest ) ──→ TRAINS/CONSISTS/BNSF_Manifest.con
-```
-
-## What Curve Fitter Does (Not)
-
-**Does:**
-- ✓ Read real railroad GeoJSON coordinates
-- ✓ Fit straight lines using PCA
-- ✓ Fit circular arcs using Taubin method
-- ✓ Output primitives (radius + angle)
-
-**Does NOT:**
-- ✗ Calculate world coordinates
-- ✗ Generate arbitrary track data
-- ✗ Accept manual curve definitions
-- ✗ Output position/rotation data
-
-(TdbDump does the coordinate calculation)
-
-## Verification Checklist
-
-- [ ] GeoJSON file has sufficient coordinate density
-- [ ] config.py points to correct file and OBJECTID
-- [ ] primitives.json generated successfully
-- [ ] TdbDump runs without errors
-- [ ] Generated .tdb, .pat, .w files exist
-- [ ] Files copied to correct route folders
-- [ ] Service and activity files created
-- [ ] Activity loads without crashes
-- [ ] Track visible in game
-- [ ] Train can move along track
-
-## Common Issues
-
-| Problem | Cause | Fix |
-|---------|-------|-----|
-| "No primitives generated" | Wrong OBJECTID or bad GeoJSON | Verify config.py settings |
-| "TdbDump crashes" | Missing primitives.json | Run curve fitter first |
-| "Track not visible" | Wrong tile or coordinates | Verify world file name matches |
-| "Train off track" | Path waypoints misaligned | Check TrackPDP coordinates in .pat |
-| "Activity won't load" | Missing service/consist | Create Service.srv with valid consist |
-| "Wrong track geometry" | Bad tolerance settings | Adjust STRAIGHT_TOLERANCE value |
-
-## Next Steps
-
-- Try with different railroad data
-- Experiment with tolerance values
-- Add multiple track segments
-- Create more complex track layouts
-- Build comprehensive railroad networks
+- [TrackBuilder](trackbuilder.md)
+- [Troubleshooting](../troubleshooting.md)
