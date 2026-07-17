@@ -1,290 +1,203 @@
-"""
-Extract Primitive Parameters from Fitted Segments (Straight + Curves)
-=====================================================================
+"""Extract strict, optionally G1-refined Open Rails primitives from GeoJSON."""
 
-This module extracts both straight line and circular arc primitives to JSON.
-
-Unified primitive format:
-- Straight: type="straight", radius=length, angle=0, clockwise=false
-- Curve:    type="curve", radius=radius, angle=sweep_angle, clockwise=direction
-"""
-
+import copy
 import json
 import numpy as np
-from config import (
-    GEOJSON_FILE,
-    TARGET_OBJECTID,
-    STRAIGHT_TOLERANCE,
-    CIRCLE_TOLERANCE,
-    INITIAL_SEGMENT_SIZE,
-    MIN_SEGMENT_SIZE,
-    PRIMITIVES_OUTPUT,
-    MAX_STRAIGHT_LENGTH
-)
+import config
+
 from circle_fitter import (
+    calculate_chained_reconstruction_errors,
     latlons_to_cartesian,
-    segment_polyline_model_selection
+    refine_segments_chained,
+    segment_polyline_model_selection,
 )
 
 
-def split_long_straights(segments, max_length=2048):
-    """
-    Split straight segments longer than max_length into multiple chunks.
-    
-    For each straight segment exceeding max_length:
-    - Calculate the number of chunks needed
-    - Distribute original polyline points across chunks
-    - Recalculate geometry (length, errors) for each chunk
-    
-    Curves are left unchanged (they're already constrained by radius).
-    
-    Args:
-        segments: List of segment dicts from segmentation
-        max_length: Maximum length per straight segment in meters (default 2048)
-        
-    Returns:
-        List of segments with long straights split into chunks
-    """
-    new_segments = []
-    
+# Existing settings
+GEOJSON_FILE = config.GEOJSON_FILE
+TARGET_OBJECTID = config.TARGET_OBJECTID
+STRAIGHT_TOLERANCE = config.STRAIGHT_TOLERANCE
+CIRCLE_TOLERANCE = config.CIRCLE_TOLERANCE
+INITIAL_SEGMENT_SIZE = config.INITIAL_SEGMENT_SIZE
+MIN_SEGMENT_SIZE = config.MIN_SEGMENT_SIZE
+PRIMITIVES_OUTPUT = config.PRIMITIVES_OUTPUT
+MAX_STRAIGHT_LENGTH = config.MAX_STRAIGHT_LENGTH
+
+# New optional settings. Existing config.py files continue to work unchanged.
+STRAIGHT_MAX_TOLERANCE = getattr(config, "STRAIGHT_MAX_TOLERANCE", STRAIGHT_TOLERANCE)
+CIRCLE_MAX_TOLERANCE = getattr(config, "CIRCLE_MAX_TOLERANCE", CIRCLE_TOLERANCE)
+MAX_CIRCLE_RADIUS = getattr(config, "MAX_CIRCLE_RADIUS", 100000.0)
+MIN_CURVE_SWEEP_DEGREES = getattr(config, "MIN_CURVE_SWEEP_DEGREES", 1.0)
+MIN_CURVE_SAGITTA = getattr(config, "MIN_CURVE_SAGITTA", 0.25)
+CURVE_IMPROVEMENT_RATIO = getattr(config, "CURVE_IMPROVEMENT_RATIO", 0.65)
+ROBUST_CIRCLE_FIT = getattr(config, "ROBUST_CIRCLE_FIT", False)
+CHAINED_REFINEMENT = getattr(config, "CHAINED_REFINEMENT", True)
+CHAINED_ROBUST_SCALE = getattr(config, "CHAINED_ROBUST_SCALE", 2.0)
+BOUNDARY_BACKTRACK_POINTS = getattr(config, "BOUNDARY_BACKTRACK_POINTS", 1)
+MIN_CURVE_POINTS = getattr(config, "MIN_CURVE_POINTS", 5)
+
+
+def split_long_straights(segments, max_length=2048.0):
+    """Split straight primitives evenly without dropping boundary distances."""
+    output = []
     for segment in segments:
-        if segment['type'] != 'straight' or segment['length'] <= max_length:
-            # Keep curves and short straights as-is
-            new_segments.append(segment)
-        else:
-            # Split this long straight
-            num_chunks = int(np.ceil(segment['length'] / max_length))
-            points = segment['points']
-            point_indices = segment['point_indices']
-            
-            print(f"\n  Splitting long straight (length={segment['length']:.1f}m) into {num_chunks} chunks")
-            
-            # Distribute points across chunks
-            points_per_chunk = len(points) / num_chunks
-            
-            for chunk_idx in range(num_chunks):
-                # Calculate which points belong to this chunk
-                start_point_idx = int(np.round(chunk_idx * points_per_chunk))
-                end_point_idx = int(np.round((chunk_idx + 1) * points_per_chunk))
-                
-                # Ensure last chunk includes all remaining points
-                if chunk_idx == num_chunks - 1:
-                    end_point_idx = len(points)
-                
-                # Extract chunk points
-                chunk_points = points[start_point_idx:end_point_idx]
-                chunk_indices = point_indices[start_point_idx:end_point_idx]
-                
-                if len(chunk_points) < 2:
-                    continue  # Skip degenerate chunks
-                
-                # Recalculate geometry for this chunk
-                chunk_length = float(np.linalg.norm(chunk_points[-1] - chunk_points[0]))
-                
-                # Recalculate fit quality (perpendicular distances to line)
-                try:
-                    from circle_fitter import fit_line_pca, calculate_line_errors
-                    fit = fit_line_pca(chunk_points)
-                    rms_error, errors = calculate_line_errors(chunk_points, fit)
-                    max_error = float(np.max(errors)) if len(errors) else 0.0
-                except Exception:
-                    # Fallback: use chord-based fit
-                    direction = chunk_points[-1] - chunk_points[0]
-                    norm = np.linalg.norm(direction)
-                    direction = direction / norm if norm > 1e-9 else np.array([1.0, 0.0])
-                    normal = np.array([-direction[1], direction[0]])
-                    errors = np.abs(np.dot(chunk_points - chunk_points[0], normal))
-                    rms_error = float(np.sqrt(np.mean(errors ** 2)))
-                    max_error = float(np.max(errors)) if len(errors) else 0.0
-                    fit = {'point': chunk_points[0], 'direction': direction, 'normal': normal}
-                
-                # Create chunk segment
-                chunk_segment = {
-                    'segment_number': 0,  # Will be renumbered later
-                    'type': 'straight',
-                    'start_index': chunk_indices[0],
-                    'end_index': chunk_indices[-1],
-                    'point_count': len(chunk_indices),
-                    'point_indices': chunk_indices,
-                    'points': chunk_points,
-                    'length': chunk_length,
-                    'rms_error': float(rms_error),
-                    'max_error': max_error,
-                    'fit': fit
-                }
-                
-                new_segments.append(chunk_segment)
-                print(f"    Chunk {chunk_idx + 1}: {chunk_length:.1f}m ({len(chunk_indices)} points)")
-    
-    return new_segments
+        if segment["type"] != "straight" or segment["length"] <= max_length:
+            output.append(segment)
+            continue
+
+        chunks = int(np.ceil(segment["length"] / max_length))
+        chunk_length = segment["length"] / chunks
+        start = np.asarray(segment["points"][0], dtype=float)
+        end = np.asarray(segment["points"][-1], dtype=float)
+
+        for index in range(chunks):
+            a = index / chunks
+            b = (index + 1) / chunks
+            chunk = dict(segment)
+            chunk["points"] = np.vstack((start + a * (end - start), start + b * (end - start)))
+            chunk["point_indices"] = [segment["start_index"], segment["end_index"]]
+            chunk["point_count"] = 2
+            chunk["length"] = float(chunk_length)
+            output.append(chunk)
+
+    for number, segment in enumerate(output, 1):
+        segment["segment_number"] = number
+    return output
 
 
 def extract_primitive_from_segment(segment, segment_number):
-    """
-    Extract primitive parameters from a segment (straight or curve).
-    
-    Returns unified format:
-      Straight: {type, radius=0, angle=length, clockwise=false, ...}
-      Curve: {type, radius, angle=sweep_angle, clockwise, ...}
-    """
-    
-    if segment['type'] == 'straight':
+    if segment["type"] == "straight":
         return {
-            'segment_number': segment_number,
-            'type': 'straight',
-            'length': segment.get('length', 0),
-            'radius': 0.0,  # Zero radius for straights
-            'angle': segment.get('length', 0),  # Use length as angle in export
-            'clockwise': False,  # Not applicable
-            'rms_error': segment.get('rms_error', 0),
-            'max_error': segment.get('max_error', 0),
-            'point_count': segment.get('point_count', 0)
+            "segment_number": segment_number,
+            "type": "straight",
+            "length": float(segment["length"]),
+            "radius": 0.0,
+            "angle": float(segment["length"]),
+            "clockwise": False,
+            "rms_error": float(segment.get("rms_error", 0.0)),
+            "max_error": float(segment.get("max_error", 0.0)),
+            "point_count": int(segment.get("point_count", 0)),
         }
-    else:  # curve
-        return {
-            'segment_number': segment_number,
-            'type': 'curve',
-            'radius': segment.get('radius', 0),
-            'angle': segment.get('angle', 0),
-            'arc_length': segment.get('arc_length', 0),
-            'clockwise': segment.get('clockwise', False),
-            'rms_error': segment.get('rms_error', 0),
-            'max_error': segment.get('max_error', 0),
-            'point_count': segment.get('point_count', 0)
-        }
+    return {
+        "segment_number": segment_number,
+        "type": "curve",
+        "radius": float(segment["radius"]),
+        "angle": float(segment["angle"]),
+        "arc_length": float(segment["radius"] * segment["angle"]),
+        "clockwise": bool(segment["clockwise"]),
+        "rms_error": float(segment.get("rms_error", 0.0)),
+        "max_error": float(segment.get("max_error", 0.0)),
+        "point_count": int(segment.get("point_count", 0)),
+    }
+
+
+def _load_target_coordinates():
+    with open(GEOJSON_FILE, "r", encoding="utf-8") as handle:
+        data = json.load(handle)
+
+    for feature in data["features"]:
+        if feature.get("properties", {}).get("OBJECTID") == TARGET_OBJECTID:
+            coordinates = feature["geometry"]["coordinates"]
+            # Preserve the direction used by the original pipeline.
+            return list(reversed(coordinates))
+    raise ValueError(f"Could not find OBJECTID {TARGET_OBJECTID}")
 
 
 def extract_primitives():
-    """
-    Extract primitives from railroad GeoJSON data.
-    
-    Pipeline:
-    1. Load GeoJSON railroad data
-    2. Extract target feature and convert coordinates
-    3. Segment polyline using model selection
-    4. Split long straights to respect tile limits
-    5. Extract primitive parameters
-    6. Export to JSON
-    
-    Returns:
-        dict: Export data with segments in Open Rails format
-    """
-    # Load data
-    print("=" * 80)
-    print("STEP 1: Loading data")
-    print("=" * 80)
-    
-    geojson_file = GEOJSON_FILE
-    with open(geojson_file, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    
-    latlons = None
-    for feature in data['features']:
-        if feature.get('properties', {}).get('OBJECTID') == TARGET_OBJECTID:
-            latlons = feature['geometry']['coordinates']
-            break
-    
-    if latlons is None:
-        print(f"ERROR: Could not find OBJECTID {TARGET_OBJECTID}")
-        return
-    
-    # Reverse the vertices to process the polyline backwards
-    latlons = list(reversed(latlons))
-    
-    print(f"Found polyline with {len(latlons)} vertices (reversed)")
-    
-    print("\n" + "=" * 80)
-    print("STEP 2: Converting coordinates")
-    print("=" * 80)
-    
-    cartesian_points, transformer = latlons_to_cartesian(latlons)
-    print(f"Converted to {len(cartesian_points)} Cartesian points")
-    
-    print("\n" + "=" * 80)
-    print("STEP 3: Model-selection segmentation")
-    print("=" * 80)
-    print(f"Straight tolerance: {STRAIGHT_TOLERANCE} m")
-    print(f"Circle tolerance: {CIRCLE_TOLERANCE} m")
-    print()
-    
+    latlons = _load_target_coordinates()
+    points, _ = latlons_to_cartesian(latlons)
+
+    print(f"Loaded {len(points)} vertices for OBJECTID {TARGET_OBJECTID}")
+    print(
+        "Limits: "
+        f"straight RMS={STRAIGHT_TOLERANCE:g}m/max={STRAIGHT_MAX_TOLERANCE:g}m, "
+        f"circle RMS={CIRCLE_TOLERANCE:g}m/max={CIRCLE_MAX_TOLERANCE:g}m"
+    )
+
     segments = segment_polyline_model_selection(
-        cartesian_points,
+        points,
         straight_tolerance=STRAIGHT_TOLERANCE,
         circle_tolerance=CIRCLE_TOLERANCE,
         initial_segment_size=INITIAL_SEGMENT_SIZE,
-        min_segment_size=MIN_SEGMENT_SIZE
+        min_segment_size=MIN_SEGMENT_SIZE,
+        straight_max_tolerance=STRAIGHT_MAX_TOLERANCE,
+        circle_max_tolerance=CIRCLE_MAX_TOLERANCE,
+        max_circle_radius=MAX_CIRCLE_RADIUS,
+        min_curve_sweep_degrees=MIN_CURVE_SWEEP_DEGREES,
+        min_curve_sagitta=MIN_CURVE_SAGITTA,
+        curve_improvement_ratio=CURVE_IMPROVEMENT_RATIO,
+        robust_circle_fit=ROBUST_CIRCLE_FIT,
+        boundary_backtrack_points=BOUNDARY_BACKTRACK_POINTS,
+        min_curve_points=MIN_CURVE_POINTS,
     )
-    
-    # Split long straights to respect tile limits
-    print("\n" + "=" * 80)
-    print("STEP 3B: Splitting long straights (max {:.0f}m per section)".format(MAX_STRAIGHT_LENGTH))
-    print("=" * 80)
-    
-    segments = split_long_straights(segments, max_length=MAX_STRAIGHT_LENGTH)
-    
-    # Renumber segments after splitting
-    for i, segment in enumerate(segments, 1):
-        segment['segment_number'] = i
-    
-    print(f"\nTotal segments after splitting: {len(segments)}")
-    
-    # Extract primitives
-    print("\n" + "=" * 80)
-    print("STEP 4: Extracting primitive parameters")
-    print("=" * 80)
-    
-    primitives = []
-    for i, segment in enumerate(segments, 1):
-        prim = extract_primitive_from_segment(segment, i)
-        primitives.append(prim)
-        
-        print(f"\nSegment {i}: {prim['type'].upper()}")
-        if prim['type'] == 'straight':
-            print(f"  Length: {prim['length']:.1f} m")
-            print(f"  Export: radius=0, angle={prim['angle']:.1f} (distance)")
-            print(f"  RMS Error: {prim['rms_error']:.4f} m")
-            print(f"  Points: {prim['point_count']}")
+
+    before = calculate_chained_reconstruction_errors(points, segments)
+    print(
+        "Chained error before refinement: "
+        f"RMS={before['rms_error']:.3f}m, max={before['max_error']:.3f}m, "
+        f"endpoint={before['final_endpoint_error']:.3f}m"
+    )
+
+    if CHAINED_REFINEMENT:
+        refined_segments = refine_segments_chained(
+            points,
+            copy.deepcopy(segments),
+            robust_scale=CHAINED_ROBUST_SCALE,
+        )
+        after = calculate_chained_reconstruction_errors(points, refined_segments)
+        print(
+            "Chained error after refinement:  "
+            f"RMS={after['rms_error']:.3f}m, max={after['max_error']:.3f}m, "
+            f"endpoint={after['final_endpoint_error']:.3f}m"
+        )
+        if after["rms_error"] <= before["rms_error"] + 1e-9:
+            segments = refined_segments
         else:
-            print(f"  Radius: {prim['radius']:.1f} m")
-            print(f"  Angle: {np.degrees(prim['angle']):.2f}° ({prim['angle']:.6f} rad)")
-            print(f"  Arc Length: {prim['arc_length']:.1f} m")
-            print(f"  Direction: {'Clockwise' if prim['clockwise'] else 'Counterclockwise'}")
-            print(f"  RMS Error: {prim['rms_error']:.4f} m")
-            print(f"  Points: {prim['point_count']}")
-    
-    # Export JSON
-    print("\n" + "=" * 80)
-    print("STEP 5: Exporting JSON")
-    print("=" * 80)
-    
-    export_segments = []
-    for prim in primitives:
-        segment = {
-            "type": prim['type'],
-            "radius": round(prim['radius'], 2),
-            "angle": round(prim['angle'], 6),
-            "clockwise": bool(prim['clockwise'])
-        }
-        
-        # For straights, also include Length field for C# to use
-        if prim['type'] == 'straight':
-            segment['length'] = round(prim['length'], 2)
-        
-        export_segments.append(segment)
-    
+            print("Refinement rejected because it increased chained RMS error")
+
+    # Validate before splitting: splitting does not change the rendered geometry.
+    segments = split_long_straights(segments, MAX_STRAIGHT_LENGTH)
+    primitives = [
+        extract_primitive_from_segment(segment, number)
+        for number, segment in enumerate(segments, 1)
+    ]
+
+    for primitive in primitives:
+        if primitive["type"] == "straight":
+            details = f"length={primitive['length']:.2f}m"
+        else:
+            direction = "CW" if primitive["clockwise"] else "CCW"
+            details = (
+                f"radius={primitive['radius']:.2f}m, "
+                f"sweep={np.degrees(primitive['angle']):.3f}deg, {direction}"
+            )
+        print(
+            f"{primitive['segment_number']:>3}. {primitive['type']:<8} {details}; "
+            f"fit RMS={primitive['rms_error']:.3f}m, max={primitive['max_error']:.3f}m"
+        )
+
     export_data = {
-        "segments": export_segments
+        "segments": [
+            {
+                "type": primitive["type"],
+                "radius": round(primitive["radius"], 2),
+                "angle": round(primitive["angle"], 6),
+                "clockwise": bool(primitive["clockwise"]),
+                **(
+                    {"length": round(primitive["length"], 2)}
+                    if primitive["type"] == "straight"
+                    else {}
+                ),
+            }
+            for primitive in primitives
+        ]
     }
-    
-    # Export to local file
-    with open(PRIMITIVES_OUTPUT, 'w') as f:
-        json.dump(export_data, f, indent=2)
-    
-    print(f"\nExported to {PRIMITIVES_OUTPUT}:")
-    print(json.dumps(export_data, indent=2))
-    
+
+    with open(PRIMITIVES_OUTPUT, "w", encoding="utf-8") as handle:
+        json.dump(export_data, handle, indent=2)
+    print(f"Exported {len(primitives)} primitives to {PRIMITIVES_OUTPUT}")
     return export_data
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     extract_primitives()

@@ -100,6 +100,59 @@ namespace TdbDump
         public List<TrackPrimitive> Segments { get; set; } = new List<TrackPrimitive>();
     }
 
+    /// <summary>
+    /// Multi-feature network export from extract_bbox_network.py.
+    /// </summary>
+    public class NetworkLocalFile
+    {
+        public NetworkCrs Crs { get; set; }
+        public List<NetworkFeature> Features { get; set; } = new List<NetworkFeature>();
+    }
+
+    public class NetworkCrs
+    {
+        public int Epsg { get; set; }
+        public bool FlipX { get; set; }
+    }
+
+    public class NetworkFeature
+    {
+        public int ObjectId { get; set; }
+        public string Error { get; set; }
+        public NetworkPoint Start { get; set; }
+        public NetworkPoint End { get; set; }
+        public List<TrackPrimitive> Primitives { get; set; } = new List<TrackPrimitive>();
+    }
+
+    public class NetworkPoint
+    {
+        public float X { get; set; }
+        public float Z { get; set; }
+        public float Ay { get; set; }
+    }
+
+    public class FeatureChain
+    {
+        public int ObjectId { get; set; }
+        public List<TrackNode> Sections { get; set; } = new List<TrackNode>();
+
+        /// <summary>True polyline endpoints from the network JSON (pre-reconstruction).</summary>
+        public float GeoStartX { get; set; }
+        public float GeoStartZ { get; set; }
+        public float GeoEndX { get; set; }
+        public float GeoEndZ { get; set; }
+
+        public float StartX { get; set; }
+        public float StartZ { get; set; }
+        public float StartAy { get; set; }
+        public float EndX { get; set; }
+        public float EndZ { get; set; }
+        public float EndAy { get; set; }
+
+        /// <summary>Assigned TDB vector-node id during BuildAllNodes.</summary>
+        public int VectorNodeId { get; set; }
+    }
+
     public class TrackPrimitive
     {
         public uint SectionIndex { get; set; }
@@ -111,11 +164,21 @@ namespace TdbDump
         public bool Clockwise { get; set; }
         public float param1 { get; set; }
         public float param2 { get; set; }
+
+        /// <summary>
+        /// Absolute start pose in the shared local meter frame, when present.
+        /// </summary>
+        public NetworkPoint Start { get; set; }
         public float SignedAngle
         {
             get
             {
-                return Clockwise ? -Angle : Angle;
+                // Straights store length in this tsection field; only curves
+                // use the Open Rails right-hand angle sign convention.
+                if (!IsCurve)
+                    return Length;
+
+                return Clockwise ? Angle : -Angle;
             }
         }
 
@@ -126,7 +189,9 @@ namespace TdbDump
                 if (!IsCurve)
                     return 0;
 
-                float sign = Clockwise ? -1f : 1f;
+                // Match OR right-hand convention: clockwise curves displace
+                // toward +X in the section-local frame when heading is +Z.
+                float sign = Clockwise ? 1f : -1f;
                 return Radius * sign * (1f - (float)Math.Cos(Angle));
             }
         }
@@ -163,85 +228,97 @@ namespace TdbDump
         public int TileZ { get; set; }
 
         public static List<DynamicTrack> MakeDynamicTrackObjects(
-            List<TrackNode> nodes,
+            IReadOnlyList<FeatureChain> chains,
             IReadOnlyCollection<TrackPrimitive> primitives)
         {
             var primitiveLookup = new Dictionary<uint, TrackPrimitive>();
-
             foreach (var primitive in primitives)
                 primitiveLookup[primitive.SectionIndex] = primitive;
 
             var dynamicTracks = new List<DynamicTrack>();
 
-            // Create one DynamicTrack per node
-            for (int i = 0; i < nodes.Count; i++)
+            // One DynTrack per section, placed at that section's reconstructed
+            // start. Packing multiple sections into one DynTrack makes OR chain
+            // them with its own math, which disagrees with our poses and causes
+            // group-boundary gaps / overshooting straights.
+            foreach (var chain in chains)
             {
-                DynamicTrack track = new DynamicTrack();
-
-                var nodeSection = nodes[i].Section;
-                if (nodeSection == null)
+                if (chain.Sections == null)
                     continue;
 
-                track.X = -nodeSection.X;
-                track.Y = nodeSection.Y;
-                track.Z = nodeSection.Z;
-
-                float qx, qy, qz, qw;
-
-                ConvertEulerToQuaternion(
-                    nodeSection.AY,
-                    nodeSection.AX,
-                    out qx,
-                    out qy,
-                    out qz,
-                    out qw);
-
-                track.Qx = qx;
-                track.Qy = qy;
-                track.Qz = qz;
-                track.Qw = qw;
-                track.UiD = (uint)nodeSection.WorldFileUiD;
-                track.SectionIdx = nodeSection.SectionIndex;
-                track.TileX = nodeSection.TileX;
-                track.TileZ = nodeSection.TileZ;
-                track.VdbId = 0;
-                track.CollideFlags = 0;
-                track.StaticFlags = 0;
-                track.Elevation = 0;
-
-                // Add the actual primitive section
-                if (primitiveLookup.TryGetValue(nodeSection.SectionIndex, out var primitive))
+                foreach (var sectionNode in chain.Sections)
                 {
-                    track.TrackSections.Add(new TrackPrimitive
-                    {
-                        SectionIndex = primitive.SectionIndex,
-                        Type = primitive.Type,
-                        Length = primitive.Length,
-                        Radius = primitive.Radius,
-                        Angle = primitive.Angle,
-                        Clockwise = primitive.Clockwise,
-                        param1 = primitive.param1,
-                        param2 = primitive.param2
-                    });
-                }
+                    var nodeSection = sectionNode.Section;
+                    if (nodeSection == null)
+                        continue;
 
-                // Pad with 4 empty sections (param1=0, param2=0)
-                while (track.TrackSections.Count < 5)
-                {
-                    track.TrackSections.Add(new TrackPrimitive
+                    var track = new DynamicTrack
                     {
-                        SectionIndex = 0,
-                        Type = "straight",
-                        Length = 0,
-                        Radius = 0,
-                        Angle = 0,
-                        Clockwise = false,
-                        param1 = 0,
-                        param2 = 0
-                    });
-                }
+                        // Keep tile-local X as stored on the section. WorldWriter
+                        // converts to world and applies the MSTS X negation once.
+                        // Negating here as well breaks continuity across tile seams
+                        // (false km-scale gaps / overshooting straights).
+                        X = nodeSection.X,
+                        Y = nodeSection.Y,
+                        Z = nodeSection.Z,
+                        UiD = (uint)nodeSection.WorldFileUiD,
+                        SectionIdx = nodeSection.SectionIndex,
+                        TileX = nodeSection.TileX,
+                        TileZ = nodeSection.TileZ,
+                        VdbId = 0,
+                        CollideFlags = 0,
+                        StaticFlags = 0,
+                        Elevation = 0,
+                    };
 
-                dynamicTracks.Add(track);
+                    // OR DynTrack meshes advance along local -Z. Our section AY
+                    // advances in +Z for heading 0, so the world quaternion must
+                    // be rotated 180° or every section draws backward (visual
+                    // gaps ahead + overshoot into the previous section).
+                    ConvertEulerToQuaternion(
+                        nodeSection.AY + (float)Math.PI,
+                        nodeSection.AX,
+                        out float qx,
+                        out float qy,
+                        out float qz,
+                        out float qw);
+                    track.Qx = qx;
+                    track.Qy = qy;
+                    track.Qz = qz;
+                    track.Qw = qw;
+
+                    if (primitiveLookup.TryGetValue(nodeSection.SectionIndex, out var primitive))
+                    {
+                        track.TrackSections.Add(new TrackPrimitive
+                        {
+                            SectionIndex = primitive.SectionIndex,
+                            Type = primitive.Type,
+                            Length = primitive.Length,
+                            Radius = primitive.Radius,
+                            Angle = primitive.Angle,
+                            Clockwise = primitive.Clockwise,
+                            param1 = primitive.param1,
+                            param2 = primitive.param2,
+                        });
+                    }
+
+                    while (track.TrackSections.Count < 5)
+                    {
+                        track.TrackSections.Add(new TrackPrimitive
+                        {
+                            SectionIndex = 0,
+                            Type = "straight",
+                            Length = 0,
+                            Radius = 0,
+                            Angle = 0,
+                            Clockwise = false,
+                            param1 = 0,
+                            param2 = 0,
+                        });
+                    }
+
+                    dynamicTracks.Add(track);
+                }
             }
 
             return dynamicTracks;

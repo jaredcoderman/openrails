@@ -14,7 +14,7 @@ Change values here to apply them everywhere.
 GEOJSON_FILE = 'NTAD_North_American_Rail_Network_Lines_BNSF_2685269841624876744.geojson'
 
 # Object ID to process (change this to analyze different railroad segments)
-TARGET_OBJECTID = 1909
+TARGET_OBJECTID = 1859
 
 # ============================================================================
 # SEGMENTATION PARAMETERS
@@ -26,7 +26,7 @@ STRAIGHT_TOLERANCE = 0.1
 
 # CIRCULAR ARC TOLERANCE
 # RMS radial error tolerance for circular arc segments (meters)
-CIRCLE_TOLERANCE = 0.5
+CIRCLE_TOLERANCE = 1
 
 # Initial number of points to start each segment with
 INITIAL_SEGMENT_SIZE = 10
@@ -43,7 +43,8 @@ PRIMITIVES_OUTPUT = 'primitives.json'
 
 # Flip X coordinates (mirror over Y-axis)
 # Set to True to flip all X coordinates before processing
-FLIP_X_COORDINATES = True
+# False = geographic east = +X. True mirrors over the local Z/north axis (negate X).
+FLIP_X_COORDINATES = False
 
 # Maximum length for straight segments (meters)
 # Straights longer than this will be split into chunks to respect tile limits
