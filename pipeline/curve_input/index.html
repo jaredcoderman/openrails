@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
       
 
@@ -607,10 +607,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#input-source" class="md-nav__link">
+  <a href="#geojson" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Input Source
+        GeoJSON
       
     </span>
   </a>
@@ -618,88 +618,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#configuration-configpy" class="md-nav__link">
+  <a href="#objectid-list-bbox_objectidstxt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Configuration (config.py)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Configuration (config.py)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#tolerance-values" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tolerance Values
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#coordinate-system" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Coordinate System
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Coordinate System">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#input-coordinates" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Input Coordinates
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#internal-conversion" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Internal Conversion
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#optional-x-flip" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Optional X-Flip
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#data-quality-notes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Data Quality Notes
+        OBJECTID list (bbox_objectids.txt)
       
     </span>
   </a>
@@ -707,10 +629,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-real-railroad-data" class="md-nav__link">
+  <a href="#configpy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example: Real Railroad Data
+        config.py
       
     </span>
   </a>
@@ -718,10 +640,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#running-the-fitter" class="md-nav__link">
+  <a href="#bbox-selection" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running the Fitter
+        Bbox selection
       
     </span>
   </a>
@@ -729,10 +651,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#output-location" class="md-nav__link">
+  <a href="#density-tips" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output Location
+        Density tips
       
     </span>
   </a>
@@ -1678,148 +1600,81 @@
 
 
 <h1 id="curve-input-format">Curve Input Format</h1>
-<p>The curve fitter reads <strong>GeoJSON files containing real railroad network coordinates</strong>.</p>
-<h2 id="input-source">Input Source</h2>
-<p>GeoJSON file format with railroad polylines:</p>
+<h2 id="geojson">GeoJSON</h2>
+<p>NTAD-style FeatureCollection. Each feature needs an <code>OBJECTID</code> and a <code>LineString</code> or <code>MultiLineString</code> (longest part used).</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FeatureCollection&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;features&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Feature&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;OBJECTID&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12345</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;railroad_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;BNSF Main Line&quot;</span>
-<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;OBJECTID&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1101</span><span class="w"> </span><span class="p">},</span>
 <span class="w">      </span><span class="nt">&quot;geometry&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LineString&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">          </span><span class="p">[</span><span class="mf">-120.5</span><span class="p">,</span><span class="w"> </span><span class="mf">38.5</span><span class="p">],</span>
-<span class="w">          </span><span class="p">[</span><span class="mf">-120.501</span><span class="p">,</span><span class="w"> </span><span class="mf">38.501</span><span class="p">],</span>
-<span class="w">          </span><span class="p">[</span><span class="mf">-120.502</span><span class="p">,</span><span class="w"> </span><span class="mf">38.502</span><span class="p">],</span>
-<span class="w">          </span><span class="err">...more</span><span class="w"> </span><span class="err">coordi</span><span class="kc">nates</span><span class="err">...</span>
-<span class="w">        </span><span class="p">]</span>
+<span class="w">        </span><span class="nt">&quot;coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="mf">-110.4</span><span class="p">,</span><span class="w"> </span><span class="mf">47.0</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">-110.39</span><span class="p">,</span><span class="w"> </span><span class="mf">47.01</span><span class="p">]]</span>
 <span class="w">      </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
-<p><strong>Coordinates format</strong>: <code>[longitude, latitude]</code> pairs (standard GeoJSON)</p>
-<h2 id="configuration-configpy">Configuration (config.py)</h2>
-<p>Before running, configure these parameters:</p>
+<p>Coordinates are <code>[longitude, latitude]</code>. The network extractor reverses vertex order so travel direction matches the historical single-OBJECTID convention.</p>
+<h2 id="objectid-list-bbox_objectidstxt">OBJECTID list (<code>bbox_objectids.txt</code>)</h2>
+<p>One integer per line; <code>#</code> comments allowed. Built by hand or by <code>select_bbox_objectids.py</code> using corners in that script (same bbox idea as the network extract).</p>
+<h2 id="configpy"><code>config.py</code></h2>
 <table>
 <thead>
 <tr>
 <th>Parameter</th>
-<th>Type</th>
+<th>Used by</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>GEOJSON_FILE</code></td>
-<td>str</td>
-<td>Path to input GeoJSON file</td>
+<td>all extracts</td>
+<td>GeoJSON path relative to <code>Tools/curve-fitter</code></td>
 </tr>
 <tr>
 <td><code>TARGET_OBJECTID</code></td>
-<td>int</td>
-<td>Which railroad segment to process (OBJECTID value)</td>
+<td><code>extract_primitives.py</code></td>
+<td>Single feature</td>
 </tr>
 <tr>
 <td><code>STRAIGHT_TOLERANCE</code></td>
-<td>float</td>
-<td>RMS perpendicular error tolerance for line fitting (meters)</td>
+<td>fit</td>
+<td>RMS perpendicular error (m) for lines</td>
 </tr>
 <tr>
 <td><code>CIRCLE_TOLERANCE</code></td>
-<td>float</td>
-<td>RMS radial error tolerance for circle fitting (meters)</td>
+<td>fit</td>
+<td>RMS radial error (m) for arcs</td>
 </tr>
 <tr>
 <td><code>FLIP_X_COORDINATES</code></td>
-<td>bool</td>
-<td>Mirror X-coordinates for local coordinate system (true/false)</td>
+<td>local frame</td>
+<td>Negate easting before origin</td>
+</tr>
+<tr>
+<td><code>MAX_STRAIGHT_LENGTH</code></td>
+<td>split</td>
+<td>Cap straight length (default 2048)</td>
 </tr>
 <tr>
 <td><code>PRIMITIVES_OUTPUT</code></td>
-<td>str</td>
-<td>Output JSON file path for primitives</td>
+<td>single-ID</td>
+<td>Output filename</td>
 </tr>
 </tbody>
 </table>
-<h3 id="tolerance-values">Tolerance Values</h3>
-<p>These determine how "tight" the fitting is:</p>
+<p>Tighter tolerances → more segments, closer to source vertices. Looser → fewer, smoother primitives.</p>
+<h2 id="bbox-selection">Bbox selection</h2>
+<p><code>select_bbox_objectids.py</code> keeps an OBJECTID if <strong>any</strong> vertex lies inside the lat/lon rectangle from <code>CORNER_A</code> / <code>CORNER_B</code>. Edit those corners when changing study area, then re-run extract.</p>
+<h2 id="density-tips">Density tips</h2>
 <ul>
-<li><strong>Smaller values</strong> (e.g., 0.5m) = More segments, closer to original</li>
-<li><strong>Larger values</strong> (e.g., 2.0m) = Fewer segments, more generalized</li>
+<li>Sparse polylines underfit curves; densify or loosen circle tolerance carefully.</li>
+<li>Tiny 2-point stubs are valid (exported as one straight).</li>
+<li>Degenerate zero-length pairs fail and appear under <code>error</code> in the network JSON.</li>
 </ul>
-<p>Example config:</p>
-<div class="highlight"><pre><span></span><code><span class="n">GEOJSON_FILE</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;C:\data\railroad_network.geojson&quot;</span>
-<span class="n">TARGET_OBJECTID</span> <span class="o">=</span> <span class="mi">12345</span>
-<span class="n">STRAIGHT_TOLERANCE</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># 1 meter RMS error for lines</span>
-<span class="n">CIRCLE_TOLERANCE</span> <span class="o">=</span> <span class="mf">1.5</span>    <span class="c1"># 1.5 meter RMS error for curves</span>
-<span class="n">FLIP_X_COORDINATES</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="n">PRIMITIVES_OUTPUT</span> <span class="o">=</span> <span class="s2">&quot;primitives.json&quot;</span>
-</code></pre></div>
-<h2 id="coordinate-system">Coordinate System</h2>
-<h3 id="input-coordinates">Input Coordinates</h3>
-<ul>
-<li><strong>Format</strong>: Latitude/Longitude (WGS84)</li>
-<li><strong>Projection</strong>: Automatically detected based on first coordinate</li>
-<li><strong>UTM Zone</strong>: Calculated from longitude</li>
-</ul>
-<h3 id="internal-conversion">Internal Conversion</h3>
-<p>The fitter converts to <strong>local Cartesian (UTM)</strong> for processing:
-- All distances in meters
-- Local X-Y coordinate system
-- Allows precise distance/angle calculations</p>
-<h3 id="optional-x-flip">Optional X-Flip</h3>
-<p>If your coordinate system needs mirroring:
-<div class="highlight"><pre><span></span><code><span class="n">FLIP_X_COORDINATES</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Negates all X values</span>
-</code></pre></div></p>
-<h2 id="data-quality-notes">Data Quality Notes</h2>
-<p>For best results, the GeoJSON railroad data should:
-- Have sufficient point density (points every ~10-50 meters)
-- Follow actual track geometry closely
-- Include both straight sections and curves
-- Be free of large jumps or missing segments
-- Represent a continuous path</p>
-<h2 id="example-real-railroad-data">Example: Real Railroad Data</h2>
-<p>A typical railroad polyline with 50 points representing 2km of track:</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;OBJECTID&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Test Track&quot;</span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;geometry&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LineString&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">      </span><span class="p">[</span><span class="mf">-122.500</span><span class="p">,</span><span class="w"> </span><span class="mf">47.650</span><span class="p">],</span>
-<span class="w">      </span><span class="p">[</span><span class="mf">-122.501</span><span class="p">,</span><span class="w"> </span><span class="mf">47.651</span><span class="p">],</span>
-<span class="w">      </span><span class="p">[</span><span class="mf">-122.502</span><span class="p">,</span><span class="w"> </span><span class="mf">47.652</span><span class="p">],</span>
-<span class="w">      </span><span class="p">[</span><span class="mf">-122.503</span><span class="p">,</span><span class="w"> </span><span class="mf">47.653</span><span class="p">],</span>
-<span class="w">      </span><span class="p">[</span><span class="mf">-122.504</span><span class="p">,</span><span class="w"> </span><span class="mf">47.654</span><span class="p">],</span>
-<span class="w">      </span><span class="err">...</span><span class="mi">46</span><span class="w"> </span><span class="err">more</span><span class="w"> </span><span class="err">poi</span><span class="kc">nts</span><span class="err">...</span>
-<span class="w">    </span><span class="p">]</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>After conversion to UTM and fitting:
-- Segments 0-15 fit to straight line
-- Segments 15-35 fit to circular arc (R=500m)
-- Segments 35-50 fit to straight line</p>
-<h2 id="running-the-fitter">Running the Fitter</h2>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>Tools<span class="se">\c</span>urve-fitter
-python<span class="w"> </span>extract_primitives.py
-</code></pre></div>
-<p>Or use the venv:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>Tools<span class="se">\c</span>urve-fitter
-.<span class="se">\S</span>cripts<span class="se">\A</span>ctivate.ps1
-python<span class="w"> </span>extract_primitives.py
-</code></pre></div>
-<p>This reads config.py settings and processes the GeoJSON file.</p>
-<h2 id="output-location">Output Location</h2>
-<p>Primitives are written to the path specified in config.py:</p>
-<div class="highlight"><pre><span></span><code><span class="n">PRIMITIVES_OUTPUT</span> <span class="o">=</span> <span class="s2">&quot;primitives.json&quot;</span>  <span class="c1"># Relative to current directory</span>
-</code></pre></div>
-<p>See <a href="../curve_output/">Curve Output Format</a> for what the output contains.</p>
 
 
 
@@ -1872,7 +1727,7 @@ python<span class="w"> </span>extract_primitives.py
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

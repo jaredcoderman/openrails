@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -27,7 +27,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
       
 
@@ -1796,9 +1796,15 @@
 - Defined in <code>.con</code> files
 - References shapes from TRAINSET folder</p>
 <p><strong>Curve Fitter</strong>
-- Python tool that converts curve definitions to track geometry
-- Takes curve radius, length, elevation as input
-- Outputs position and rotation for each track section</p>
+- Python tools under <code>Tools/curve-fitter</code>
+- Fit GeoJSON polylines to straight + circular-arc primitives
+- Network path: <code>extract_bbox_network.py</code> → <code>bbox_network_local.json</code></p>
+<p><strong>FeatureChain</strong>
+- One OBJECTID’s reconstructed sections plus geo start/end poses
+- Becomes one TDB vector node</p>
+<p><strong>Geo endpoint</strong>
+- True polyline end from source GeoJSON (local meters)
+- Used for snap/junction matching (not drifted reconstructed ends)</p>
 <h3 id="d">D</h3>
 <p><strong>DynTrack</strong> (Dynamic Track)
 - Track geometry defined in world files (<code>.w</code>)
@@ -1863,25 +1869,21 @@
 - File: <code>tdb.dat</code>
 - Contains track nodes and pin connections</p>
 <p><strong>TrEndNode</strong>
-- Track node marking start or end of segment
-- Has 1 input, 0 output pins
-- References a UID</p>
+- Free terminus when an endpoint is not linked or junctioned</p>
 <p><strong>TrJunctionNode</strong>
-- Track node where track splits or merges
-- Typically 3 pins (1 input, 2 outputs for Y-junction)
-- References a UID</p>
+- 3-way switch (<code>trpins</code> 1 in + 2 out: stem, main, diverging)
+- From a geo endpoint cluster; tips reshaped onto geo headings
+- <code>ShapeIndex</code> often 0 until a switch mesh is assigned</p>
 <p><strong>TrPin</strong>
 - Connection between track nodes
-- Contains: node ID and direction (0 or 1)
-- Must be reciprocal</p>
+- Contains: node ID and direction (0 or 1) on the <em>linked</em> node
+- Must be reciprocal (except junction-owned sides)</p>
 <p><strong>TrVectorNode</strong>
-- Track node containing curved sections
-- Has 1 input, 1 output pins
-- Contains multiple TrVectorSections</p>
+- One per OBJECTID feature chain; many <code>TrVectorSection</code>s
+- Pins to ends, neighbor vectors, and/or a junction</p>
 <p><strong>TrVectorSection</strong>
-- Individual track section within a TrVectorNode
-- Contains position, rotation, curve data
-- References SectionIndex and WorldFileUiD</p>
+- One section row in a vector node
+- Position, rotation, SectionIndex, WorldFileUiD</p>
 <h3 id="u">U</h3>
 <p><strong>UID</strong> (Universal ID)
 - 12-element unique identifier
@@ -2110,7 +2112,7 @@ Player_Service_Definition name → Service.srv
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

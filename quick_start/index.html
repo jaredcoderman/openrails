@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
       
 
@@ -495,10 +495,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-pipeline" class="md-nav__link">
+  <a href="#pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Pipeline
+        Pipeline
       
     </span>
   </a>
@@ -506,10 +506,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-1-get-railroad-data" class="md-nav__link">
+  <a href="#prerequisites" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 1: Get Railroad Data
+        Prerequisites
       
     </span>
   </a>
@@ -517,10 +517,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-2-configure-curve-fitter" class="md-nav__link">
+  <a href="#step-1-configure-fitter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 2: Configure Curve Fitter
+        Step 1 — Configure fitter
       
     </span>
   </a>
@@ -528,10 +528,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-3-run-curve-fitter" class="md-nav__link">
+  <a href="#step-2-choose-objectids" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 3: Run Curve Fitter
+        Step 2 — Choose OBJECTIDs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-fit-the-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Fit the network
       
     </span>
   </a>
@@ -542,7 +553,7 @@
   <a href="#step-4-run-tdbdump" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 4: Run TdbDump
+        Step 4 — Run TdbDump
       
     </span>
   </a>
@@ -550,10 +561,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-5-integrate-into-route" class="md-nav__link">
+  <a href="#step-5-verify" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 5: Integrate into Route
+        Step 5 — Verify
       
     </span>
   </a>
@@ -561,10 +572,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-6-create-service-activity-files" class="md-nav__link">
+  <a href="#legacy-single-feature-path" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 6: Create Service &amp; Activity Files
+        Legacy single-feature path
       
     </span>
   </a>
@@ -572,32 +583,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-7-test-in-open-rails" class="md-nav__link">
+  <a href="#next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 7: Test in Open Rails
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-concepts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Concepts
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next Steps
+        Next
       
     </span>
   </a>
@@ -1650,126 +1639,89 @@
 
 
 <h1 id="quick-start-guide">Quick Start Guide</h1>
-<p>Get track data from railroad coordinates to Open Rails in minutes!</p>
-<h2 id="the-pipeline">The Pipeline</h2>
-<div class="highlight"><pre><span></span><code>Real railroad GeoJSON
-        ↓
-Curve Fitter (Python)
-        ↓
-primitives.json
-        ↓
-TdbDump (C#)
-        ↓
-.tdb, .pat, .w files
-        ↓
-Copy to route
-        ↓
-Load in Open Rails
+<p>GeoJSON railroad lines → Open Rails TDB in a few steps.</p>
+<h2 id="pipeline">Pipeline</h2>
+<div class="highlight"><pre><span></span><code>NTAD GeoJSON
+    → select OBJECTIDs (bbox)
+    → fit network (shared local meters)
+    → TdbDump
+    → .tdb + tsection.dat + WORLD/*.w
+    → Track Viewer Ctrl+R
 </code></pre></div>
-<h2 id="step-1-get-railroad-data">Step 1: Get Railroad Data</h2>
-<p>You need GeoJSON with real railroad coordinates (lat/lon).</p>
-<p><strong>Example sources:</strong>
-- Survey data
-- OpenStreetMap railway data
-- Your own GPS traces
-- Other mapping data</p>
-<p>File format:
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FeatureCollection&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;features&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span>
-<span class="w">    </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;OBJECTID&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span>
-<span class="w">    </span><span class="nt">&quot;geometry&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LineString&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="mf">-122.5</span><span class="p">,</span><span class="w"> </span><span class="mf">47.65</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">-122.501</span><span class="p">,</span><span class="w"> </span><span class="mf">47.651</span><span class="p">],</span><span class="w"> </span><span class="err">...</span><span class="p">]</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">  </span><span class="p">}]</span>
-<span class="p">}</span>
-</code></pre></div></p>
-<h2 id="step-2-configure-curve-fitter">Step 2: Configure Curve Fitter</h2>
-<p>Edit <code>Tools/curve-fitter/config.py</code>:</p>
-<div class="highlight"><pre><span></span><code><span class="n">GEOJSON_FILE</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;C:\path\to\your\railroad_data.geojson&quot;</span>
-<span class="n">TARGET_OBJECTID</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Which segment to process</span>
-<span class="n">STRAIGHT_TOLERANCE</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># Fit tolerance in meters</span>
-<span class="n">CIRCLE_TOLERANCE</span> <span class="o">=</span> <span class="mf">1.5</span>
-</code></pre></div>
-<h2 id="step-3-run-curve-fitter">Step 3: Run Curve Fitter</h2>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>Tools<span class="se">\c</span>urve-fitter
-.<span class="se">\S</span>cripts<span class="se">\A</span>ctivate.ps1
-python<span class="w"> </span>extract_primitives.py
-</code></pre></div>
-<p>Creates <code>primitives.json</code> with curve/straight segments.</p>
-<h2 id="step-4-run-tdbdump">Step 4: Run TdbDump</h2>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>Source<span class="se">\T</span>dbDump
-dotnet<span class="w"> </span>run<span class="w"> </span>--<span class="w"> </span>generate
-</code></pre></div>
-<p>Generates:
-- <code>.tdb</code> file (track database)
-- <code>.pat</code> file (path waypoints)
-- <code>.w</code> files (world geometry)</p>
-<h2 id="step-5-integrate-into-route">Step 5: Integrate into Route</h2>
-<p>Copy files to your route:</p>
-<div class="highlight"><pre><span></span><code>ROUTES/MyRoute/
-├── tdb.dat                   ← Generated .tdb
-├── PATHS/
-│   └── Track.pat            ← Generated .pat
-└── WORLD/
-    └── w-012842+014734.w    ← Generated .w
-</code></pre></div>
-<h2 id="step-6-create-service-activity-files">Step 6: Create Service &amp; Activity Files</h2>
-<p><strong>Service</strong> (<code>ROUTES/MyRoute/SERVICES/Track.srv</code>):
-<div class="highlight"><pre><span></span><code>SIMISA@@@@@@@@@@JINX0S0t______
-
-Service (
-    Serial ( 1 )
-    Name ( &quot;Track Service&quot; )
-    PathID ( Track )
-    TrainConfig ( BNSF_Manifest )
-)
-</code></pre></div></p>
-<p><strong>Activity</strong> (<code>ROUTES/MyRoute/ACTIVITIES/TestActivity.act</code>):
-<div class="highlight"><pre><span></span><code>SIMISA@@@@@@@@@@JINX0a0t______
-
-Tr_Activity (
-    Serial ( 1 )
-    Tr_Activity_Header (
-        RouteID ( MyRoute )
-        Name ( &quot;Test Track&quot; )
-        Description ( &quot;Testing generated track&quot; )
-        StartTime ( 9 0 0 )
-        Season ( 1 )
-        Weather ( 0 )
-        PathID ( Track )
-    )
-    Tr_Activity_File (
-        Player_Service_Definition ( Track_Service
-            Player_Traffic_Definition ( 79200 )
-        )
-        NextServiceUID ( 1 )
-        NextActivityObjectUID ( 32768 )
-        Events ( )
-    )
-)
-</code></pre></div></p>
-<h2 id="step-7-test-in-open-rails">Step 7: Test in Open Rails</h2>
-<ol>
-<li>Launch Open Rails</li>
-<li>Select your route</li>
-<li>Select the activity</li>
-<li>Click "Start"</li>
-<li>Train should appear on your generated track!</li>
-</ol>
-<h2 id="key-concepts">Key Concepts</h2>
+<h2 id="prerequisites">Prerequisites</h2>
 <ul>
-<li><strong>Curve Fitter</strong>: Takes real railroad coordinates, fits them to straight lines and circular arcs</li>
-<li><strong>TdbDump</strong>: Converts primitives to Open Rails format with world coordinates</li>
-<li><strong>Primitives</strong>: Simplified representations (radius, angle) not full position data</li>
+<li>Python 3 + <code>numpy</code>, <code>pyproj</code> (curve-fitter venv under <code>Tools/curve-fitter</code> if you use it)</li>
+<li>.NET SDK (build <code>Source/TdbDump</code>)</li>
+<li>Route folder already configured in <code>Source/TdbDump/Program.cs</code> (default: BNSF Scenic copy)</li>
 </ul>
-<h2 id="next-steps">Next Steps</h2>
+<h2 id="step-1-configure-fitter">Step 1 — Configure fitter</h2>
+<p>Edit <code>Tools/curve-fitter/config.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">GEOJSON_FILE</span> <span class="o">=</span> <span class="s1">&#39;NTAD_....geojson&#39;</span>   <span class="c1"># in the curve-fitter folder</span>
+<span class="n">STRAIGHT_TOLERANCE</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">CIRCLE_TOLERANCE</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">FLIP_X_COORDINATES</span> <span class="o">=</span> <span class="kc">False</span>
+</code></pre></div>
+<h2 id="step-2-choose-objectids">Step 2 — Choose OBJECTIDs</h2>
+<p>Either edit <code>Tools/curve-fitter/bbox_objectids.txt</code> (one ID per line), or:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd </span><span class="n">Tools</span><span class="p">\</span><span class="n">curve-fitter</span>
+<span class="n">py</span> <span class="p">-</span><span class="n">3</span> <span class="n">select_bbox_objectids</span><span class="p">.</span><span class="n">py</span>
+</code></pre></div>
+<p>That writes IDs whose vertices fall in the lat/lon box defined in the script.</p>
+<h2 id="step-3-fit-the-network">Step 3 — Fit the network</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">cd </span><span class="n">Tools</span><span class="p">\</span><span class="n">curve-fitter</span>
+<span class="n">py</span> <span class="p">-</span><span class="n">3</span> <span class="n">extract_bbox_network</span><span class="p">.</span><span class="n">py</span>
+</code></pre></div>
+<p>Produces:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bbox_network_local.json</code></td>
+<td>Input for TdbDump</td>
+</tr>
+<tr>
+<td><code>bbox_network.geojson</code></td>
+<td>Drop in QGIS to verify selection</td>
+</tr>
+</tbody>
+</table>
+<h2 id="step-4-run-tdbdump">Step 4 — Run TdbDump</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">copy </span><span class="n">Tools</span><span class="p">\</span><span class="n">curve-fitter</span><span class="p">\</span><span class="n">bbox_network_local</span><span class="p">.</span><span class="n">json</span> <span class="n">Source</span><span class="p">\</span><span class="n">TdbDump</span><span class="p">\</span><span class="n">bin</span><span class="p">\</span><span class="n">Debug</span><span class="p">\</span>
+<span class="n">dotnet</span> <span class="n">build</span> <span class="n">Source</span><span class="p">\</span><span class="n">TdbDump</span> <span class="n">-c</span> <span class="n">Debug</span>
+<span class="nb">cd </span><span class="n">Source</span><span class="p">\</span><span class="n">TdbDump</span><span class="p">\</span><span class="n">bin</span><span class="p">\</span><span class="n">Debug</span>
+<span class="p">.\</span><span class="n">TdbDump</span><span class="p">.</span><span class="n">exe</span>
+</code></pre></div>
+<p>Writes into the route path hard-coded in <code>Program.cs</code>:</p>
 <ul>
-<li>Learn more: <a href="../pipeline/full_walkthrough/">Full Pipeline Walkthrough</a></li>
-<li>Reference: <a href="../formats/tdb/">File Formats</a></li>
-<li>Debug: <a href="../troubleshooting/">Troubleshooting</a></li>
-<li>Understand: <a href="../concepts/coordinates/">Concepts</a></li>
+<li><code>…/BNSF_Scenic.tdb</code></li>
+<li><code>…/tsection.dat</code></li>
+<li><code>…/WORLD/w-012842+014734.w</code></li>
+</ul>
+<p>Console should mention endpoint snap counts and any <code>TrJunctionNode</code> created.</p>
+<h2 id="step-5-verify">Step 5 — Verify</h2>
+<ol>
+<li>Open the route in <strong>Track Viewer</strong>.</li>
+<li>Press <strong>Ctrl+R</strong> to reload the TDB.</li>
+<li>Compare junctions / diverge angles to QGIS (<code>bbox_network.geojson</code>).</li>
+</ol>
+<p>Scenario <code>.pat</code> / <code>.act</code> generation is still first-feature-only when that feature still has two free ends; networked junctions often skip scenario write — topology in the TDB is the main deliverable.</p>
+<h2 id="legacy-single-feature-path">Legacy single-feature path</h2>
+<div class="highlight"><pre><span></span><code><span class="c"># config.py TARGET_OBJECTID = …</span>
+<span class="n">py</span> <span class="p">-</span><span class="n">3</span> <span class="n">extract_primitives</span><span class="p">.</span><span class="n">py</span>          <span class="c"># → primitives.json</span>
+<span class="c"># place primitives.json next to TdbDump.exe (or only network JSON present)</span>
+<span class="p">.\</span><span class="n">TdbDump</span><span class="p">.</span><span class="n">exe</span>
+</code></pre></div>
+<p>TdbDump prefers <code>bbox_network_local.json</code> when present.</p>
+<h2 id="next">Next</h2>
+<ul>
+<li><a href="../pipeline/full_walkthrough/">Full Walkthrough</a></li>
+<li><a href="../pipeline/trackbuilder/">TrackBuilder</a> (snap, junctions, tip reshape)</li>
+<li><a href="../troubleshooting/">Troubleshooting</a></li>
 </ul>
 
 
@@ -1823,7 +1775,7 @@ Tr_Activity (
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

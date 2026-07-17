@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
       
 
@@ -775,49 +775,10 @@
   <a href="#key-components" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Key Components
+        Key components
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Key Components">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#modelscs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Models.cs
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#trackbuildercs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        TrackBuilder.cs
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#writers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Writers
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -826,6 +787,28 @@
     <span class="md-ellipsis">
       
         Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#node-kinds-in-the-tdb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Node kinds in the TDB
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#world-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        World files
       
     </span>
   </a>
@@ -844,60 +827,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#output-files" class="md-nav__link">
+  <a href="#integration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output Files
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Output Files">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#tracktdb" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        track.tdb
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#w-012842014734w" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        w-012842+014734.w
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#trackpat" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        track.pat
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#integration-with-open-rails" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Integration with Open Rails
+        Integration
       
     </span>
   </a>
@@ -905,10 +838,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
+  <a href="#next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next Steps
+        Next
       
     </span>
   </a>
@@ -1711,125 +1644,104 @@
 
 
 <h1 id="tdbdump-overview">TdbDump Overview</h1>
-<p>TdbDump is the C# tool that converts curve fitter output into Open Rails track files.</p>
+<p>C# tool (<code>Source/TdbDump</code>) that converts curve-fitter output into Open Rails route files.</p>
 <h2 id="purpose">Purpose</h2>
-<p>TdbDump transforms abstract track data into Open Rails format:</p>
-<ul>
-<li><strong>Input</strong>: Curve fitter output (JSON)</li>
-<li><strong>Output</strong>: </li>
-<li><code>.tdb</code> (Track Database)</li>
-<li><code>.pat</code> (Path/Track waypoints)</li>
-<li><code>.w</code> (World geometry files)</li>
-<li><code>.act</code> (Activity template)</li>
-</ul>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Outputs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bbox_network_local.json</code> (preferred) or <code>primitives.json</code></td>
+<td><code>BNSF_Scenic.tdb</code>, <code>tsection.dat</code>, <code>WORLD/w-*.w</code>, optional scenario set for first free-ended feature</td>
+</tr>
+</tbody>
+</table>
+<p>Route paths are currently hard-coded in <code>Program.cs</code> (BNSF Scenic copy). Adjust there for another route.</p>
 <h2 id="architecture">Architecture</h2>
-<div class="highlight"><pre><span></span><code>Input (JSON)
-    ↓
-Models.cs (Data structures)
-    ↓
-TrackBuilder (Generate TDB structure)
-    ↓
-TDBWriter (Write .tdb file)
-WorldWriter (Write .w files)
-PathWriter (Write .pat file)
-    ↓
-Output Files
+<div class="highlight"><pre><span></span><code>bbox_network_local.json
+        ↓
+TrackBuilder (load → place → snap → junctions → pins)
+        ↓
+    ┌───┼───────────────┐
+    ↓   ↓               ↓
+TSection  TDBWriter   WorldWriter (DynTracks from chains)
+Writer    (+ junctions)
 </code></pre></div>
-<h2 id="key-components">Key Components</h2>
-<h3 id="modelscs">Models.cs</h3>
-<p>Defines data structures:
-- <code>TrackNode</code> - Nodes in the track database
-- <code>TrVectorSection</code> - Individual track sections
-- <code>TrPin</code> - Connections between nodes
-- <code>TrEndNode</code> - Track terminus points
-- <code>DynamicTrack</code> - World file track objects</p>
-<h3 id="trackbuildercs">TrackBuilder.cs</h3>
-<p>Constructs the TDB node structure:
-- Converts sections into <code>TrVectorNode</code> entries
-- Creates <code>TrEndNode</code> entries at start/end
-- Establishes pin connections
-- Calculates tile coordinates and UIDs</p>
-<h3 id="writers">Writers</h3>
-<p>Generate output files:
-- <code>TDBWriter</code> - <code>.tdb</code> file format
-- <code>WorldWriter</code> - <code>.w</code> file format
-- <code>PathWriter</code> - <code>.pat</code> file format</p>
+<h2 id="key-components">Key components</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Program.cs</code></td>
+<td>Load builder, write tsection/tdb/world/scenario</td>
+</tr>
+<tr>
+<td><code>TrackBuilder.cs</code></td>
+<td>Network graph construction</td>
+</tr>
+<tr>
+<td><code>Models.cs</code></td>
+<td>Nodes, chains, primitives, DynTrack helpers</td>
+</tr>
+<tr>
+<td><code>TDBWriter.cs</code></td>
+<td>End / vector / junction nodes</td>
+</tr>
+<tr>
+<td><code>TSectionWriter.cs</code></td>
+<td>Dynamic <code>TrackSection</code> / <code>SectionCurve</code> entries</td>
+</tr>
+<tr>
+<td><code>WorldWriter.cs</code></td>
+<td>Dyntrack objects into one base-tile <code>.w</code></td>
+</tr>
+<tr>
+<td><code>ScenarioWriter.cs</code></td>
+<td>PAT/ACT/SRV for first feature when possible</td>
+</tr>
+</tbody>
+</table>
 <h2 id="workflow">Workflow</h2>
-<ol>
-<li>
-<p><strong>Load input data</strong>
-   <div class="highlight"><pre><span></span><code><span class="kt">var</span><span class="w"> </span><span class="n">trackData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JsonConvert</span><span class="p">.</span><span class="n">DeserializeObject</span><span class="o">&lt;</span><span class="n">TrackData</span><span class="o">&gt;</span><span class="p">(</span><span class="n">inputJson</span><span class="p">);</span>
-</code></pre></div></p>
-</li>
-<li>
-<p><strong>Build node structure</strong>
-   <div class="highlight"><pre><span></span><code><span class="kt">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TrackBuilder</span><span class="p">(</span><span class="n">trackData</span><span class="p">);</span>
-<span class="kt">var</span><span class="w"> </span><span class="n">nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">BuildAllNodes</span><span class="p">();</span>
-</code></pre></div></p>
-</li>
-<li>
-<p><strong>Write outputs</strong>
-   <div class="highlight"><pre><span></span><code><span class="kt">var</span><span class="w"> </span><span class="n">tdbWriter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TDBWriter</span><span class="p">();</span>
-<span class="n">tdbWriter</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;output.tdb&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="kt">var</span><span class="w"> </span><span class="n">track</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TrackBuilder</span><span class="p">();</span><span class="w">           </span><span class="c1">// finds network or legacy JSON</span>
+<span class="kt">var</span><span class="w"> </span><span class="n">allNodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">track</span><span class="p">.</span><span class="n">BuildAllNodes</span><span class="p">();</span><span class="w">     </span><span class="c1">// snap + junctions + pins</span>
 
-<span class="kt">var</span><span class="w"> </span><span class="n">worldWriter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">WorldWriter</span><span class="p">();</span>
-<span class="n">worldWriter</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;world/&quot;</span><span class="p">);</span>
-</code></pre></div></p>
-</li>
-</ol>
+<span class="n">TSectionWriter</span><span class="p">.</span><span class="n">UpdateTSectionDat</span><span class="p">(</span><span class="err">…</span><span class="p">,</span><span class="w"> </span><span class="n">track</span><span class="p">.</span><span class="n">Primitives</span><span class="p">);</span>
+<span class="c1">// write each TrEndNode / TrJunctionNode / TrackNode</span>
+<span class="n">DynamicTrack</span><span class="p">.</span><span class="n">MakeDynamicTrackObjects</span><span class="p">(</span><span class="n">track</span><span class="p">.</span><span class="n">Chains</span><span class="p">,</span><span class="w"> </span><span class="n">track</span><span class="p">.</span><span class="n">Primitives</span><span class="p">);</span>
+<span class="n">WorldWriter</span><span class="p">.</span><span class="n">WriteWorldFiles</span><span class="p">(</span><span class="err">…</span><span class="p">);</span>
+</code></pre></div>
+<h2 id="node-kinds-in-the-tdb">Node kinds in the TDB</h2>
+<ul>
+<li><strong>TrVectorNode</strong> — one per OBJECTID chain; many <code>TrVectorSection</code>s.</li>
+<li><strong>TrEndNode</strong> — free tips not consumed by a link or junction.</li>
+<li><strong>TrJunctionNode</strong> — 3-way geo cluster (stem + main + diverging).</li>
+</ul>
+<p>Counts: e.g. 39 features → 39 vectors + ends + junctions ≈ 40+ TDB nodes.</p>
+<h2 id="world-files">World files</h2>
+<p>One DynTrack per <strong>section</strong> (not one packed object for an entire vector). Positions come from post-reshape <code>chain.Sections</code>, so junction tip fixes appear in the world file as well as the TDB.</p>
 <h2 id="configuration">Configuration</h2>
-<p>Base tile coordinates (editable in TrackBuilder):
-<div class="highlight"><pre><span></span><code><span class="n">_tileX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mi">12842</span><span class="p">;</span><span class="w">  </span><span class="c1">// Tile X</span>
-<span class="n">_tileZ</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">14734</span><span class="p">;</span><span class="w">   </span><span class="c1">// Tile Z</span>
-</code></pre></div></p>
-<p>These determine where track appears in the world.</p>
-<h2 id="output-files">Output Files</h2>
-<h3 id="tracktdb">track.tdb</h3>
-<div class="highlight"><pre><span></span><code>trackdb (
-    tracknodes (
-        tracknode (
-            trvectornode (
-                trvectorsections ( ... )
-            )
-            trpins ( ... )
-        )
-    )
-)
-</code></pre></div>
-<h3 id="w-012842014734w">w-012842+014734.w</h3>
-<div class="highlight"><pre><span></span><code>Dyntrack (
-    Tr_WorldFile (
-        TrackObj (
-            ...
-        )
-        DyntrackObj (
-            ...
-        )
-    )
-)
-</code></pre></div>
-<h3 id="trackpat">track.pat</h3>
-<div class="highlight"><pre><span></span><code>Serial ( 1 )
-TrackPDPs ( ... )
-TrackPath (
-    TrPathName ( TrackName )
-    TrPathNodes ( ... )
-)
-</code></pre></div>
-<h2 id="integration-with-open-rails">Integration with Open Rails</h2>
-<p>Copy generated files to your route:</p>
-<div class="highlight"><pre><span></span><code>ROUTES/MyRoute/
-├── tdb.dat               # Generated .tdb
-├── PATHS/
-│   └── TrackName.pat     # Generated .pat
-└── WORLD/
-    └── w-012842+014734.w # Generated .w
-</code></pre></div>
-<h2 id="next-steps">Next Steps</h2>
-<p>See:
-- <a href="../trackbuilder/">TrackBuilder Details</a>
-- <a href="../writers/">Writers Details</a>
-- <a href="../full_walkthrough/">Full Pipeline Walkthrough</a></p>
+<ul>
+<li>Input search: <code>bbox_network_local.json</code>, else <code>primitives.json</code> (working directory / known paths via <code>FindInputFile</code>).</li>
+<li>Base tile: <code>(-12842, 14734)</code> in TrackBuilder / WorldWriter.</li>
+<li>Default elevation for world: ~1000 m (flat placeholder).</li>
+</ul>
+<h2 id="integration">Integration</h2>
+<p>After a successful run, reload Track Viewer (<strong>Ctrl+R</strong>) or launch the route in Open Rails. Prefer TDB for topology checks; world is for mesh/DynTrack visuals.</p>
+<h2 id="next">Next</h2>
+<ul>
+<li><a href="../trackbuilder/">TrackBuilder</a></li>
+<li><a href="../tdbdump_architecture/">Architecture</a></li>
+<li><a href="../writers/">Writers</a></li>
+</ul>
 
 
 
@@ -1882,7 +1794,7 @@ TrackPath (
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

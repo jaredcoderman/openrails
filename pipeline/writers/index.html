@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
       
 
@@ -834,10 +834,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#writer-architecture" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Writer Architecture
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tsectionwriter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TSectionWriter
       
     </span>
   </a>
@@ -853,34 +864,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="TDBWriter">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#output-format" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Output Format
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#key-methods" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Methods
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -892,80 +875,13 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="WorldWriter">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#output-format_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Output Format
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#key-methods_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Methods
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
-  <a href="#pathwriter" class="md-nav__link">
+  <a href="#scenariowriter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        PathWriter
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="PathWriter">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#output-format_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Output Format
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#key-methods_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Methods
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#extending-writers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Extending Writers
+        ScenarioWriter
       
     </span>
   </a>
@@ -973,10 +889,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#error-handling" class="md-nav__link">
+  <a href="#pat-act-srv-consist" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Error Handling
+        PAT / ACT / SRV / Consist
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
       
     </span>
   </a>
@@ -1695,380 +1622,67 @@
 
 
 <h1 id="writers-details">Writers Details</h1>
-<p>The writer components transform TrackBuilder output into various file formats.</p>
-<h2 id="writer-architecture">Writer Architecture</h2>
-<div class="highlight"><pre><span></span><code>TDBWriter ──→ .tdb (STF format)
-WorldWriter ──→ .w (World geometry)
-PathWriter ──→ .pat (Path waypoints)
+<p>Writers turn <code>TrackBuilder</code> output into route files. Entry point: <code>Program.cs</code>.</p>
+<h2 id="overview">Overview</h2>
+<div class="highlight"><pre><span></span><code>track.Primitives  →  TSectionWriter  →  tsection.dat
+allNodes          →  TDBWriter       →  BNSF_Scenic.tdb
+track.Chains      →  DynTracks       →  WorldWriter → WORLD/w-*.w
+first free chain  →  ScenarioWriter  →  .pat / .act / .srv (optional)
 </code></pre></div>
+<h2 id="tsectionwriter">TSectionWriter</h2>
+<p>Writes dynamic track sections for every <code>TrackPrimitive</code> (including tip reseats / junction straights).</p>
+<p>Format used by this project (compact <code>SectionCurve</code> lines):</p>
+<div class="highlight"><pre><span></span><code>TrackSections ( N
+  TrackSection (
+    SectionCurve ( 0 ) 40001 822.47 0          ; straight: length, radius 0
+  )
+  TrackSection (
+    SectionCurve ( 1 ) 40002 0.991214 176.38   ; curve: angle rad, radius m
+  )
+)
+</code></pre></div>
+<p>Section indices are assigned in TrackBuilder (typically from 40001).</p>
 <h2 id="tdbwriter">TDBWriter</h2>
-<p>Generates the <code>.tdb</code> (Track Database) file in SIMISA Text Format (STF).</p>
-<h3 id="output-format">Output Format</h3>
-<div class="highlight"><pre><span></span><code>SIMISA@@@@@@@@@@JINX0t0t______
-
-trackdb (
-    tracknodes ( 3
-        tracknode ( 1
-            uid ( 0 0 0 0 0 0 0 0 0 0 0 0 )
-            trendnode ( )
-            trpins ( 1 0
-                TrPin ( 2 1 )
-            )
-        )
-        tracknode ( 2
-            trvectornode (
-                trvectorsections ( 25
-                    50001 0 0 0 0 0 1 00 0 0 0 0 0 0 0 0
-                    50002 0 0 0 0 0 1 00 0 0 100 0 0 0 0 0
-                    ...more sections...
-                )
-                tritemrefs ( 0 )
-            )
-            trpins ( 1 1
-                TrPin ( 1 0 )
-                TrPin ( 3 1 )
-            )
-        )
-        tracknode ( 3
-            uid ( 0 0 0 0 0 0 0 0 0 0 0 0 )
-            trendnode ( )
-            trpins ( 1 0
-                TrPin ( 2 0 )
-            )
-        )
-    )
-    tritemtable ( 0 )
-)
-</code></pre></div>
-<h3 id="key-methods">Key Methods</h3>
-<div class="highlight"><pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">TDBWriter</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Write</span><span class="p">(</span><span class="n">TrackNode</span><span class="p">[]</span><span class="w"> </span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">filename</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">writer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamWriter</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">writer</span><span class="p">);</span>
-<span class="w">            </span><span class="n">WriteTrackDB</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span><span class="w"> </span><span class="n">nodes</span><span class="p">);</span>
-<span class="w">            </span><span class="n">WriteFooter</span><span class="p">(</span><span class="n">writer</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteHeader</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;SIMISA@@@@@@@@@@JINX0t0t______&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">();</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteTrackDB</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">TrackNode</span><span class="p">[]</span><span class="w"> </span><span class="n">nodes</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;trackdb (&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;    tracknodes ( {nodes.Length - 1}&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// -1 for null at [0]</span>
-
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nodes</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">WriteTrackNode</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">i</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    tritemtable ( 0 )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;)&quot;</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteTrackNode</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">TrackNode</span><span class="w"> </span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">id</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;        tracknode ( {id}&quot;</span><span class="p">);</span>
-
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">node</span><span class="p">.</span><span class="n">TrEndNode</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="k">null</span><span class="p">)</span>
-<span class="w">            </span><span class="n">WriteEndNode</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="p">);</span>
-<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="nf">if</span><span class="w"> </span><span class="p">(</span><span class="n">node</span><span class="p">.</span><span class="n">TrVectorNode</span><span class="p">)</span>
-<span class="w">            </span><span class="n">WriteVectorNode</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="p">);</span>
-
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;        )&quot;</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteEndNode</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">TrackNode</span><span class="w"> </span><span class="n">node</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;            uid ( 0 0 0 0 0 0 0 0 0 0 0 0 )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;            trendnode ( )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">WritePins</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteVectorNode</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">TrackNode</span><span class="w"> </span><span class="n">node</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;            trvectornode (&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;                trvectorsections ( {node.Sections.Count}&quot;</span><span class="p">);</span>
-
-<span class="w">        </span><span class="k">foreach</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">section</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">node</span><span class="p">.</span><span class="n">Sections</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">WriteVectorSection</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">section</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;                )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;                tritemrefs ( 0 )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;            )&quot;</span><span class="p">);</span>
-
-<span class="w">        </span><span class="n">WritePins</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteVectorSection</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">TrVectorSection</span><span class="w"> </span><span class="n">section</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">// Format: SectionIndex TileX TileZ X Y Z AX AY AZ WFNameX WFNameZ WorldFileUiD</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">$&quot;                    {section.SectionIndex} &quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">$&quot;{section.TileX} {section.TileZ} &quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">$&quot;{section.X.ToString(&quot;</span><span class="n">F1</span><span class="s">&quot;)} {section.Y.ToString(&quot;</span><span class="n">F1</span><span class="s">&quot;)} {section.Z.ToString(&quot;</span><span class="n">F1</span><span class="s">&quot;)} &quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">$&quot;{section.AX.ToString(&quot;</span><span class="n">F6</span><span class="s">&quot;)} {section.AY.ToString(&quot;</span><span class="n">F6</span><span class="s">&quot;)} {section.AZ.ToString(&quot;</span><span class="n">F6</span><span class="s">&quot;)} &quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">$&quot;{section.WFNameX} {section.WFNameZ} &quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">section</span><span class="p">.</span><span class="n">WorldFileUiD</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;X&quot;</span><span class="p">));</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WritePins</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">TrackNode</span><span class="w"> </span><span class="n">node</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">// Calculate inpins/outpins based on pin directions</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">inPins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="p">.</span><span class="n">Pins</span><span class="p">.</span><span class="n">Count</span><span class="p">(</span><span class="n">p</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">Direction</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">outPins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="p">.</span><span class="n">Pins</span><span class="p">.</span><span class="n">Count</span><span class="p">(</span><span class="n">p</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">Direction</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
-
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            trpins ( {inPins} {outPins}&quot;</span><span class="p">);</span>
-
-<span class="w">        </span><span class="k">foreach</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">pin</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">node</span><span class="p">.</span><span class="n">Pins</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;                TrPin ( {pin.Node} {pin.Direction} )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;            )&quot;</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
+<p>Three writers:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Node</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>WriteEndNode</code></td>
+<td><code>TrEndNode</code></td>
+</tr>
+<tr>
+<td><code>WriteVectorNode</code></td>
+<td>Multi-section vector for one OBJECTID</td>
+</tr>
+<tr>
+<td><code>WriteJunctionNode</code></td>
+<td><code>TrJunctionNode</code> (<code>trpins</code> 1 2, stem/main/div)</td>
+</tr>
+</tbody>
+</table>
+<p>Pins use Open Rails conventions (direction = linked node’s side). See <a href="../../concepts/pins/">Pins</a>.</p>
 <h2 id="worldwriter">WorldWriter</h2>
-<p>Generates <code>.w</code> (World) files containing dynamic track objects.</p>
-<h3 id="output-format_1">Output Format</h3>
-<div class="highlight"><pre><span></span><code>SIMISA@@@@@@@@@@JINX0W0t______
-
-Dyntrack (
-    Tr_WorldFile (
-        Serial ( 1 )
-        TrackObj (
-            SectionIdx ( 50001 )
-            Elevation ( 100 )
-            CollideFlags ( 7 )
-            StaticFlags ( 0 )
-            Position ( -433 100 25 )
-            QDirection ( 0 0.707107 0 0.707107 )
-            VDbId ( 2 0 0 )
-        )
-        DyntrackObj (
-            SectionIdx ( 50001 )
-            Elevation ( 100 )
-            CollideFlags ( 7 )
-            StaticFlags ( 0 )
-            Position ( -433 100 25 )
-            QDirection ( 0 0.707107 0 0.707107 )
-            VDbId ( 2 0 0 )
-            TrackSections ( 1
-                TrackSection ( 50001 0 0 0 0 0 1 00 0 0 0 0 0 0 0 0 )
-            )
-        )
-    )
-)
-</code></pre></div>
-<h3 id="key-methods_1">Key Methods</h3>
-<div class="highlight"><pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">WorldWriter</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Write</span><span class="p">(</span><span class="n">TrackNode</span><span class="p">[]</span><span class="w"> </span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">outputDir</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">// Group sections by tile</span>
-<span class="w">        </span><span class="kt">var</span><span class="w"> </span><span class="n">tileGroups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GroupSectionsByTile</span><span class="p">(</span><span class="n">nodes</span><span class="p">);</span>
-
-<span class="w">        </span><span class="k">foreach</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">tileGroup</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">tileGroups</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="kt">var</span><span class="w"> </span><span class="n">filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WorldFileNameFromTile</span><span class="p">(</span><span class="n">tileGroup</span><span class="p">.</span><span class="n">Key</span><span class="p">);</span>
-<span class="w">            </span><span class="n">WriteWorldFile</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="w"> </span><span class="n">tileGroup</span><span class="p">.</span><span class="n">Value</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="nf">WorldFileNameFromTile</span><span class="p">((</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">z</span><span class="p">)</span><span class="w"> </span><span class="n">tile</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">$&quot;w-{tile.x:D6}{tile.z:D6}.w&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteWorldFile</span><span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="n">filename</span><span class="p">,</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">TrVectorSection</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sections</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">writer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamWriter</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;SIMISA@@@@@@@@@@JINX0W0t______&quot;</span><span class="p">);</span>
-<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">();</span>
-<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Dyntrack (&quot;</span><span class="p">);</span>
-<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    Tr_WorldFile (&quot;</span><span class="p">);</span>
-
-<span class="w">            </span><span class="k">foreach</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">section</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">sections</span><span class="p">)</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">                </span><span class="n">WriteDyntrackObj</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span><span class="w"> </span><span class="n">section</span><span class="p">);</span>
-<span class="w">            </span><span class="p">}</span>
-
-<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    )&quot;</span><span class="p">);</span>
-<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;)&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteDyntrackObj</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">TrVectorSection</span><span class="w"> </span><span class="n">section</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">// Apply coordinate transformation for TSRE5 compatibility</span>
-<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">posX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">section</span><span class="p">.</span><span class="n">X</span><span class="p">;</span><span class="w">  </span><span class="c1">// Negate X</span>
-<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">posZ</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">section</span><span class="p">.</span><span class="n">Z</span><span class="p">;</span><span class="w">   </span><span class="c1">// Keep Z positive</span>
-<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">posY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">section</span><span class="p">.</span><span class="n">Y</span><span class="p">;</span>
-
-<span class="w">        </span><span class="c1">// Convert Euler angles to quaternion</span>
-<span class="w">        </span><span class="kt">var</span><span class="w"> </span><span class="n">quat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EulerToQuaternion</span><span class="p">(</span><span class="n">section</span><span class="p">.</span><span class="n">AX</span><span class="p">,</span><span class="w"> </span><span class="n">section</span><span class="p">.</span><span class="n">AY</span><span class="p">,</span><span class="w"> </span><span class="n">section</span><span class="p">.</span><span class="n">AZ</span><span class="p">);</span>
-
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;        DyntrackObj (&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            SectionIdx ( {section.SectionIndex} )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            Elevation ( {posY} )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            CollideFlags ( 7 )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            StaticFlags ( 0 )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            Position ( {posX} {posY} {posZ} )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            QDirection ( {quat.X} {quat.Y} {quat.Z} {quat.W} )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;            VDbId ( {section.WorldFileUiD} 0 0 )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;            TrackSections ( 1&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">$&quot;                TrackSection ( {section.SectionIndex} &quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="c1">// ... write section data ...</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;)&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;            )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;        )&quot;</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="n">Quaternion</span><span class="w"> </span><span class="nf">EulerToQuaternion</span><span class="p">(</span><span class="kt">float</span><span class="w"> </span><span class="n">ax</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">ay</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">az</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">// Convert Euler angles (roll, pitch, yaw) to quaternion</span>
-<span class="w">        </span><span class="c1">// Using ZYX convention as per Open Rails</span>
-
-<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">cy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MathF</span><span class="p">.</span><span class="n">Cos</span><span class="p">(</span><span class="n">ay</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">);</span>
-<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">sy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MathF</span><span class="p">.</span><span class="n">Sin</span><span class="p">(</span><span class="n">ay</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">);</span>
-<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">cp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MathF</span><span class="p">.</span><span class="n">Cos</span><span class="p">(</span><span class="n">ax</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">);</span>
-<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">sp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MathF</span><span class="p">.</span><span class="n">Sin</span><span class="p">(</span><span class="n">ax</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">);</span>
-<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">cr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MathF</span><span class="p">.</span><span class="n">Cos</span><span class="p">(</span><span class="n">az</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">);</span>
-<span class="w">        </span><span class="kt">float</span><span class="w"> </span><span class="n">sr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MathF</span><span class="p">.</span><span class="n">Sin</span><span class="p">(</span><span class="n">az</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5f</span><span class="p">);</span>
-
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">Quaternion</span><span class="p">(</span>
-<span class="w">            </span><span class="n">sr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">cr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sy</span><span class="p">,</span><span class="w">  </span><span class="c1">// X</span>
-<span class="w">            </span><span class="n">cr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cy</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">sr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sy</span><span class="p">,</span><span class="w">  </span><span class="c1">// Y</span>
-<span class="w">            </span><span class="n">cr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">sr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cy</span><span class="p">,</span><span class="w">  </span><span class="c1">// Z</span>
-<span class="w">            </span><span class="n">cr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cy</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">sr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sy</span><span class="w">   </span><span class="c1">// W</span>
-<span class="w">        </span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<h2 id="pathwriter">PathWriter</h2>
-<p>Generates <code>.pat</code> (Path) files with waypoints and navigation.</p>
-<h3 id="output-format_2">Output Format</h3>
-<div class="highlight"><pre><span></span><code>SIMISA@@@@@@@@@@JINX0P0t______
-
-Serial ( 1 )
-
-TrackPDPs (
-    TrackPDP ( -12842 14734 0 0 0 2 0 )
-    TrackPDP ( -12842 14734 100 0 0 2 0 )
-    TrackPDP ( -12842 14734 200 0 0 2 0 )
-)
-
-TrackPath (
-    TrPathName ( TestTrack )
-    Name ( &quot;Test Track&quot; )
-    TrPathStart ( Start )
-    TrPathEnd ( End )
-    TrPathNodes ( 3
-        TrPathNode ( 00000000 1 4294967295 0 )
-        TrPathNode ( 00000000 2 4294967295 1 )
-        TrPathNode ( 00000000 4294967295 4294967295 2 )
-    )
-)
-</code></pre></div>
-<h3 id="key-methods_2">Key Methods</h3>
-<div class="highlight"><pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">PathWriter</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Write</span><span class="p">(</span><span class="n">TrackNode</span><span class="p">[]</span><span class="w"> </span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">filename</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">// Extract all sections</span>
-<span class="w">        </span><span class="kt">var</span><span class="w"> </span><span class="n">allSections</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nodes</span>
-<span class="w">            </span><span class="p">.</span><span class="n">Where</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">TrVectorNode</span><span class="p">)</span>
-<span class="w">            </span><span class="p">.</span><span class="n">SelectMany</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">Sections</span><span class="p">)</span>
-<span class="w">            </span><span class="p">.</span><span class="n">ToList</span><span class="p">();</span>
-
-<span class="w">        </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">writer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StreamWriter</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;SIMISA@@@@@@@@@@JINX0P0t______&quot;</span><span class="p">);</span>
-<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">();</span>
-<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Serial ( 1 )&quot;</span><span class="p">);</span>
-<span class="w">            </span><span class="n">writer</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">();</span>
-
-<span class="w">            </span><span class="n">WriteTrackPDPs</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span><span class="w"> </span><span class="n">allSections</span><span class="p">);</span>
-<span class="w">            </span><span class="n">WriteTrackPath</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span><span class="w"> </span><span class="n">allSections</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteTrackPDPs</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">TrVectorSection</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sections</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;TrackPDPs (&quot;</span><span class="p">);</span>
-
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">sections</span><span class="p">.</span><span class="n">Count</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="kt">var</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sections</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">            </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;    TrackPDP ( {s.TileX} {s.TileZ} {s.X.ToString(&quot;</span><span class="n">F1</span><span class="s">&quot;)} {s.Y.ToString(&quot;</span><span class="n">F1</span><span class="s">&quot;)} {s.Z.ToString(&quot;</span><span class="n">F1</span><span class="s">&quot;)} 2 0 )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;)&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">();</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">WriteTrackPath</span><span class="p">(</span><span class="n">StreamWriter</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">TrVectorSection</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sections</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;TrackPath (&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    TrPathName ( TestTrack )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    Name ( \&quot;Test Track\&quot; )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    TrPathStart ( Start )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    TrPathEnd ( End )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;    TrPathNodes ( {sections.Count}&quot;</span><span class="p">);</span>
-
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">sections</span><span class="p">.</span><span class="n">Count</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="kt">uint</span><span class="w"> </span><span class="n">nextNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">sections</span><span class="p">.</span><span class="n">Count</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="p">(</span><span class="kt">uint</span><span class="p">)(</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mh">0xFFFFFFFF</span><span class="p">;</span>
-<span class="w">            </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;        TrPathNode ( 00000000 {i} {nextNode} {i} )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;    )&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">w</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;)&quot;</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<h2 id="extending-writers">Extending Writers</h2>
-<p>To add a new file format:</p>
-<ol>
-<li>
-<p>Create new writer class:
-<div class="highlight"><pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">MyFormatWriter</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Write</span><span class="p">(</span><span class="n">TrackNode</span><span class="p">[]</span><span class="w"> </span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">filename</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div></p>
-</li>
-<li>
-<p>Integrate into Program.cs:
-<div class="highlight"><pre><span></span><code><span class="kt">var</span><span class="w"> </span><span class="n">myWriter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">MyFormatWriter</span><span class="p">();</span>
-<span class="n">myWriter</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="n">trackNodes</span><span class="p">,</span><span class="w"> </span><span class="n">outputPath</span><span class="p">);</span>
-</code></pre></div></p>
-</li>
-</ol>
-<h2 id="error-handling">Error Handling</h2>
-<p>All writers include error checking:</p>
-<div class="highlight"><pre><span></span><code><span class="k">try</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">writer</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="n">filename</span><span class="p">);</span>
-<span class="w">    </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;✓ Generated {filename}&quot;</span><span class="p">);</span>
-<span class="p">}</span>
-<span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">ex</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$&quot;✗ Failed to generate {filename}: {ex.Message}&quot;</span><span class="p">);</span>
-<span class="w">    </span><span class="k">throw</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
+<ul>
+<li>Builds DynTrack list via <code>DynamicTrack.MakeDynamicTrackObjects(chains, primitives)</code> — <strong>one DynTrack per section</strong> on each chain (post-junction geometry).</li>
+<li>Writes into the base tile file <code>w-012842+014734.w</code> (offsets other tiles into that file’s local frame).</li>
+<li>Applies MSTS X negation on position/quaternion Z component at write time.</li>
+</ul>
+<h2 id="scenariowriter">ScenarioWriter</h2>
+<p>Still aimed at a <strong>single</strong> playable path: first <code>FeatureChain</code> when it still has two <code>TrEndNode</code>s. Dense snapped networks often skip this (logged). Full network path stitching is future work.</p>
+<h2 id="pat-act-srv-consist">PAT / ACT / SRV / Consist</h2>
+<p>Format references remain under <a href="../../formats/pat/">formats/</a>. Generation for those is not the main network deliverable anymore; TDB + tsection + world are.</p>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="../tdbdump_overview/">TdbDump Overview</a></li>
+<li><a href="../trackbuilder/">TrackBuilder</a></li>
+<li><a href="../../formats/world/">World format</a></li>
+</ul>
 
 
 
@@ -2121,7 +1735,7 @@ TrackPath (
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
       
 
@@ -663,33 +663,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#workflow-overview" class="md-nav__link">
+  <a href="#network-preferred" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Workflow Overview
+        Network (preferred)
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#setup" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Setup
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Setup">
+    <nav class="md-nav" aria-label="Network (preferred)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-activate-virtual-environment" class="md-nav__link">
+  <a href="#tight-vs-loose-fit" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Activate Virtual Environment
+        Tight vs loose fit
       
     </span>
   </a>
@@ -697,32 +686,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-prepare-geojson-file" class="md-nav__link">
+  <a href="#flip-easting" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Prepare GeoJSON File
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-configure-configpy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Configure config.py
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-run-the-fitter" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Run the Fitter
+        Flip easting
       
     </span>
   </a>
@@ -735,10 +702,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-simple-railroad" class="md-nav__link">
+  <a href="#single-objectid-legacy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example: Simple Railroad
+        Single OBJECTID (legacy)
       
     </span>
   </a>
@@ -746,10 +713,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-long-straight-tile-boundary-handling" class="md-nav__link">
+  <a href="#interpreting-fit-stats" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example: Long Straight (Tile Boundary Handling)
+        Interpreting fit stats
       
     </span>
   </a>
@@ -757,10 +724,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-complex-track" class="md-nav__link">
+  <a href="#two-point-stubs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example: Complex Track
+        Two-point stubs
       
     </span>
   </a>
@@ -768,99 +735,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#understanding-tolerance-parameters" class="md-nav__link">
+  <a href="#next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Understanding Tolerance Parameters
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Understanding Tolerance Parameters">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#straight_tolerance-05-tight" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        STRAIGHT_TOLERANCE = 0.5 (Tight)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#straight_tolerance-20-loose" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        STRAIGHT_TOLERANCE = 2.0 (Loose)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Troubleshooting
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Troubleshooting">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#object-id-not-found-in-geojson" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        "Object ID not found in GeoJSON"
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#too-manyfew-segments-generated" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        "Too many/few segments generated"
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#coordinates-dont-look-right" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        "Coordinates don't look right"
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next Steps
+        Next
       
     </span>
   </a>
@@ -1750,176 +1628,56 @@
 
 
 <h1 id="curve-fitter-usage-examples">Curve Fitter Usage Examples</h1>
-<p>The curve fitter processes real railroad GeoJSON data and extracts curve/straight primitives.</p>
-<h2 id="workflow-overview">Workflow Overview</h2>
-<div class="highlight"><pre><span></span><code>GeoJSON file (railroad coordinates)
-        ↓
-Configure config.py (tolerances, file path)
-        ↓
-Run extract_primitives.py
-        ↓
-primitives.json (straight/curve segments)
-        ↓
-TdbDump processes primitives
+<h2 id="network-preferred">Network (preferred)</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">cd </span><span class="n">Tools</span><span class="p">\</span><span class="n">curve-fitter</span>
+<span class="p">.\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">Activate</span><span class="p">.</span><span class="n">ps1</span>   <span class="c"># if using the local venv</span>
+
+<span class="c"># 1) OBJECTID list for a bbox (or edit bbox_objectids.txt by hand)</span>
+<span class="n">py</span> <span class="p">-</span><span class="n">3</span> <span class="n">select_bbox_objectids</span><span class="p">.</span><span class="n">py</span>
+
+<span class="c"># 2) Fit every ID in one shared local meter frame</span>
+<span class="n">py</span> <span class="p">-</span><span class="n">3</span> <span class="n">extract_bbox_network</span><span class="p">.</span><span class="n">py</span>
+
+<span class="c"># Inspect</span>
+<span class="c">#   bbox_network.geojson      → QGIS</span>
+<span class="c">#   bbox_network_local.json   → TdbDump</span>
 </code></pre></div>
-<h2 id="setup">Setup</h2>
-<h3 id="1-activate-virtual-environment">1. Activate Virtual Environment</h3>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>Tools<span class="se">\c</span>urve-fitter
-.<span class="se">\S</span>cripts<span class="se">\A</span>ctivate.ps1
+<p>Copy JSON to the TdbDump output folder and run the exe (see <a href="../../quick_start/">Quick Start</a>).</p>
+<h3 id="tight-vs-loose-fit">Tight vs loose fit</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># config.py</span>
+<span class="n">STRAIGHT_TOLERANCE</span> <span class="o">=</span> <span class="mf">0.1</span>   <span class="c1"># stricter → more short straights</span>
+<span class="n">CIRCLE_TOLERANCE</span> <span class="o">=</span> <span class="mf">1.0</span>
 </code></pre></div>
-<p>You should see <code>(curve-fitter)</code> in your prompt.</p>
-<h3 id="2-prepare-geojson-file">2. Prepare GeoJSON File</h3>
-<p>Ensure you have a GeoJSON file with railroad network data (lat/lon coordinates).</p>
-<h3 id="3-configure-configpy">3. Configure config.py</h3>
-<p>Edit <code>Tools/curve-fitter/config.py</code>:</p>
-<div class="highlight"><pre><span></span><code><span class="n">GEOJSON_FILE</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;C:\path\to\railroad_data.geojson&quot;</span>
-<span class="n">TARGET_OBJECTID</span> <span class="o">=</span> <span class="mi">12345</span>  <span class="c1"># Which railroad segment to extract</span>
-<span class="n">STRAIGHT_TOLERANCE</span> <span class="o">=</span> <span class="mf">1.0</span>    <span class="c1"># Meters RMS error for lines</span>
-<span class="n">CIRCLE_TOLERANCE</span> <span class="o">=</span> <span class="mf">1.5</span>      <span class="c1"># Meters RMS error for curves</span>
-<span class="n">FLIP_X_COORDINATES</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="n">PRIMITIVES_OUTPUT</span> <span class="o">=</span> <span class="s2">&quot;primitives.json&quot;</span>
+<p>Raise tolerances if the polyline is noisy; lower if you need closer vertex following.</p>
+<h3 id="flip-easting">Flip easting</h3>
+<p>If Track Viewer / OR looks mirrored vs QGIS:</p>
+<div class="highlight"><pre><span></span><code><span class="n">FLIP_X_COORDINATES</span> <span class="o">=</span> <span class="kc">True</span>   <span class="c1"># must re-extract after changing</span>
 </code></pre></div>
-<h3 id="4-run-the-fitter">4. Run the Fitter</h3>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>extract_primitives.py
+<h2 id="single-objectid-legacy">Single OBJECTID (legacy)</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># config.py</span>
+<span class="n">TARGET_OBJECTID</span> <span class="o">=</span> <span class="mi">1859</span>
+<span class="n">PRIMITIVES_OUTPUT</span> <span class="o">=</span> <span class="s1">&#39;primitives.json&#39;</span>
 </code></pre></div>
-<p>Or to run the full pipeline (including TdbDump):</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>main.py
+<div class="highlight"><pre><span></span><code><span class="n">py</span> <span class="p">-</span><span class="n">3</span> <span class="n">extract_primitives</span><span class="p">.</span><span class="n">py</span>
 </code></pre></div>
-<h2 id="example-simple-railroad">Example: Simple Railroad</h2>
-<p><strong>GeoJSON input</strong> (3000m track with straight + curve sections):</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;features&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span>
-<span class="w">    </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;OBJECTID&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span>
-<span class="w">    </span><span class="nt">&quot;geometry&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LineString&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">[</span><span class="mf">-122.500</span><span class="p">,</span><span class="w"> </span><span class="mf">47.650</span><span class="p">],</span>
-<span class="w">        </span><span class="p">[</span><span class="mf">-122.501</span><span class="p">,</span><span class="w"> </span><span class="mf">47.651</span><span class="p">],</span>
-<span class="w">        </span><span class="err">...</span><span class="w"> </span><span class="mi">50</span><span class="w"> </span><span class="err">poi</span><span class="kc">nts</span><span class="w"> </span><span class="err">...</span>
-<span class="w">        </span><span class="p">[</span><span class="mf">-122.530</span><span class="p">,</span><span class="w"> </span><span class="mf">47.680</span><span class="p">]</span>
-<span class="w">      </span><span class="p">]</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">  </span><span class="p">}]</span>
+<p>TdbDump loads this only when <code>bbox_network_local.json</code> is not found.</p>
+<h2 id="interpreting-fit-stats">Interpreting fit stats</h2>
+<p>In <code>bbox_network_local.json</code>, each feature may include:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;fit&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;rms_error&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.35</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;max_error&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;endpoint_error&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.6</span>
 <span class="p">}</span>
 </code></pre></div>
-<p><strong>Configuration:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="n">TARGET_OBJECTID</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">STRAIGHT_TOLERANCE</span> <span class="o">=</span> <span class="mf">1.0</span>
-<span class="n">CIRCLE_TOLERANCE</span> <span class="o">=</span> <span class="mf">1.5</span>
-</code></pre></div>
-<p><strong>Output</strong> (<code>primitives.json</code>):</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;segments&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;straight&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;radius&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;angle&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">500.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">500.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;clockwise&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;curve&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;radius&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">450.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;angle&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.785398</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">353.5</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;clockwise&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;straight&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;radius&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;angle&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1000.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1000.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;clockwise&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">  </span><span class="p">]</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>This means:
-- 500m straight section
-- 45-degree curve (π/4 radians) with 450m radius, turning right
-- 1000m straight section</p>
-<h2 id="example-long-straight-tile-boundary-handling">Example: Long Straight (Tile Boundary Handling)</h2>
-<p><strong>Input:</strong> 2500m straight (exceeds 2048m tile limit)</p>
-<p><strong>Curve fitter output:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;segments&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;straight&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">2048.0</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;straight&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">452.0</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">  </span><span class="p">]</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>Automatically split into two segments to respect tile boundaries.</p>
-<h2 id="example-complex-track">Example: Complex Track</h2>
-<p><strong>Multi-element track:</strong> straight → right curve → straight → left curve → straight</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;segments&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;straight&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">400</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;curve&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;radius&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;angle&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.5236</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;clockwise&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;straight&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">600</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;curve&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;radius&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">600</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;angle&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.4189</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;clockwise&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;straight&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">}</span>
-<span class="w">  </span><span class="p">]</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>Visual representation:
-<div class="highlight"><pre><span></span><code>Straight 400m
-     ↓
-  ╭─ Curve (R=500m, 30°)
-  │
-Straight 600m
-     ↓
-  ╰─ Curve (R=600m, 24°, left)
-  │
-Straight 300m
-</code></pre></div></p>
-<h2 id="understanding-tolerance-parameters">Understanding Tolerance Parameters</h2>
-<h3 id="straight_tolerance-05-tight">STRAIGHT_TOLERANCE = 0.5 (Tight)</h3>
+<p>High <code>endpoint_error</code> after chained refinement still leaves geo ends correct for snap — TrackBuilder aligns reconstructed chains separately.</p>
+<h2 id="two-point-stubs">Two-point stubs</h2>
+<p>Features with only two vertices become one straight. They often sit next to longer OBJECTIDs and matter for snap continuity.</p>
+<h2 id="next">Next</h2>
 <ul>
-<li>Fits straights closely to original data</li>
-<li>More segments, higher precision</li>
-<li>Slower TdbDump processing</li>
+<li><a href="../curve_output/">Curve Output</a></li>
+<li><a href="../full_walkthrough/">Full Walkthrough</a></li>
+<li><a href="../trackbuilder/">TrackBuilder</a></li>
 </ul>
-<h3 id="straight_tolerance-20-loose">STRAIGHT_TOLERANCE = 2.0 (Loose)</h3>
-<ul>
-<li>Generalized straights</li>
-<li>Fewer segments, faster processing</li>
-<li>May miss small deviations</li>
-</ul>
-<p><strong>Recommendation:</strong> Start with 1.0-1.5 meters for realistic track.</p>
-<h2 id="troubleshooting">Troubleshooting</h2>
-<h3 id="object-id-not-found-in-geojson">"Object ID not found in GeoJSON"</h3>
-<ul>
-<li>Check TARGET_OBJECTID matches actual OBJECTID in data</li>
-<li>Verify GeoJSON file is valid</li>
-</ul>
-<h3 id="too-manyfew-segments-generated">"Too many/few segments generated"</h3>
-<ul>
-<li>Adjust STRAIGHT_TOLERANCE and CIRCLE_TOLERANCE</li>
-<li>Lower tolerance = more segments</li>
-<li>Higher tolerance = fewer segments</li>
-</ul>
-<h3 id="coordinates-dont-look-right">"Coordinates don't look right"</h3>
-<ul>
-<li>Check FLIP_X_COORDINATES setting</li>
-<li>Verify GeoJSON uses standard [lon, lat] order</li>
-<li>Ensure sufficient point density in source data</li>
-</ul>
-<h2 id="next-steps">Next Steps</h2>
-<p>Once primitives.json is generated:</p>
-<ol>
-<li>TdbDump reads it</li>
-<li>Calculates world coordinates</li>
-<li>Generates TDB, .w, and .pat files</li>
-<li>Copy to route folder</li>
-<li>Load in Open Rails!</li>
-</ol>
-<p>See <a href="../tdbdump_overview/">TdbDump Overview</a> for details.</p>
 
 
 
@@ -1972,7 +1730,7 @@ Straight 300m
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

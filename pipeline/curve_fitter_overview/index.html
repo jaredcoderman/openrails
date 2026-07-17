@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
       
 
@@ -579,10 +579,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#purpose" class="md-nav__link">
+  <a href="#scripts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Purpose
+        Scripts
       
     </span>
   </a>
@@ -590,10 +590,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#input" class="md-nav__link">
+  <a href="#network-extract-what-tdbdump-expects" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Input
+        Network extract (what TdbDump expects)
       
     </span>
   </a>
@@ -601,10 +601,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#output" class="md-nav__link">
+  <a href="#fitting-algorithm-per-feature" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output
+        Fitting algorithm (per feature)
       
     </span>
   </a>
@@ -612,82 +612,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-it-works" class="md-nav__link">
+  <a href="#config-knobs-configpy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How It Works
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="How It Works">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#step-1-load-and-convert-coordinates" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 1: Load and Convert Coordinates
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-2-segmentation-model-selection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 2: Segmentation (Model Selection)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-3-arc-parameter-calculation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 3: Arc Parameter Calculation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-4-handle-long-straights" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 4: Handle Long Straights
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-5-export-primitives" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 5: Export Primitives
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-workflow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example Workflow
+        Config knobs (config.py)
       
     </span>
   </a>
@@ -695,60 +623,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#algorithms-used" class="md-nav__link">
+  <a href="#what-the-fitter-does-not-do" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Algorithms Used
+        What the fitter does not do
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Algorithms Used">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-pca-line-fitting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. PCA Line Fitting
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-taubin-circle-fitting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Taubin Circle Fitting
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-model-selection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Model Selection
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#integration-with-tdbdump" class="md-nav__link">
+  <a href="#next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Integration with TdbDump
+        Next
       
     </span>
   </a>
@@ -1722,98 +1611,108 @@
 
 
 <h1 id="curve-fitter-overview">Curve Fitter Overview</h1>
-<p>The Python Curve Fitter is the first step in the pipeline. It <strong>reverse-engineers railroad curves</strong> from real-world coordinate data (GeoJSON), fitting them into straight lines and circular arcs suitable for Open Rails.</p>
-<h2 id="purpose">Purpose</h2>
-<p>The curve fitter takes <strong>existing railroad coordinates</strong> (latitude/longitude) and:</p>
+<p>Python tools under <code>Tools/curve-fitter</code> turn NTAD (or similar) GeoJSON polylines into Open Rails–friendly <strong>straight</strong> and <strong>circular arc</strong> primitives.</p>
+<h2 id="scripts">Scripts</h2>
+<table>
+<thead>
+<tr>
+<th>Script</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>config.py</code></td>
+<td>Shared paths and fit tolerances</td>
+</tr>
+<tr>
+<td><code>select_bbox_objectids.py</code></td>
+<td>List OBJECTIDs with any vertex in a lat/lon bbox → <code>bbox_objectids.txt</code></td>
+</tr>
+<tr>
+<td><code>extract_bbox_network.py</code></td>
+<td><strong>Primary</strong>: fit every listed OBJECTID in one shared local meter frame → <code>bbox_network_local.json</code></td>
+</tr>
+<tr>
+<td><code>extract_primitives.py</code></td>
+<td>Legacy: fit one <code>TARGET_OBJECTID</code> → <code>primitives.json</code></td>
+</tr>
+<tr>
+<td><code>circle_fitter.py</code></td>
+<td>PCA lines, Taubin circles, model selection, chained refinement</td>
+</tr>
+<tr>
+<td><code>main.py</code></td>
+<td>Older single-feature entry (prefer the extract scripts)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="network-extract-what-tdbdump-expects">Network extract (what TdbDump expects)</h2>
+<p><code>extract_bbox_network.py</code>:</p>
+<ol>
+<li>Loads OBJECTIDs from <code>bbox_objectids.txt</code>.</li>
+<li>Pulls those features from the GeoJSON in <code>config.GEOJSON_FILE</code>.</li>
+<li>Builds <strong>one</strong> UTM zone + local origin for all vertices (optional <code>FLIP_X_COORDINATES</code>).</li>
+<li>Fits each polyline independently (same fitter as the single-ID path).</li>
+<li>Writes:</li>
+<li><code>bbox_network.geojson</code> — WGS84 for QGIS</li>
+<li><code>bbox_network_local.json</code> — CRS + <code>points_local</code> + primitives with absolute <code>start</code> poses</li>
+</ol>
+<p>Two-point polylines become a single straight (model selection needs ≥3 points).</p>
+<h2 id="fitting-algorithm-per-feature">Fitting algorithm (per feature)</h2>
+<ol>
+<li>Convert lon/lat → shared local <code>(x, z)</code> meters (<code>z</code> = northing-ish).</li>
+<li>Grow segments with model selection: PCA straight vs Taubin circle within tolerances.</li>
+<li>Optional <strong>chained refinement</strong> so successive primitives meet with less endpoint drift.</li>
+<li>Split straights longer than <code>MAX_STRAIGHT_LENGTH</code> (2048 m tile-friendly).</li>
+<li>Export primitives; each includes <code>start: {x, z, ay}</code> on the shared frame so C# can place sections without integrating only length/angle (which drifts).</li>
+</ol>
+<h2 id="config-knobs-configpy">Config knobs (<code>config.py</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GEOJSON_FILE</code></td>
+<td>Input FeatureCollection</td>
+</tr>
+<tr>
+<td><code>TARGET_OBJECTID</code></td>
+<td>Single-ID path only</td>
+</tr>
+<tr>
+<td><code>STRAIGHT_TOLERANCE</code> / <code>CIRCLE_TOLERANCE</code></td>
+<td>RMS fit thresholds (m)</td>
+</tr>
+<tr>
+<td><code>FLIP_X_COORDINATES</code></td>
+<td>Mirror easting before local origin</td>
+</tr>
+<tr>
+<td><code>MAX_STRAIGHT_LENGTH</code></td>
+<td>Split long straights</td>
+</tr>
+<tr>
+<td><code>PRIMITIVES_OUTPUT</code></td>
+<td>Single-ID output name</td>
+</tr>
+</tbody>
+</table>
+<p>Optional getattr defaults in <code>extract_primitives.py</code>: max circle radius, min curve sweep/sagitta, chained refinement, etc.</p>
+<h2 id="what-the-fitter-does-not-do">What the fitter does <em>not</em> do</h2>
 <ul>
-<li>Converts coordinates to local Cartesian (UTM) system</li>
-<li>Fits straight lines and circular arcs to the coordinate sequence</li>
-<li>Determines curve parameters (radius, angle, direction)</li>
-<li>Produces <strong>primitives</strong> (straight/curve definitions) for track building</li>
-<li>Handles long straights by splitting at tile boundaries</li>
+<li>No TDB pins, junctions, or world files (that is TdbDump).</li>
+<li>No guarantee reconstructed chains meet neighbors in meters — geo ends meet; reconstruction can drift hundreds of meters until TrackBuilder aligns.</li>
 </ul>
-<h2 id="input">Input</h2>
-<p>The curve fitter reads from <strong>GeoJSON railroad network files</strong> containing:</p>
+<h2 id="next">Next</h2>
 <ul>
-<li><strong>Real railroad coordinates</strong>: lat/lon polyline data</li>
-<li><strong>ObjectID</strong>: Which railroad segment to process</li>
-<li><strong>Configuration</strong> (config.py):</li>
-<li><code>STRAIGHT_TOLERANCE</code>: RMS error tolerance for line fitting (meters)</li>
-<li><code>CIRCLE_TOLERANCE</code>: RMS error tolerance for circle fitting (meters)</li>
-<li><code>FLIP_X_COORDINATES</code>: Mirror the coordinate system if needed</li>
-<li>Input/output file paths</li>
+<li><a href="../curve_input/">Input format</a> / <a href="../curve_output/">Output format</a></li>
+<li><a href="../tdbdump_overview/">TdbDump Overview</a></li>
 </ul>
-<p>See <a href="../curve_input/">Curve Input Format</a> for details.</p>
-<h2 id="output">Output</h2>
-<p>The curve fitter produces <strong>primitives</strong> - simplified representations:</p>
-<ul>
-<li><strong>Straight Primitive</strong>: <code>{"type": "straight", "radius": 0.0, "angle": length, "length": meters}</code></li>
-<li><strong>Curve Primitive</strong>: <code>{"type": "curve", "radius": meters, "angle": radians, "clockwise": bool}</code></li>
-</ul>
-<p>These primitives are exported to <code>primitives.json</code> for TdbDump conversion.</p>
-<p>See <a href="../curve_output/">Curve Output Format</a> for details.</p>
-<h2 id="how-it-works">How It Works</h2>
-<h3 id="step-1-load-and-convert-coordinates">Step 1: Load and Convert Coordinates</h3>
-<p>Read GeoJSON file with railroad lat/lon coordinates and convert to local Cartesian meters (using UTM projection).</p>
-<h3 id="step-2-segmentation-model-selection">Step 2: Segmentation (Model Selection)</h3>
-<p>For each sequence of points:
-1. <strong>Try straight line fit</strong> - Uses PCA (Principal Component Analysis) to fit a line
-2. <strong>Try circular arc fit</strong> - Uses Taubin's least-squares method to fit a circle
-3. <strong>Select winner</strong> - Chooses the model that covers more points within tolerance
-4. <strong>Grow segment</strong> - Incrementally adds points until error exceeds tolerance</p>
-<h3 id="step-3-arc-parameter-calculation">Step 3: Arc Parameter Calculation</h3>
-<p>For curved segments:
-- Calculate center point and radius from circle fit
-- Compute sweep angle (total rotation)
-- Determine direction (clockwise vs counter-clockwise)
-- Generate curve primitive</p>
-<h3 id="step-4-handle-long-straights">Step 4: Handle Long Straights</h3>
-<p>Split any straight section exceeding 2048m (Open Rails tile limit) into multiple primitives.</p>
-<h3 id="step-5-export-primitives">Step 5: Export Primitives</h3>
-<p>Output <code>primitives.json</code> with all segments ready for TdbDump.</p>
-<h2 id="example-workflow">Example Workflow</h2>
-<div class="highlight"><pre><span></span><code>Real railroad GeoJSON
-├─ Coordinates: (lat1, lon1), (lat2, lon2), ..., (latN, lonN)
-│
-├─ Convert to Cartesian meters (UTM)
-│
-├─ Fit segments:
-│  ├─ Points 0-15: Fit line (straight) → RMS error 0.2m
-│  ├─ Points 15-32: Fit circle (curve, R=500m) → RMS error 0.5m
-│  └─ Points 32-48: Fit line (straight) → RMS error 0.3m
-│
-└─ Output primitives.json
-   ├─ Straight primitive (0-15)
-   ├─ Curve primitive (15-32, R=500m)
-   └─ Straight primitive (32-48)
-</code></pre></div>
-<h2 id="algorithms-used">Algorithms Used</h2>
-<h3 id="1-pca-line-fitting">1. PCA Line Fitting</h3>
-<ul>
-<li>Finds principal component (direction of least variance)</li>
-<li>Centers on centroid of points</li>
-<li>Calculates perpendicular distances (RMS error)</li>
-</ul>
-<h3 id="2-taubin-circle-fitting">2. Taubin Circle Fitting</h3>
-<ul>
-<li>Least-squares optimization to minimize radial distance</li>
-<li>Finds center point and radius</li>
-<li>Calculates RMS radial error</li>
-</ul>
-<h3 id="3-model-selection">3. Model Selection</h3>
-<ul>
-<li>Fits both models to each growing point sequence</li>
-<li>Compares RMS errors against configured tolerances</li>
-<li>Selects model covering more points within tolerance</li>
-<li>Guarantees every vertex is covered by exactly one segment</li>
-</ul>
-<h2 id="integration-with-tdbdump">Integration with TdbDump</h2>
-<p>The <code>primitives.json</code> output is consumed by TdbDump to:
-- Calculate world coordinates and rotations
-- Generate TDB track database entries
-- Create path waypoints
-- Produce world geometry files</p>
-<p>See <a href="../tdbdump_overview/">TdbDump Overview</a> for the next step.</p>
 
 
 
@@ -1866,7 +1765,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

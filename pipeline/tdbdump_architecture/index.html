@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
       
 
@@ -781,7 +781,7 @@
   <a href="#component-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Component Diagram
+        Component diagram
       
     </span>
   </a>
@@ -789,132 +789,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#data-flow" class="md-nav__link">
+  <a href="#data-model-modelscs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Data Flow
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Data Flow">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-input-parsing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Input Parsing
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-model-construction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Model Construction
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-trackbuilder-processing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. TrackBuilder Processing
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-output-generation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Output Generation
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-design-decisions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Design Decisions
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Key Design Decisions">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#single-vector-node" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Single Vector Node
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pin-reciprocity" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pin Reciprocity
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#coordinate-transformation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Coordinate Transformation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tile-management" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tile Management
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#extending-tdbdump" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Extending TdbDump
+        Data model (Models.cs)
       
     </span>
   </a>
@@ -922,10 +800,54 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#performance-considerations" class="md-nav__link">
+  <a href="#load-path" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Performance Considerations
+        Load path
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buildallnodes-stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BuildAllNodes stages
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#writers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pin-junction-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pin / junction semantics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extension-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extension points
       
     </span>
   </a>
@@ -1700,197 +1622,108 @@
 
 
 <h1 id="tdbdump-architecture">TdbDump Architecture</h1>
-<p>Deep dive into the internal architecture of TdbDump.</p>
-<h2 id="component-diagram">Component Diagram</h2>
-<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────┐
-│           Program.cs (Entry Point)              │
-└──────────────┬──────────────────────────────────┘
-               │ Parses arguments
-               ↓
-┌─────────────────────────────────────────────────┐
-│      Input Handler (Reads JSON curve data)      │
-└──────────────┬──────────────────────────────────┘
-               │
-               ↓
-┌─────────────────────────────────────────────────┐
-│         Models.cs (Data Structures)             │
-│  ┌────────────────────────────────────────────┐ │
-│  │ - TrackNode / TrVectorSection              │ │
-│  │ - TrPin / TrEndNode                        │ │
-│  │ - DynamicTrack / WorldFile                 │ │
-│  └────────────────────────────────────────────┘ │
-└──────────────┬──────────────────────────────────┘
-               │
-               ↓
-┌─────────────────────────────────────────────────┐
-│       TrackBuilder.cs (TDB Generation)          │
-│  ┌────────────────────────────────────────────┐ │
-│  │ BuildAllNodes() → TrackNode[] with pins    │ │
-│  │ CalculateTiles() → TileX, TileZ            │ │
-│  │ CalculateUIDs() → Unique identifiers       │ │
-│  └────────────────────────────────────────────┘ │
-└──────────────┬──────────────────────────────────┘
-               │
-        ┌──────┼──────┬──────────┐
-        ↓      ↓      ↓          ↓
-     TDB     World  Path      Activity
-    Writer   Writer Writer    Template
-        │      │      │          │
-        ↓      ↓      ↓          ↓
-    .tdb    .w    .pat        .act
+<p>How the C# side is wired today.</p>
+<h2 id="component-diagram">Component diagram</h2>
+<div class="highlight"><pre><span></span><code>┌──────────────────────────────────────────┐
+│ Program.cs                               │
+│  TrackBuilder → writers → route files    │
+└──────────────────┬───────────────────────┘
+                   ↓
+┌──────────────────────────────────────────┐
+│ TrackBuilder                             │
+│  BuildFromNetwork / LegacyPrimitives     │
+│  BuildAllNodes:                          │
+│    links → align → reseat → junctions    │
+│    → UID → vector snapshot → pin wire    │
+└──────────────────┬───────────────────────┘
+                   ↓
+     ┌─────────────┼──────────────┬────────────┐
+     ↓             ↓              ↓            ↓
+ TSectionWriter  TDBWriter   WorldWriter  ScenarioWriter
+     ↓             ↓              ↓            ↓
+ tsection.dat   .tdb          WORLD/*.w   .pat/.act/.srv*
 </code></pre></div>
-<h2 id="data-flow">Data Flow</h2>
-<h3 id="1-input-parsing">1. Input Parsing</h3>
-<div class="highlight"><pre><span></span><code><span class="c1">// Read JSON from curve fitter</span>
-<span class="kt">var</span><span class="w"> </span><span class="n">json</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">File</span><span class="p">.</span><span class="n">ReadAllText</span><span class="p">(</span><span class="n">inputPath</span><span class="p">);</span>
-<span class="kt">var</span><span class="w"> </span><span class="n">trackData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JsonConvert</span><span class="p">.</span><span class="n">DeserializeObject</span><span class="o">&lt;</span><span class="n">TrackData</span><span class="o">&gt;</span><span class="p">(</span><span class="n">json</span><span class="p">);</span>
+<p>*Scenario write is best-effort for the first chain with two free ends.</p>
+<h2 id="data-model-modelscs">Data model (<code>Models.cs</code>)</h2>
+<div class="highlight"><pre><span></span><code>NetworkLocalFile
+  crs, features[] → NetworkFeature
+                      objectid, start/end, points_local, primitives[]
 
-<span class="c1">// trackData contains:</span>
-<span class="c1">// - base_tile_x, base_tile_z</span>
-<span class="c1">// - sections[] with X, Y, Z, AX, AY, AZ, radius, length</span>
+FeatureChain
+  ObjectId, Sections[], Geo* poses, Start/End reconstructed, VectorNodeId
+
+TrackPrimitive
+  SectionIndex, Type, Length/Radius/Angle/Clockwise, Start pose
+
+TrackNode          — vector (Id, Sections, Pins)
+TrEndNode          — terminus
+TrJunctionNode     — 3-way (ShapeIndex, pose, Pins ordered stem/main/div)
+TrVectorSection    — one TDB section row + WorldFileUiD
+TrPin(Node, Pin)   — Pin = direction on the *linked* node
 </code></pre></div>
-<h3 id="2-model-construction">2. Model Construction</h3>
-<p>Models.cs defines:</p>
-<div class="highlight"><pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">TrackNode</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">Id</span><span class="p">;</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">TrVectorSection</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Sections</span><span class="p">;</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">TrPin</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Pins</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">TrVectorSection</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">SectionIndex</span><span class="p">;</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">TileX</span><span class="p">,</span><span class="w"> </span><span class="n">TileZ</span><span class="p">;</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="n">Z</span><span class="p">;</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">AX</span><span class="p">,</span><span class="w"> </span><span class="n">AY</span><span class="p">,</span><span class="w"> </span><span class="n">AZ</span><span class="p">;</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">uint</span><span class="w"> </span><span class="n">WorldFileUiD</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">TrPin</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">Node</span><span class="p">;</span><span class="w">      </span><span class="c1">// Linked node ID</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">Direction</span><span class="p">;</span><span class="w"> </span><span class="c1">// 0 or 1 (linked node&#39;s side)</span>
-<span class="p">}</span>
+<h2 id="load-path">Load path</h2>
+<div class="highlight"><pre><span></span><code><span class="k">new</span><span class="w"> </span><span class="nf">TrackBuilder</span><span class="p">()</span>
+<span class="w">  </span><span class="err">→</span><span class="w"> </span><span class="n">FindInputFile</span><span class="p">(</span><span class="s">&quot;bbox_network_local.json&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">??</span><span class="w"> </span><span class="n">FindInputFile</span><span class="p">(</span><span class="s">&quot;primitives.json&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="err">→</span><span class="w"> </span><span class="n">BuildFromNetwork</span><span class="w">  </span><span class="k">or</span><span class="w">  </span><span class="n">BuildFromLegacyPrimitives</span>
 </code></pre></div>
-<h3 id="3-trackbuilder-processing">3. TrackBuilder Processing</h3>
-<div class="highlight"><pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">TrackBuilder</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="c1">// Input: JSON section data</span>
-<span class="w">    </span><span class="c1">// Output: Valid TDB node structure</span>
-
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="n">TrackNode</span><span class="p">[]</span><span class="w"> </span><span class="nf">BuildAllNodes</span><span class="p">()</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">// 1. Create start TrEndNode (ID 1)</span>
-<span class="w">        </span><span class="c1">// 2. Create single TrVectorNode (ID 2) with all sections</span>
-<span class="w">        </span><span class="c1">// 3. Create end TrEndNode (ID 3)</span>
-<span class="w">        </span><span class="c1">// 4. Set up reciprocal pin connections</span>
-<span class="w">        </span><span class="c1">// 5. Calculate coordinates, tiles, UIDs</span>
-<span class="w">        </span><span class="c1">// 6. Return complete node array</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>Key algorithm:</p>
-<div class="highlight"><pre><span></span><code>For each input section:
-  - Accumulate position and rotation
-  - Calculate which tile it falls into
-  - Create TrVectorSection entry
-  - Set tile coordinates (TileX, TileZ)
-  - Set local coordinates (X, Y, Z)
-  - Set rotation angles (AX, AY, AZ)
-  - Assign unique UID
-
-Create start/end nodes with pins pointing to vector node
-Set vector node pins pointing back to end nodes
-</code></pre></div>
-<h3 id="4-output-generation">4. Output Generation</h3>
-<p>Each writer takes the node array and generates files:</p>
-<p><strong>TDBWriter</strong>
-<div class="highlight"><pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Write</span><span class="p">(</span><span class="n">TrackNode</span><span class="p">[]</span><span class="w"> </span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">filename</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="c1">// Generate STF format:</span>
-<span class="w">    </span><span class="c1">// trackdb (</span>
-<span class="w">    </span><span class="c1">//     tracknodes ( count</span>
-<span class="w">    </span><span class="c1">//         tracknode ( id</span>
-<span class="w">    </span><span class="c1">//             trvectornode ( ... )</span>
-<span class="w">    </span><span class="c1">//             trpins ( inCount outCount</span>
-<span class="w">    </span><span class="c1">//                 TrPin ( linkId direction )</span>
-<span class="w">    </span><span class="c1">//             )</span>
-<span class="w">    </span><span class="c1">//         )</span>
-<span class="w">    </span><span class="c1">//     )</span>
-<span class="w">    </span><span class="c1">// )</span>
-<span class="p">}</span>
-</code></pre></div></p>
-<p><strong>WorldWriter</strong>
-<div class="highlight"><pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Write</span><span class="p">(</span><span class="n">TrackNode</span><span class="p">[]</span><span class="w"> </span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">outputDir</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="c1">// Generate DynTrack objects for world files</span>
-<span class="w">    </span><span class="c1">// For each section, create DyntrackObj with:</span>
-<span class="w">    </span><span class="c1">// - Position (negated Z for TSRE5 compatibility)</span>
-<span class="w">    </span><span class="c1">// - Quaternion rotation</span>
-<span class="w">    </span><span class="c1">// - Reference to TDB via UiD</span>
-<span class="p">}</span>
-</code></pre></div></p>
-<p><strong>PathWriter</strong>
-<div class="highlight"><pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Write</span><span class="p">(</span><span class="n">TrackNode</span><span class="p">[]</span><span class="w"> </span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">filename</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="c1">// Generate .pat file with TrackPDPs and TrPathNodes</span>
-<span class="w">    </span><span class="c1">// Each TrackPDP = one waypoint on path</span>
-<span class="w">    </span><span class="c1">// TrPathNodes link them together</span>
-<span class="p">}</span>
-</code></pre></div></p>
-<h2 id="key-design-decisions">Key Design Decisions</h2>
-<h3 id="single-vector-node">Single Vector Node</h3>
-<p>Instead of one node per section, all sections go into <strong>one TrVectorNode</strong>. This:
-- Allows MapViewer to use optimized rendering path
-- Avoids accessing UiD on vector nodes (they don't have one)
-- Matches expected MSTS structure</p>
-<h3 id="pin-reciprocity">Pin Reciprocity</h3>
-<p>Every pin connection is bidirectional:
-- If Node A pins to Node B, Node B must pin back to Node A
-- Directions specify which side of the target node
-- Side 0 = "input", Side 1 = "output" (conceptually)</p>
-<h3 id="coordinate-transformation">Coordinate Transformation</h3>
-<ul>
-<li>TSRE5 expects negated Z for compatibility</li>
-<li>X coordinate sign handling for proper orientation</li>
-<li>Quaternion adjustments for 180-degree Y rotation</li>
-</ul>
-<h3 id="tile-management">Tile Management</h3>
-<ul>
-<li>All sections may span multiple tiles</li>
-<li>Each section's TileX, TileZ indicates its home tile</li>
-<li>Local X, Z are relative within that tile (0-2048)</li>
-</ul>
-<h2 id="extending-tdbdump">Extending TdbDump</h2>
-<p>To add new features:</p>
+<p>Network path registers every primitive into <code>_primitives</code> with a unique <code>SectionIndex</code> (from 40001 upward) and builds <code>_chains</code>.</p>
+<h2 id="buildallnodes-stages">BuildAllNodes stages</h2>
 <ol>
-<li><strong>Add to Models.cs</strong> - New data structure</li>
-<li><strong>Update TrackBuilder</strong> - Calculate or populate new structure</li>
-<li><strong>Update Writers</strong> - Output new fields</li>
-<li><strong>Update Program.cs</strong> - Accept new options</li>
+<li><strong>ID reserve</strong> — vector ids 1..N for chains.</li>
+<li><strong>Geo links</strong> — endpoints within 25 m.</li>
+<li><strong>Align</strong> — multi-way clusters, then connected components.</li>
+<li><strong>Reseat</strong> — close residual gaps without twin reverse straights.</li>
+<li><strong>Junctions</strong> — 3-way only; reshape tips; add <code>TrJunctionNode</code> into <code>allNodes</code>.</li>
+<li><strong>UIDs</strong> — unique <code>WorldFileUiD</code> per section for DynTracks.</li>
+<li><strong>Snapshot</strong> — <code>TrackNode.Sections</code> copied from chain (must be post-reshape).</li>
+<li><strong>Wire</strong> — junction / link / end pins.</li>
+<li><strong>Order</strong> — sort by node id for stable TDB.</li>
 </ol>
-<p>Example: Adding super-elevation:</p>
-<div class="highlight"><pre><span></span><code><span class="c1">// Models.cs</span>
-<span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">TrVectorSection</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">BankingAngle</span><span class="p">;</span><span class="w">  </span><span class="c1">// New field</span>
-<span class="p">}</span>
-
-<span class="c1">// TrackBuilder.cs</span>
-<span class="n">section</span><span class="p">.</span><span class="n">BankingAngle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">inputSection</span><span class="p">.</span><span class="n">banking</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-
-<span class="c1">// TDBWriter.cs</span>
-<span class="n">writer</span><span class="p">.</span><span class="n">Write</span><span class="p">(</span><span class="s">$&quot;{section.BankingAngle} &quot;</span><span class="p">);</span>
-</code></pre></div>
-<h2 id="performance-considerations">Performance Considerations</h2>
+<h2 id="writers">Writers</h2>
 <ul>
-<li>Sections are batched into single VectorNode for efficiency</li>
-<li>Tile calculations use modulo arithmetic</li>
-<li>Pin arrays pre-allocated based on node count</li>
-<li>File I/O buffered</li>
+<li><strong>TSectionWriter</strong> — <code>SectionCurve ( 0|1 ) index length|angle radius</code> style dynamic sections for every primitive (including reseated tips).</li>
+<li><strong>TDBWriter</strong> — <code>WriteEndNode</code>, <code>WriteVectorNode</code>, <code>WriteJunctionNode</code>.</li>
+<li><strong>WorldWriter</strong> — packs all DynTracks into base tile <code>w-012842+014734.w</code> with MSTS X negation on write.</li>
+<li><strong>DynamicTrack.MakeDynamicTrackObjects</strong> — iterates <code>chain.Sections</code> only (orphaned removed tip sections are not written).</li>
 </ul>
-<p>Typical performance: ~100K sections in &lt;5 seconds.</p>
+<h2 id="pin-junction-semantics">Pin / junction semantics</h2>
+<p>Unchanged Open Rails rules: pin direction names the <strong>linked</strong> node’s side. Junctions use header <code>1 2</code> (one in, two out). See <a href="../../concepts/pins/">Pin Connections</a> and <a href="../../deep_dives/pin_semantics/">Pin Semantics</a>.</p>
+<h2 id="extension-points">Extension points</h2>
+<table>
+<thead>
+<tr>
+<th>Want</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Different route path</td>
+<td><code>Program.cs</code> constants</td>
+</tr>
+<tr>
+<td>Snap radius</td>
+<td><code>EndpointSnapMeters</code></td>
+</tr>
+<tr>
+<td>Tip lengths at turnouts</td>
+<td><code>ReshapeJunctionApproach</code> call sites</td>
+</tr>
+<tr>
+<td>N-way switches</td>
+<td><code>CreateJunctionNodes</code> (currently 3 only)</td>
+</tr>
+<tr>
+<td>Switch meshes</td>
+<td><code>TrJunctionNode.ShapeIndex</code> + shapes</td>
+</tr>
+<tr>
+<td>Full-network paths</td>
+<td>Scenario / path stitching (not done)</td>
+</tr>
+</tbody>
+</table>
 
 
 
@@ -1943,7 +1776,7 @@ Set vector node pins pointing back to end nodes
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

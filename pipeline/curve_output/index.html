@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
       
 
@@ -635,33 +635,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#output-structure" class="md-nav__link">
+  <a href="#primary-bbox_network_localjson" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output Structure
+        Primary: bbox_network_local.json
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#primitive-types" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Primitive Types
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Primitive Types">
+    <nav class="md-nav" aria-label="Primary: bbox_network_local.json">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#straight-primitive" class="md-nav__link">
+  <a href="#per-feature-fields" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Straight Primitive
+        Per-feature fields
       
     </span>
   </a>
@@ -669,10 +658,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#curve-primitive" class="md-nav__link">
+  <a href="#primitive-fields" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Curve Primitive
+        Primitive fields
       
     </span>
   </a>
@@ -685,71 +674,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-primitives-are-generated" class="md-nav__link">
+  <a href="#legacy-primitivesjson" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How Primitives Are Generated
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="How Primitives Are Generated">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-coordinate-conversion" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Coordinate Conversion
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-model-fitting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Model Fitting
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-arc-parameter-calculation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Arc Parameter Calculation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-splitting-long-straights" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Splitting Long Straights
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-workflow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example Workflow
+        Legacy: primitives.json
       
     </span>
   </a>
@@ -757,21 +685,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#key-differences-from-input" class="md-nav__link">
+  <a href="#how-tdbdump-uses-this" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Key Differences from Input
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-tdbdump-does-next" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What TdbDump Does Next
+        How TdbDump uses this
       
     </span>
   </a>
@@ -1689,238 +1606,135 @@
 
 
 <h1 id="curve-output-format">Curve Output Format</h1>
-<p>The curve fitter produces <strong>primitives</strong> - simplified representations of straight lines and curves fitted to the railroad coordinate data.</p>
-<h2 id="output-structure">Output Structure</h2>
+<h2 id="primary-bbox_network_localjson">Primary: <code>bbox_network_local.json</code></h2>
+<p>Written by <code>extract_bbox_network.py</code>. This is what TrackBuilder loads first.</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;segments&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="nt">&quot;crs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;epsg&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">32612</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;origin_easting&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">…</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;origin_northing&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">…</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;flip_x&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;axes&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;x=easting-ish (after flip), z=northing&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;geojson&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;….geojson&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;objectid_list&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bbox_objectids.txt&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;bbox_corners_latlon&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="err">la</span><span class="kc">t</span><span class="p">,</span><span class="w"> </span><span class="err">lo</span><span class="kc">n</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="err">la</span><span class="kc">t</span><span class="p">,</span><span class="w"> </span><span class="err">lo</span><span class="kc">n</span><span class="p">]]</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;features&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;straight&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;radius&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;angle&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">2048.5</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;clockwise&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">2048.5</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;curve&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;radius&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">500.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;angle&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.785398</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;clockwise&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">392.7</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;straight&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;radius&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;angle&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1500.25</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;clockwise&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1500.25</span>
+<span class="w">      </span><span class="nt">&quot;objectid&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2017</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;vertex_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">120</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;z&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;ay&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-0.54</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;end&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">500.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;z&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">80.0</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;points_local&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">],</span><span class="w"> </span><span class="err">…</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;fit&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;rms_error&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;max_error&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.2</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;endpoint_error&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.8</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;primitives&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;straight&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">64.2</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;radius&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;angle&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">64.2</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;clockwise&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;x&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;z&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;ay&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-0.54</span><span class="w"> </span><span class="p">}</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;curve&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;radius&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">176.38</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;angle&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.991214</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;clockwise&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;x&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">…</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;z&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">…</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;ay&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">…</span><span class="w"> </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">]</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
-<h2 id="primitive-types">Primitive Types</h2>
-<h3 id="straight-primitive">Straight Primitive</h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;straight&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;radius&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;angle&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1500.25</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;clockwise&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1500.25</span>
-<span class="p">}</span>
-</code></pre></div>
+<h3 id="per-feature-fields">Per-feature fields</h3>
 <table>
 <thead>
 <tr>
 <th>Field</th>
-<th>Type</th>
-<th>Description</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>objectid</code></td>
+<td>Stable ID → one TDB vector chain</td>
+</tr>
+<tr>
+<td><code>start</code> / <code>end</code></td>
+<td>Geo polyline ends in local meters (<code>ay</code> = travel heading at start)</td>
+</tr>
+<tr>
+<td><code>points_local</code></td>
+<td>Full polyline for geo heading at either end / debug</td>
+</tr>
+<tr>
+<td><code>primitives[]</code></td>
+<td>Fitted sections; each has absolute <code>start</code> pose</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td>Present instead of primitives if fit failed</td>
+</tr>
+</tbody>
+</table>
+<h3 id="primitive-fields">Primitive fields</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Straight</th>
+<th>Curve</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>type</code></td>
-<td>string</td>
-<td>Always "straight"</td>
-</tr>
-<tr>
-<td><code>radius</code></td>
-<td>float</td>
-<td>Always 0.0 for straight</td>
-</tr>
-<tr>
-<td><code>angle</code></td>
-<td>float</td>
-<td>Length along the straight section (meters)</td>
-</tr>
-<tr>
-<td><code>clockwise</code></td>
-<td>bool</td>
-<td>False for straights</td>
+<td><code>"straight"</code></td>
+<td><code>"curve"</code></td>
 </tr>
 <tr>
 <td><code>length</code></td>
-<td>float</td>
-<td>Same as angle - distance traveled (meters)</td>
-</tr>
-</tbody>
-</table>
-<h3 id="curve-primitive">Curve Primitive</h3>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;curve&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;radius&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">500.0</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;angle&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.785398</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;clockwise&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;length&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">392.7</span>
-<span class="p">}</span>
-</code></pre></div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>type</code></td>
-<td>string</td>
-<td>Always "curve"</td>
+<td>meters</td>
+<td>omitted (use <code>radius * angle</code>)</td>
 </tr>
 <tr>
 <td><code>radius</code></td>
-<td>float</td>
-<td>Circle radius in meters</td>
+<td><code>0</code></td>
+<td>meters</td>
 </tr>
 <tr>
 <td><code>angle</code></td>
-<td>float</td>
-<td>Arc sweep angle in radians (0 to 2π)</td>
+<td>same as length (legacy)</td>
+<td>sweep radians</td>
 </tr>
 <tr>
 <td><code>clockwise</code></td>
-<td>bool</td>
-<td>True = right turn, False = left turn</td>
+<td>false</td>
+<td>true = OR right-hand sign convention</td>
 </tr>
 <tr>
-<td><code>length</code></td>
-<td>float</td>
-<td>Arc length traveled (radius × angle)</td>
+<td><code>start</code></td>
+<td><code>{x,z,ay}</code> on shared frame</td>
+<td>same</td>
 </tr>
 </tbody>
 </table>
-<h2 id="how-primitives-are-generated">How Primitives Are Generated</h2>
-<h3 id="1-coordinate-conversion">1. Coordinate Conversion</h3>
-<p>Real railroad coordinates (lat/lon) → Local Cartesian (UTM) in meters</p>
-<h3 id="2-model-fitting">2. Model Fitting</h3>
-<p>For each segment:
-- <strong>Fit straight line</strong> using PCA
-- <strong>Fit circular arc</strong> using Taubin's method
-- <strong>Select winner</strong> based on RMS error vs tolerance</p>
-<h3 id="3-arc-parameter-calculation">3. Arc Parameter Calculation</h3>
-<p>For curves, compute:
-- <strong>Center point</strong>: From least-squares circle fit
-- <strong>Radius</strong>: Distance from center to points
-- <strong>Angles</strong>: <code>arctan2()</code> from center to start/end points
-- <strong>Sweep angle</strong>: Total rotation (radians)
-- <strong>Direction</strong>: Clockwise if cross product &lt; 0</p>
-<h3 id="4-splitting-long-straights">4. Splitting Long Straights</h3>
-<p>Any straight &gt; 2048m is split into multiple primitives (Open Rails tile limit)</p>
-<h2 id="example-workflow">Example Workflow</h2>
-<p><strong>Input: GeoJSON railroad coordinates (50 points, ~2km)</strong></p>
-<div class="highlight"><pre><span></span><code>Point sequence: (lat1, lon1) → (lat2, lon2) → ... → (lat50, lon50)
-
-Convert to Cartesian: (x1, y1) → (x2, y2) → ... → (x50, y50)
-
-Fit segments:
-├─ Points 0-15: Fit line → RMS error 0.3m ✓ (&lt; 1.0m tolerance)
-│  Output: {&quot;type&quot;: &quot;straight&quot;, &quot;length&quot;: 500}
-│
-├─ Points 15-35: Fit circle (R=450m) → RMS error 0.8m ✓ (&lt; 1.5m tolerance)
-│  Output: {&quot;type&quot;: &quot;curve&quot;, &quot;radius&quot;: 450, &quot;angle&quot;: 0.524, &quot;clockwise&quot;: true}
-│
-└─ Points 35-50: Fit line → RMS error 0.2m ✓ (&lt; 1.0m tolerance)
-   Output: {&quot;type&quot;: &quot;straight&quot;, &quot;length&quot;: 300}
-
-Final primitives.json:
-[
-  {&quot;type&quot;: &quot;straight&quot;, &quot;length&quot;: 500},
-  {&quot;type&quot;: &quot;curve&quot;, &quot;radius&quot;: 450, &quot;angle&quot;: 0.524, &quot;clockwise&quot;: true},
-  {&quot;type&quot;: &quot;straight&quot;, &quot;length&quot;: 300}
-]
-</code></pre></div>
-<h2 id="key-differences-from-input">Key Differences from Input</h2>
-<table>
-<thead>
-<tr>
-<th>Aspect</th>
-<th>Input</th>
-<th>Output</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Source</strong></td>
-<td>Real coordinates (lat/lon)</td>
-<td>Fitted primitives</td>
-</tr>
-<tr>
-<td><strong>Detail level</strong></td>
-<td>Per-vertex points</td>
-<td>Generalized segments</td>
-</tr>
-<tr>
-<td><strong>Position data</strong></td>
-<td>Yes (full coordinates)</td>
-<td>No (primitives only)</td>
-</tr>
-<tr>
-<td><strong>World coords</strong></td>
-<td>None</td>
-<td>None (TdbDump adds these)</td>
-</tr>
-<tr>
-<td><strong>Rotation data</strong></td>
-<td>None</td>
-<td>Curve angles only</td>
-</tr>
-</tbody>
-</table>
-<h2 id="what-tdbdump-does-next">What TdbDump Does Next</h2>
-<p>The primitives are consumed by TdbDump to:</p>
+<p>Heading <code>ay</code> uses Open Rails–style yaw: <code>atan2(dx, dz)</code> with <code>0</code> along +Z.</p>
+<p>Also written: <code>bbox_network.geojson</code> (WGS84) for QGIS — not consumed by TdbDump.</p>
+<h2 id="legacy-primitivesjson">Legacy: <code>primitives.json</code></h2>
+<p>From <code>extract_primitives.py</code> (one OBJECTID). Shape is a flat <code>segments</code> / primitive list without multi-feature CRS. TrackBuilder still accepts it via <code>BuildFromLegacyPrimitives</code> when no network JSON is found.</p>
+<h2 id="how-tdbdump-uses-this">How TdbDump uses this</h2>
 <ol>
-<li><strong>Calculate world coordinates</strong></li>
-<li>Starting position (base tile + offset)</li>
-<li>
-<p>For each primitive, compute endpoint position</p>
-</li>
-<li>
-<p><strong>Calculate rotations</strong></p>
-</li>
-<li>Starting heading (0° East)</li>
-<li>For each primitive, update heading based on angle</li>
-<li>
-<p>Generate Euler angles (AX, AY, AZ)</p>
-</li>
-<li>
-<p><strong>Generate TDB entries</strong></p>
-</li>
-<li>Create TrVectorSection for each primitive</li>
-<li>
-<p>Set SectionIndex, tile coordinates, position, rotation</p>
-</li>
-<li>
-<p><strong>Generate world geometry</strong></p>
-</li>
-<li>Create DynTrackObj with primitives</li>
-<li>
-<p>Set position and quaternion rotation</p>
-</li>
-<li>
-<p><strong>Generate path waypoints</strong></p>
-</li>
-<li>Create TrackPDP for each primitive endpoint</li>
+<li>Prefer <code>bbox_network_local.json</code> beside the exe (or discoverable path).</li>
+<li>Place each primitive from its <code>start</code> pose (chained continuity within a feature).</li>
+<li>Keep geo start/end (and headings from <code>points_local</code>) for snap + junction tip reshape.</li>
+<li>Assign section indices into <code>tsection.dat</code> (<code>SectionCurve</code> style entries).</li>
 </ol>
-<p>See <a href="../tdbdump_overview/">TdbDump Overview</a> for the next step in the pipeline.</p>
+<p>See <a href="../trackbuilder/">TrackBuilder</a>.</p>
 
 
 
@@ -1973,7 +1787,7 @@ Final primitives.json:
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -27,7 +27,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
       
       
 
@@ -466,10 +466,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-is-this" class="md-nav__link">
+  <a href="#what-this-pipeline-does" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What is This?
+        What This Pipeline Does
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-workflow-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Workflow (Network)
       
     </span>
   </a>
@@ -488,10 +499,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#project-structure" class="md-nav__link">
+  <a href="#project-layout" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Project Structure
+        Project Layout
       
     </span>
   </a>
@@ -499,21 +510,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#key-concepts" class="md-nav__link">
+  <a href="#key-ideas" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Key Concepts
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#getting-help" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Getting Help
+        Key Ideas
       
     </span>
   </a>
@@ -1593,43 +1593,74 @@
 
 
 <h1 id="open-rails-track-builder-documentation">Open Rails Track Builder Documentation</h1>
-<p>Welcome to the comprehensive documentation for the Open Rails Track Builder pipeline!</p>
-<h2 id="what-is-this">What is This?</h2>
-<p>This documentation covers the complete pipeline for generating Open Rails track data:</p>
+<p>Pipeline for turning real railroad GeoJSON into Open Rails track data (TDB, tsection, world DynTracks).</p>
+<h2 id="what-this-pipeline-does">What This Pipeline Does</h2>
 <ol>
-<li><strong>Python Curve Fitter</strong> - Generates smooth track curves from mathematical definitions</li>
-<li><strong>TdbDump Tool</strong> - Converts curve data into Open Rails track database format</li>
-<li><strong>Open Rails File Formats</strong> - Understanding how track data is stored and interpreted</li>
+<li><strong>Curve fitter</strong> (<code>Tools/curve-fitter</code>) — Fits NTAD/GeoJSON polylines to straight + circular-arc primitives in a shared local meter frame.</li>
+<li><strong>TdbDump / TrackBuilder</strong> (<code>Source/TdbDump</code>) — Places one TDB vector chain per OBJECTID, snaps endpoints, builds 3-way junctions, writes route files.</li>
+<li><strong>Verify</strong> — Track Viewer (TDB, Ctrl+R) and/or Open Rails world DynTracks.</li>
 </ol>
-<h2 id="quick-navigation">Quick Navigation</h2>
-<ul>
-<li><strong>Just getting started?</strong> → Head to <a href="quick_start/">Quick Start</a></li>
-<li><strong>Want to understand the full pipeline?</strong> → See <a href="pipeline/full_walkthrough/">Full Pipeline Walkthrough</a></li>
-<li><strong>Need to know about a specific file format?</strong> → Check <a href="formats/tdb/">File Formats</a></li>
-<li><strong>Having issues?</strong> → Visit <a href="troubleshooting/">Troubleshooting</a></li>
-</ul>
-<h2 id="project-structure">Project Structure</h2>
-<div class="highlight"><pre><span></span><code>openrails/
-├── Program/
-│   ├── CurveFitter/          # Python curve fitting tool
-│   └── ...
-├── Source/
-│   └── TdbDump/              # C# tool for generating TDB files
-└── track_builder_docs/       # This documentation
+<h2 id="current-workflow-network">Current Workflow (Network)</h2>
+<div class="highlight"><pre><span></span><code>GeoJSON (NTAD BNSF lines)
+        ↓
+select_bbox_objectids.py  →  bbox_objectids.txt
+        ↓
+extract_bbox_network.py   →  bbox_network_local.json (+ QGIS geojson)
+        ↓
+copy JSON → Source/TdbDump/bin/Debug/
+        ↓
+TdbDump.exe               →  .tdb / tsection.dat / WORLD/*.w
+        ↓
+Track Viewer Ctrl+R  (or load route in OR)
 </code></pre></div>
-<h2 id="key-concepts">Key Concepts</h2>
+<p>Single-OBJECTID <code>extract_primitives.py</code> → <code>primitives.json</code> still works as a legacy path.</p>
+<h2 id="quick-navigation">Quick Navigation</h2>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Doc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Run it now</td>
+<td><a href="quick_start/">Quick Start</a></td>
+</tr>
+<tr>
+<td>End-to-end example</td>
+<td><a href="pipeline/full_walkthrough/">Full Pipeline Walkthrough</a></td>
+</tr>
+<tr>
+<td>Fitter details</td>
+<td><a href="pipeline/curve_fitter_overview/">Curve Fitter Overview</a></td>
+</tr>
+<tr>
+<td>TrackBuilder / junctions</td>
+<td><a href="pipeline/trackbuilder/">TrackBuilder Details</a></td>
+</tr>
+<tr>
+<td>File formats</td>
+<td><a href="formats/tdb/">formats/</a></td>
+</tr>
+<tr>
+<td>Stuck?</td>
+<td><a href="troubleshooting/">Troubleshooting</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="project-layout">Project Layout</h2>
+<div class="highlight"><pre><span></span><code>openrails/
+├── Tools/curve-fitter/     # Python fit + bbox network extract
+├── Source/TdbDump/         # C# TrackBuilder + writers
+└── track_builder_docs/     # This documentation
+</code></pre></div>
+<h2 id="key-ideas">Key Ideas</h2>
 <ul>
-<li><strong>Tile Coordinates</strong>: Track positions are referenced by world tiles (TileX, TileZ)</li>
-<li><strong>World Coordinates</strong>: Within each tile, precise X, Y, Z positions</li>
-<li><strong>TrVectorSection</strong>: Individual track sections with curve data</li>
-<li><strong>Pin Connections</strong>: How track nodes link together</li>
-<li><strong>UIDs</strong>: Universal identifiers for referencing track sections in world files</li>
-</ul>
-<h2 id="getting-help">Getting Help</h2>
-<ul>
-<li>Check the <a href="glossary/">Glossary</a> for terminology</li>
-<li>See <a href="concepts/pins/">Pin Connections</a> for connectivity details</li>
-<li>Review <a href="troubleshooting/">Troubleshooting</a> for common errors</li>
+<li><strong>One OBJECTID → one TDB vector node</strong> (chain of sections), not one mega-polyline for the whole route.</li>
+<li><strong>Snap on GeoJSON ends</strong> (not reconstructed ends) so topology matches QGIS even when chained reconstruction drifts.</li>
+<li><strong>3-way clusters → TrJunctionNode</strong>; tip geometry is reshaped onto geo headings so spurs diverge instead of overlapping the through line.</li>
+<li><strong>Tiles</strong>: Base tile for BNSF Scenic work is <code>(-12842, 14734)</code>; local coords within 2048 m tiles.</li>
 </ul>
 
 
@@ -1683,7 +1714,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
