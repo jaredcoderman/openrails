@@ -6,15 +6,13 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Complete guide to the Python Curve Fitter, TdbDump tool, and Open Rails file formats">
+        <meta name="description" content="GeoJSON railroad lines to Open Rails TDB">
       
       
       
       
-        <link rel="prev" href="../pipeline/full_walkthrough/">
+        <link rel="prev" href="../how-it-works/">
       
-      
-        <link rel="next" href="../glossary/">
       
       
         
@@ -25,7 +23,7 @@
     
     
       
-        <title>Troubleshooting - Open Rails Track Builder Documentation</title>
+        <title>Troubleshooting - Track builder</title>
       
     
     
@@ -78,9 +76,11 @@
     
       
 
-<header class="md-header" data-md-component="header">
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Open Rails Track Builder Documentation" class="md-header__button md-logo" aria-label="Open Rails Track Builder Documentation" data-md-component="logo">
+    <a href=".." title="Track builder" class="md-header__button md-logo" aria-label="Track builder" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -94,7 +94,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Open Rails Track Builder Documentation
+            Track builder
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -164,212 +164,6 @@
       
         
           
-            
-<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
-  <div class="md-grid">
-    <ul class="md-tabs__list">
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href=".." class="md-tabs__link">
-        
-  
-  
-    
-  
-  Home
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../quick_start/" class="md-tabs__link">
-        
-  
-  
-    
-  
-  Quick Start
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../pipeline/curve_fitter_overview/" class="md-tabs__link">
-          
-  
-  
-  Python Curve Fitter
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../pipeline/tdbdump_overview/" class="md-tabs__link">
-          
-  
-  
-  TdbDump Tool
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../formats/" class="md-tabs__link">
-          
-  
-  
-  File Formats
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../concepts/coordinates/" class="md-tabs__link">
-          
-  
-  
-  Open Rails Concepts
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../deep_dives/pin_semantics/" class="md-tabs__link">
-          
-  
-  
-  Technical Deep Dives
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../pipeline/full_walkthrough/" class="md-tabs__link">
-        
-  
-  
-    
-  
-  Full Pipeline Walkthrough
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-    
-  
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
-        
-  
-  
-    
-  
-  Troubleshooting
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../glossary/" class="md-tabs__link">
-        
-  
-  
-    
-  
-  Glossary
-
-      </a>
-    </li>
-  
-
-      
-    </ul>
-  </div>
-</nav>
-          
         
       
       <main class="md-main" data-md-component="main">
@@ -383,20 +177,16 @@
                     
 
 
-  
 
-
-  
-
-<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Open Rails Track Builder Documentation" class="md-nav__button md-logo" aria-label="Open Rails Track Builder Documentation" data-md-component="logo">
+    <a href=".." title="Track builder" class="md-nav__button md-logo" aria-label="Track builder" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Open Rails Track Builder Documentation
+    Track builder
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -435,14 +225,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../quick_start/" class="md-nav__link">
+      <a href="../getting-started/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Quick Start
+    Getting started
   
 
     
@@ -461,954 +251,15 @@
   
   
   
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Python Curve Fitter
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Python Curve Fitter
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
     <li class="md-nav__item">
-      <a href="../pipeline/curve_fitter_overview/" class="md-nav__link">
+      <a href="../how-it-works/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Overview
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../pipeline/curve_input/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Input Format
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../pipeline/curve_output/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Output Format
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../pipeline/curve_examples/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Usage Examples
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
-        
-          
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    TdbDump Tool
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    TdbDump Tool
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../pipeline/tdbdump_overview/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../pipeline/tdbdump_architecture/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Architecture
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../pipeline/trackbuilder/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    TrackBuilder
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../pipeline/writers/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Writers
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    File Formats
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    File Formats
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../formats/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../formats/tdb/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Track Database (.tdb)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../formats/pat/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Path Files (.pat)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../formats/world/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    World Files (.w)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../formats/srv/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Service Files (.srv)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../formats/act/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Activity Files (.act)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../formats/consist/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Consist Files (.con)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
-        
-          
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Open Rails Concepts
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Open Rails Concepts
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../concepts/coordinates/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Coordinate Systems
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../concepts/pins/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Pin Connections
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../concepts/track_sections/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Track Sections
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../concepts/uids/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    UIDs and References
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
-        
-          
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Technical Deep Dives
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Technical Deep Dives
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../deep_dives/pin_semantics/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Pin Semantics
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../deep_dives/quaternions/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Quaternions and Rotations
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../deep_dives/tsre5_comparison.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    TSRE5 vs Open Rails
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../deep_dives/tile_system.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    World File Tile System
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../pipeline/full_walkthrough/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Full Pipeline Walkthrough
+    How it works
   
 
     
@@ -1437,24 +288,6 @@
         
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Troubleshooting
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -1472,357 +305,6 @@
 
       </a>
       
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#network-tdbdump" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Network / TdbDump
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Network / TdbDump">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#wrong-or-empty-network-loaded" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Wrong or empty network loaded
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#missing-short-objectids-gaps-next-to-stubs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Missing short OBJECTIDs / gaps next to stubs
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#long-duplicated-reverse-straights-at-joints" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Long duplicated / reverse straights at joints
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#spur-overlaps-through-track-at-a-t-junction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Spur overlaps through track at a T-junction
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#skipping-n-way-cluster" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        “Skipping N-way cluster”
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#scenario-files-skipped" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Scenario files skipped
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#track-viewer-shows-old-geometry" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Track Viewer shows old geometry
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#track-not-visible-in-game" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Track Not Visible in Game
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Track Not Visible in Game">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#symptom" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Symptom
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#causes-fixes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Causes &amp; Fixes
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Causes &amp; Fixes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-world-file-naming" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. World File Naming
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-tile-mismatch-between-files" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Tile Mismatch Between Files
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-coordinates-out-of-tile" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Coordinates Out of Tile
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-looking-at-world-vs-tdb" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Looking at world vs TDB
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#diagnostic-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Diagnostic Steps
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pin-connection-errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pin Connection Errors
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Pin Connection Errors">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#symptom_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Symptom
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#causes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Causes
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Causes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-pin-references-out-of-bounds-node" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Pin References Out-of-Bounds Node
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-non-reciprocal-pins" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Non-reciprocal pins
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-confusing-direction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Confusing Direction
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#curve-fitter-issues" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Curve Fitter Issues
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#mapviewer-single-section-vectors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        MapViewer / single-section vectors
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#general-debugging-tips" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        General Debugging Tips
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../glossary/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Glossary
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -1833,6 +315,24 @@
                 </div>
               </div>
             
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
             
           
           
@@ -1845,102 +345,57 @@
 
 
 <h1 id="troubleshooting">Troubleshooting</h1>
-<p>Common issues for the <strong>network</strong> pipeline (GeoJSON → bbox fit → TdbDump). Older single-polyline notes still apply where noted.</p>
-<h2 id="network-tdbdump">Network / TdbDump</h2>
-<h3 id="wrong-or-empty-network-loaded">Wrong or empty network loaded</h3>
-<p><strong>Check:</strong> <code>bbox_network_local.json</code> sits next to <code>TdbDump.exe</code> (<code>Source/TdbDump/bin/Debug/</code>). TdbDump prefers that name over <code>primitives.json</code>.</p>
-<p><strong>Fix:</strong> Re-copy after every <code>extract_bbox_network.py</code> run.</p>
-<h3 id="missing-short-objectids-gaps-next-to-stubs">Missing short OBJECTIDs / gaps next to stubs</h3>
-<p><strong>Cause:</strong> Two-point GeoJSON features used to be dropped (fitter required ≥3 points).</p>
-<p><strong>Fix:</strong> Current <code>extract_bbox_network.py</code> emits a single straight for 2-point polylines. Re-extract and rebuild.</p>
-<h3 id="long-duplicated-reverse-straights-at-joints">Long duplicated / reverse straights at joints</h3>
-<p><strong>Cause:</strong> Old filler logic appended reverse or collinear twin sections.</p>
-<p><strong>Fix:</strong> Current builder reseats tip straights onto partners. Rebuild with latest <code>TrackBuilder.cs</code>.</p>
-<h3 id="spur-overlaps-through-track-at-a-t-junction">Spur overlaps through track at a T-junction</h3>
-<p><strong>Cause:</strong> Reconstruction collapsed the diverge angle, and/or a fitted spur curve swung into the main; reshape must run <strong>before</strong> the TDB vector snapshot.</p>
-<p><strong>Fix:</strong> Rebuild with current code (<code>ReshapeJunctionApproach</code> + junctions before section snapshot). Ctrl+R in Track Viewer. Tip should follow geo heading (~QGIS diverge); near the frog paths are close by design, but should not form an “X”.</p>
-<h3 id="skipping-n-way-cluster">“Skipping N-way cluster”</h3>
-<p>Only <strong>3-way</strong> junctions are implemented. Larger endpoint clusters are left as pairwise links / ends.</p>
-<h3 id="scenario-files-skipped">Scenario files skipped</h3>
-<p>Expected when the first feature’s ends are snapped or junctioned (no free <code>TrEndNode</code> pair). TDB topology is still valid.</p>
-<h3 id="track-viewer-shows-old-geometry">Track Viewer shows old geometry</h3>
-<p>Press <strong>Ctrl+R</strong> after every TdbDump run. Confirm timestamps on <code>BNSF_Scenic.tdb</code> / <code>tsection.dat</code>.</p>
-<hr />
-<h2 id="track-not-visible-in-game">Track Not Visible in Game</h2>
-<h3 id="symptom">Symptom</h3>
-<p>Generated track files exist but don't appear when loading the activity.</p>
-<h3 id="causes-fixes">Causes &amp; Fixes</h3>
-<h4 id="1-world-file-naming">1. World File Naming</h4>
-<p><strong>Check:</strong> File names match tile coordinates</p>
-<div class="highlight"><pre><span></span><code>Expected: w-012842+014734.w
-Wrong:    w-012842+14734.w     ← Missing leading zeros
-          w-12842+14734.w      ← Tile coords without padding
-</code></pre></div>
-<p><strong>Fix:</strong> Use format <code>w-[+/-XXXXXX][+/-XXXXXX].w</code> with 6-digit padding.</p>
-<h4 id="2-tile-mismatch-between-files">2. Tile Mismatch Between Files</h4>
-<p><strong>Check:</strong> Consistency across TDB, .w files, and .pat</p>
-<ul>
-<li>TrVectorSection.TileX/TileZ in TDB</li>
-<li>World file name coordinates</li>
-<li>TrackPDP tile coordinates in .pat</li>
-</ul>
-<p>Must all match!</p>
-<h4 id="3-coordinates-out-of-tile">3. Coordinates Out of Tile</h4>
-<p><strong>Check:</strong> Local X, Z coordinates are within a sensible tile-local range after placement. TrackBuilder re-tiles via <code>PlaceWorld</code>.</p>
-<h4 id="4-looking-at-world-vs-tdb">4. Looking at world vs TDB</h4>
-<p>Track Viewer primarily validates <strong>TDB</strong>. DynTracks in <code>.w</code> are a separate visual path; both should match post-reshape chains.</p>
-<h3 id="diagnostic-steps">Diagnostic Steps</h3>
-<ol>
-<li>Check Open Rails / Track Viewer logs</li>
-<li>Confirm TdbDump console feature + junction counts</li>
-<li>Open <code>.tdb</code> and confirm vector/junction nodes exist</li>
-<li>Confirm world file is under <code>WORLD/</code></li>
-<li>Compare a junction to QGIS (<code>bbox_network.geojson</code>)</li>
-</ol>
-<h2 id="pin-connection-errors">Pin Connection Errors</h2>
-<h3 id="symptom_1">Symptom</h3>
-<p><code>Ignored invalid track node pin [dir] link to track node X</code></p>
-<h3 id="causes">Causes</h3>
-<h4 id="1-pin-references-out-of-bounds-node">1. Pin References Out-of-Bounds Node</h4>
-<div class="highlight"><pre><span></span><code>TrPin ( 99 0 )    ← Node 99 doesn&#39;t exist!
-</code></pre></div>
-<h4 id="2-non-reciprocal-pins">2. Non-reciprocal pins</h4>
-<p>If A pins to B, B must pin back appropriately. Junction wiring is generated in <code>WireVectorSide</code> / <code>CreateJunctionNodes</code> — prefer fixing builder logic over hand-editing TDB.</p>
-<h4 id="3-confusing-direction">3. Confusing Direction</h4>
-<p>Pin <strong>Direction</strong> is the side on the <strong>linked</strong> node, not “forward along this chain.” See <a href="../deep_dives/pin_semantics/">Pin Semantics</a>.</p>
-<h2 id="curve-fitter-issues">Curve Fitter Issues</h2>
 <table>
 <thead>
 <tr>
-<th>Problem</th>
+<th>Symptom</th>
 <th>Fix</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>No features fitted</td>
-<td>Wrong GeoJSON path / OBJECTIDs not in file</td>
+<td>Empty / wrong network in TdbDump</td>
+<td>Put a fresh <code>bbox_network_local.json</code> next to <code>TdbDump.exe</code> (<code>Source/TdbDump/bin/Debug/</code>). That name wins over <code>primitives.json</code>.</td>
 </tr>
 <tr>
-<td>Huge RMS</td>
-<td>Tighten or loosen tolerances; check flipped X</td>
+<td>Missing short stubs / gaps</td>
+<td>Re-run <code>extract_bbox_network.py</code> (2-point polylines export as one straight).</td>
 </tr>
 <tr>
-<td>QGIS and local disagree</td>
-<td>Shared CRS / <code>FLIP_X_COORDINATES</code> mismatch — keep flip consistent between extract and expectations</td>
+<td>Long duplicated or reverse straights at joints</td>
+<td>Rebuild with current TrackBuilder (reseats tip straights; does not append reverse twins).</td>
+</tr>
+<tr>
+<td>Spur crosses through track at a T</td>
+<td>Rebuild so junction tip reshape runs before the TDB snapshot. Ctrl+R in Track Viewer. Paths meet at the frog but should not form an “X”.</td>
+</tr>
+<tr>
+<td>“Skipping N-way cluster”</td>
+<td>Only 3-way junctions are implemented.</td>
+</tr>
+<tr>
+<td>Scenario files skipped</td>
+<td>Normal when the first feature has no free ends. TDB is still valid.</td>
+</tr>
+<tr>
+<td>Track Viewer shows old geometry</td>
+<td><strong>Ctrl+R</strong> after every TdbDump run; check file timestamps.</td>
+</tr>
+<tr>
+<td>Track missing in Open Rails</td>
+<td>Confirm <code>WORLD/w-012842+014734.w</code> naming (6-digit padded tiles) and that TDB + world were updated together.</td>
+</tr>
+<tr>
+<td>Mirrored vs QGIS</td>
+<td>Toggle <code>FLIP_X_COORDINATES</code> in <code>config.py</code>, re-extract, rebuild.</td>
+</tr>
+<tr>
+<td>High fit RMS</td>
+<td>Adjust <code>STRAIGHT_TOLERANCE</code> / <code>CIRCLE_TOLERANCE</code>; re-extract.</td>
 </tr>
 </tbody>
 </table>
-<h2 id="mapviewer-single-section-vectors">MapViewer / single-section vectors</h2>
-<p>Do <strong>not</strong> emit one vector node per section for the whole route. Current design: <strong>one vector node per OBJECTID</strong> with many sections. That is intentional and different from “one vector for the entire railroad.”</p>
-<h2 id="general-debugging-tips">General Debugging Tips</h2>
-<ol>
-<li>Re-run extract → copy JSON → rebuild → Ctrl+R as one loop.</li>
-<li>Use a small <code>bbox_objectids.txt</code> when isolating a junction.</li>
-<li>Log lines from TrackBuilder (<code>Endpoint snap…</code>, <code>Junction…</code>) are the first signal of topology health.</li>
-<li>Prefer geometry questions against TDB + QGIS before chasing world quaternion issues.</li>
-</ol>
-<p>See also <a href="../quick_start/">Quick Start</a> and <a href="../pipeline/trackbuilder/">TrackBuilder</a>.</p>
+<p>Loop when debugging: extract → copy JSON → <code>dotnet build</code> → <code>TdbDump.exe</code> → Ctrl+R. Use a small <code>bbox_objectids.txt</code> to isolate a junction.</p>
 
 
 
@@ -1990,7 +445,7 @@ Wrong:    w-012842+14734.w     ← Missing leading zeros
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
