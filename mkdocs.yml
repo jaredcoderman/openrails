@@ -27,3 +27,6 @@ nav:
   - Getting started: getting-started.md
   - How it works: how-it-works.md
   - Troubleshooting: troubleshooting.md
+
+# Old URLs kept as short redirects so bookmarks still resolve under /openrails/.
+# They are not listed in nav.
