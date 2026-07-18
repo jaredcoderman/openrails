@@ -10,6 +10,8 @@
       
       
       
+        <link rel="canonical" href="https://jaredcoderman.github.io/openrails/how-it-works/">
+      
       
         <link rel="prev" href="../getting-started/">
       
@@ -465,14 +467,14 @@
     → snap / junctions / DynTracks
 </code></pre></div>
 <h2 id="curve-fitter">Curve fitter</h2>
-<p><a href="../Tools/curve-fitter/extract_bbox_network.py"><code>extract_bbox_network.py</code></a> loads IDs from <code>bbox_objectids.txt</code>, puts every vertex in <strong>one</strong> UTM-based local frame, and fits each polyline to straights and circular arcs.</p>
+<p><code>Tools/curve-fitter/extract_bbox_network.py</code> loads IDs from <code>bbox_objectids.txt</code>, puts every vertex in <strong>one</strong> UTM-based local frame, and fits each polyline to straights and circular arcs.</p>
 <ul>
 <li>Each primitive includes an absolute <code>start</code> pose (<code>x</code>, <code>z</code>, <code>ay</code>) so placement does not rely only on integrating length/angle.</li>
 <li>Two-point features become a single straight.</li>
 <li><code>bbox_network.geojson</code> is the same selection in WGS84 for QGIS.</li>
 </ul>
 <h2 id="trackbuilder">TrackBuilder</h2>
-<p><a href="../Source/TdbDump/TrackBuilder.cs"><code>TrackBuilder</code></a> loads <code>bbox_network_local.json</code> and builds the graph:</p>
+<p><code>Source/TdbDump/TrackBuilder.cs</code> loads <code>bbox_network_local.json</code> and builds the graph:</p>
 <table>
 <thead>
 <tr>
@@ -585,7 +587,7 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
