@@ -11,7 +11,7 @@ GeoJSON OBJECTIDs
 
 ## Curve fitter
 
-[`extract_bbox_network.py`](../Tools/curve-fitter/extract_bbox_network.py) loads IDs from `bbox_objectids.txt`, puts every vertex in **one** UTM-based local frame, and fits each polyline to straights and circular arcs.
+`Tools/curve-fitter/extract_bbox_network.py` loads IDs from `bbox_objectids.txt`, puts every vertex in **one** UTM-based local frame, and fits each polyline to straights and circular arcs.
 
 - Each primitive includes an absolute `start` pose (`x`, `z`, `ay`) so placement does not rely only on integrating length/angle.
 - Two-point features become a single straight.
@@ -19,7 +19,7 @@ GeoJSON OBJECTIDs
 
 ## TrackBuilder
 
-[`TrackBuilder`](../Source/TdbDump/TrackBuilder.cs) loads `bbox_network_local.json` and builds the graph:
+`Source/TdbDump/TrackBuilder.cs` loads `bbox_network_local.json` and builds the graph:
 
 | Step | What happens |
 |------|----------------|

@@ -6,11 +6,11 @@ Build a multi-feature track database from NTAD-style GeoJSON.
 
 - Python 3 with `numpy` and `pyproj` (optional venv under `Tools/curve-fitter`)
 - .NET SDK (to build `Source/TdbDump`)
-- Route output path set in [`Source/TdbDump/Program.cs`](../Source/TdbDump/Program.cs) (default: BNSF Scenic copy)
+- Route output path set in `Source/TdbDump/Program.cs` (default: BNSF Scenic copy)
 
 ## 1. Configure the fitter
 
-Edit [`Tools/curve-fitter/config.py`](../Tools/curve-fitter/config.py):
+Edit `Tools/curve-fitter/config.py`:
 
 ```python
 GEOJSON_FILE = 'NTAD_....geojson'   # file in Tools/curve-fitter

@@ -1,9 +1,10 @@
 site_name: Track builder
 site_description: GeoJSON railroad lines to Open Rails TDB
+site_url: https://jaredcoderman.github.io/openrails/
+
 theme:
   name: material
   features:
-    - navigation.instant
     - search.suggest
     - search.highlight
     - content.code.copy

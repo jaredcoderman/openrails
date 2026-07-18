@@ -1,6 +1,6 @@
 # Open Rails
 
-[![Documentation](https://img.shields.io/badge/docs-Track%20builder-blue)](https://jaredt82.github.io/openrails/)
+[![Documentation](https://img.shields.io/badge/docs-Track%20builder-blue)](https://jaredcoderman.github.io/openrails/)
 
 Open-source train simulator with a small pipeline for building track from real railroad GeoJSON.
 
@@ -24,7 +24,7 @@ cd ..\..\Source\TdbDump\bin\Debug
 .\TdbDump.exe
 ```
 
-Hosted docs (MkDocs): https://jaredt82.github.io/openrails/
+Hosted docs: https://jaredcoderman.github.io/openrails/
 
 ## Contributing docs
 

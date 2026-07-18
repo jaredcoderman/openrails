@@ -8,8 +8,8 @@ GeoJSON  →  curve-fitter  →  bbox_network_local.json  →  TdbDump  →  rou
 
 | Tool | Location | Job |
 |------|----------|-----|
-| Curve fitter | [`Tools/curve-fitter`](../Tools/curve-fitter) | Fit polylines to straights + circular arcs |
-| TdbDump | [`Source/TdbDump`](../Source/TdbDump) | Snap network, junctions, write route files |
+| Curve fitter | `Tools/curve-fitter` | Fit polylines to straights + circular arcs |
+| TdbDump | `Source/TdbDump` | Snap network, junctions, write route files |
 
 ## Docs
 
