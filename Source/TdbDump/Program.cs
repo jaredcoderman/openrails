@@ -8,16 +8,31 @@ namespace TdbDump
 {
     internal class Program
     {
+        private const string DefaultRoute =
+            @"C:\Users\jared\ORRoutes\BNSF Starter Route - Copy\ROUTES\BNSF_Scenic";
+
         static int Main(string[] args)
         {
-            string basePath = @"C:\Users\jared\ORRoutes\BNSF Starter Route - Copy\ROUTES\BNSF_Scenic";
-            string tsectionPath = Path.Combine(basePath, "tsection.dat");
-            string tdbPath = Path.Combine(basePath, "BNSF_Scenic.tdb");
+            if (!TryParseArgs(args, out CliOptions cli, out string error))
+            {
+                Console.WriteLine(error);
+                PrintUsage();
+                return 1;
+            }
+
+            string routeDirectory = cli.RouteDirectory ?? DefaultRoute;
+            string networkPath = cli.NetworkPath; // may be null → TrackBuilder default search
+            string tsectionPath = Path.Combine(routeDirectory, "tsection.dat");
+            string routeName = Path.GetFileName(
+                routeDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            string tdbPath = Path.Combine(routeDirectory, routeName + ".tdb");
 
             TrackBuilder track;
             try
             {
-                track = new TrackBuilder();
+                track = string.IsNullOrWhiteSpace(networkPath)
+                    ? new TrackBuilder()
+                    : new TrackBuilder(networkPath);
             }
             catch (Exception ex)
             {
@@ -25,9 +40,7 @@ namespace TdbDump
                 return 1;
             }
 
-            List<object> allNodes = null;
-
-            // Build TDB graph first so endpoint fillers are included in primitives.
+            List<object> allNodes;
             try
             {
                 allNodes = track.BuildAllNodes();
@@ -45,6 +58,22 @@ namespace TdbDump
                 return 1;
             }
             Console.WriteLine("TrPin link check: OK");
+
+            var pathOptions = BuildPathOptions(cli, routeName);
+
+            if (cli.PathOnly)
+            {
+                try
+                {
+                    ScenarioWriter.Write(routeDirectory, track.Chains, allNodes, pathOptions);
+                    return 0;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error writing scenario files: " + ex.Message);
+                    return 1;
+                }
+            }
 
             // Write TSectionDat to separate file
             try
@@ -104,10 +133,10 @@ namespace TdbDump
                 return 1;
             }
 
-            // Player path across the snapped network (any two free ends).
+            // Player path across the snapped network.
             try
             {
-                ScenarioWriter.Write(basePath, track.Chains, allNodes);
+                ScenarioWriter.Write(routeDirectory, track.Chains, allNodes, pathOptions);
             }
             catch (Exception ex)
             {
@@ -115,8 +144,7 @@ namespace TdbDump
                 return 1;
             }
 
-            // Write DynamicTracks to World Files (one DynTrack per TDB section,
-            // in the world file named by that section's WFName / TileX/Z).
+            // Write DynamicTracks to World Files
             try
             {
                 int tdbSectionCount = track.Chains.Sum(c => c.Sections.Count);
@@ -131,8 +159,6 @@ namespace TdbDump
                         + " != TDB section count " + tdbSectionCount);
                 }
 
-                // Spot-check: every DynTrack UiD/tile matches a chain section,
-                // and curve params match the shared primitive.
                 var sectionByKey = new Dictionary<(int TileX, int TileZ, int UiD), TrVectorSection>();
                 foreach (var chain in track.Chains)
                 {
@@ -196,6 +222,201 @@ namespace TdbDump
             }
         }
 
+        private sealed class CliOptions
+        {
+            public bool PathOnly;
+            public string NetworkPath;
+            public string RouteDirectory;
+            public int? StartObjectId;
+            public bool StartIsStart = true;
+            public int? GoalObjectId;
+            public bool GoalIsStart = true;
+            public string PathId;
+            public string PathName;
+            public string StartLabel;
+            public string EndLabel;
+            public string Consist;
+            public string RouteId;
+        }
+
+        private static ScenarioPathOptions BuildPathOptions(CliOptions cli, string routeName)
+        {
+            var options = new ScenarioPathOptions
+            {
+                RouteId = string.IsNullOrWhiteSpace(cli.RouteId) ? routeName : cli.RouteId,
+            };
+
+            if (cli.StartObjectId.HasValue && cli.GoalObjectId.HasValue)
+            {
+                options.StartObjectId = cli.StartObjectId;
+                options.StartIsStart = cli.StartIsStart;
+                options.GoalObjectId = cli.GoalObjectId;
+                options.GoalIsStart = cli.GoalIsStart;
+            }
+
+            if (!string.IsNullOrWhiteSpace(cli.PathId))
+                options.PathId = cli.PathId;
+            if (!string.IsNullOrWhiteSpace(cli.PathName))
+                options.PathName = cli.PathName;
+            if (!string.IsNullOrWhiteSpace(cli.StartLabel))
+                options.StartLabel = cli.StartLabel;
+            if (!string.IsNullOrWhiteSpace(cli.EndLabel))
+                options.EndLabel = cli.EndLabel;
+            if (!string.IsNullOrWhiteSpace(cli.Consist))
+                options.Consist = cli.Consist;
+
+            return options;
+        }
+
+        private static bool TryParseArgs(string[] args, out CliOptions cli, out string error)
+        {
+            cli = new CliOptions();
+            error = null;
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                string arg = args[i];
+                if (arg == "--path-only")
+                {
+                    cli.PathOnly = true;
+                    continue;
+                }
+                if (arg == "--help" || arg == "-h" || arg == "/?")
+                {
+                    error = "Usage:";
+                    return false;
+                }
+
+                if (!TryTakeValue(args, ref i, out string value, out error))
+                    return false;
+
+                switch (arg)
+                {
+                    case "--network":
+                        cli.NetworkPath = value;
+                        break;
+                    case "--route":
+                        cli.RouteDirectory = value;
+                        break;
+                    case "--start":
+                        if (!TryParseEndRef(value, out int startOid, out bool startIsStart))
+                        {
+                            error = "Invalid --start value '" + value + "' (expected e.g. 151:S or 151:E).";
+                            return false;
+                        }
+                        cli.StartObjectId = startOid;
+                        cli.StartIsStart = startIsStart;
+                        break;
+                    case "--end":
+                        if (!TryParseEndRef(value, out int endOid, out bool endIsStart))
+                        {
+                            error = "Invalid --end value '" + value + "' (expected e.g. 1101:E).";
+                            return false;
+                        }
+                        cli.GoalObjectId = endOid;
+                        cli.GoalIsStart = endIsStart;
+                        break;
+                    case "--path-id":
+                        cli.PathId = value;
+                        break;
+                    case "--name":
+                        cli.PathName = value;
+                        break;
+                    case "--start-label":
+                        cli.StartLabel = value;
+                        break;
+                    case "--end-label":
+                        cli.EndLabel = value;
+                        break;
+                    case "--consist":
+                        cli.Consist = value;
+                        break;
+                    case "--route-id":
+                        cli.RouteId = value;
+                        break;
+                    default:
+                        error = "Unknown argument: " + arg;
+                        return false;
+                }
+            }
+
+            if (cli.PathOnly
+                && (!cli.StartObjectId.HasValue || !cli.GoalObjectId.HasValue))
+            {
+                error = "--path-only requires both --start and --end.";
+                return false;
+            }
+
+            if (cli.StartObjectId.HasValue != cli.GoalObjectId.HasValue)
+            {
+                error = "Provide both --start and --end, or neither.";
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool TryTakeValue(
+            string[] args, ref int i, out string value, out string error)
+        {
+            value = null;
+            error = null;
+            if (i + 1 >= args.Length)
+            {
+                error = "Missing value after " + args[i];
+                return false;
+            }
+            i++;
+            value = args[i];
+            return true;
+        }
+
+        /// <summary>
+        /// Accepts "151:S", "151S", "151:s", "151:E", "151E".
+        /// </summary>
+        private static bool TryParseEndRef(string text, out int objectId, out bool isStart)
+        {
+            objectId = 0;
+            isStart = true;
+            if (string.IsNullOrWhiteSpace(text))
+                return false;
+
+            text = text.Trim();
+            char side = '\0';
+            string numberPart = text;
+
+            if (text.Length >= 2)
+            {
+                char last = char.ToUpperInvariant(text[text.Length - 1]);
+                if (last == 'S' || last == 'E')
+                {
+                    side = last;
+                    numberPart = text.Substring(0, text.Length - 1).TrimEnd(':');
+                }
+            }
+
+            if (side == '\0')
+                return false;
+            if (!int.TryParse(numberPart, out objectId))
+                return false;
+
+            isStart = side == 'S';
+            return true;
+        }
+
+        private static void PrintUsage()
+        {
+            Console.WriteLine(
+                "TdbDump [--path-only] [--network file] [--route dir]"
+                + " [--start oid:S|E] [--end oid:S|E]"
+                + " [--path-id id] [--name name]"
+                + " [--start-label label] [--end-label label]"
+                + " [--consist name] [--route-id id]");
+            Console.WriteLine(
+                "  --path-only   Build in-memory graph and write .pat/.srv/.act only"
+                + " (requires --start and --end).");
+        }
+
         /// <summary>
         /// Mirrors OR Signals.performLinkTest: each pin's Direction selects the
         /// opposite side of the linked node for the reciprocal back-link.
@@ -222,7 +443,6 @@ namespace TdbDump
                 for (int i = 0; i < pins.Count; i++)
                 {
                     int direction = i < inpins ? 0 : 1;
-                    // For junctions, pin index 0 is in; 1 and 2 are outs (direction 1).
                     if (kv.Value.Kind == "junction")
                         direction = i == 0 ? 0 : 1;
 

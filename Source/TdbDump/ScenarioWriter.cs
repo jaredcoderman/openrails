@@ -2,18 +2,30 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace TdbDump
 {
+    public sealed class ScenarioPathOptions
+    {
+        public int? StartObjectId;
+        public bool StartIsStart = true;
+        public int? GoalObjectId;
+        public bool GoalIsStart = true;
+        public string PathId = "GeneratedTrack";
+        public string PathName = "Generated Track";
+        public string StartLabel = "Start";
+        public string EndLabel = "End";
+        public string Consist = "Everett Switcher";
+        public string RouteId = "BNSF_Scenic";
+    }
+
     /// <summary>
     /// Builds a playable path across the networked TDB and writes matching
     /// .pat / .srv / .act files (same PathID in all three).
     /// </summary>
     public static class ScenarioWriter
     {
-        private const string PathId = "GeneratedTrack";
-        private const string ServiceId = "GeneratedService";
-        private const string ActivityId = "GeneratedActivity";
         private const string DefaultConsist = "Everett Switcher";
         private const string DefaultRouteId = "BNSF_Scenic";
         private const float MinWaypointSeparationM = 5f;
@@ -23,17 +35,33 @@ namespace TdbDump
             IReadOnlyList<FeatureChain> chains,
             IReadOnlyList<object> allNodes)
         {
+            Write(routeDirectory, chains, allNodes, null);
+        }
+
+        public static void Write(
+            string routeDirectory,
+            IReadOnlyList<FeatureChain> chains,
+            IReadOnlyList<object> allNodes,
+            ScenarioPathOptions options)
+        {
             if (chains == null)
                 throw new ArgumentNullException(nameof(chains));
             if (allNodes == null)
                 throw new ArgumentNullException(nameof(allNodes));
 
-            if (!TryBuildPlayerRoute(chains, allNodes, out PlayerRoute route))
+            if (options == null)
+                options = new ScenarioPathOptions();
+
+            if (!TryBuildPlayerRoute(chains, allNodes, options, out PlayerRoute route))
             {
                 Console.WriteLine(
-                    "Skipping scenario files: no path between two free TrEndNodes.");
+                    "Skipping scenario files: no path between the requested ends.");
                 return;
             }
+
+            string pathId = SanitizeId(options.PathId);
+            string serviceId = pathId;
+            string activityId = pathId;
 
             string pathsDirectory = Path.Combine(routeDirectory, "PATHS");
             string servicesDirectory = Path.Combine(routeDirectory, "SERVICES");
@@ -42,37 +70,53 @@ namespace TdbDump
             Directory.CreateDirectory(servicesDirectory);
             Directory.CreateDirectory(activitiesDirectory);
 
-            string patPath = Path.Combine(pathsDirectory, PathId + ".pat");
+            string patPath = Path.Combine(pathsDirectory, pathId + ".pat");
             PATWriter.Write(
                 patPath,
                 route.Waypoints,
-                PathId,
-                "Generated Track",
-                "Start",
-                "End");
+                pathId,
+                options.PathName,
+                options.StartLabel,
+                options.EndLabel);
             Console.WriteLine(
                 "Wrote path to: " + patPath
                 + " (" + route.Waypoints.Count + " PDPs, "
                 + route.VectorCount + " vectors)");
 
-            string srvPath = Path.Combine(servicesDirectory, ServiceId + ".srv");
+            string srvPath = Path.Combine(servicesDirectory, serviceId + ".srv");
             SRVWriter.Write(
                 srvPath,
-                "Generated Track",
-                DefaultConsist,
-                PathId);
+                options.PathName,
+                string.IsNullOrWhiteSpace(options.Consist) ? DefaultConsist : options.Consist,
+                pathId);
             Console.WriteLine("Wrote service to: " + srvPath);
 
-            string actPath = Path.Combine(activitiesDirectory, ActivityId + ".act");
+            string actPath = Path.Combine(activitiesDirectory, activityId + ".act");
             ACTWriter.Write(
                 actPath,
                 route.Start,
                 route.End,
-                DefaultRouteId,
-                "Generated Track",
-                ServiceId,
-                PathId);
+                string.IsNullOrWhiteSpace(options.RouteId) ? DefaultRouteId : options.RouteId,
+                options.PathName,
+                serviceId,
+                pathId);
             Console.WriteLine("Wrote activity to: " + actPath);
+        }
+
+        public static string SanitizeId(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return "GeneratedTrack";
+            var sb = new StringBuilder(value.Length);
+            foreach (char c in value.Trim())
+            {
+                if (char.IsLetterOrDigit(c) || c == '_' || c == '-')
+                    sb.Append(c);
+                else if (char.IsWhiteSpace(c) || c == '/' || c == '\\')
+                    sb.Append('_');
+            }
+            string id = sb.ToString();
+            return id.Length == 0 ? "GeneratedTrack" : id;
         }
 
         private sealed class PlayerRoute
@@ -86,6 +130,7 @@ namespace TdbDump
         private static bool TryBuildPlayerRoute(
             IReadOnlyList<FeatureChain> chains,
             IReadOnlyList<object> allNodes,
+            ScenarioPathOptions options,
             out PlayerRoute route)
         {
             route = null;
@@ -95,6 +140,39 @@ namespace TdbDump
                 return false;
 
             var vectorsById = chains.ToDictionary(c => c.VectorNodeId);
+            var chainsByObjectId = chains.ToDictionary(c => c.ObjectId);
+
+            if (options.StartObjectId.HasValue && options.GoalObjectId.HasValue)
+            {
+                if (!TryResolveEnd(
+                        options.StartObjectId.Value, options.StartIsStart,
+                        chainsByObjectId, byId, out TrEndNode start))
+                {
+                    Console.WriteLine(
+                        "Could not resolve start end oid "
+                        + options.StartObjectId.Value
+                        + (options.StartIsStart ? "S" : "E"));
+                    return false;
+                }
+                if (!TryResolveEnd(
+                        options.GoalObjectId.Value, options.GoalIsStart,
+                        chainsByObjectId, byId, out TrEndNode goal))
+                {
+                    Console.WriteLine(
+                        "Could not resolve goal end oid "
+                        + options.GoalObjectId.Value
+                        + (options.GoalIsStart ? "S" : "E"));
+                    return false;
+                }
+                if (!TryShortestHopPath(start, goal, byId, out List<int> nodeIds))
+                {
+                    Console.WriteLine("No connected path between selected ends.");
+                    return false;
+                }
+                route = Materialize(start, goal, nodeIds, byId, vectorsById);
+                return route != null && route.Waypoints.Count >= 2;
+            }
+
             PlayerRoute best = null;
             int bestScore = -1;
 
@@ -122,6 +200,29 @@ namespace TdbDump
             return route != null && route.Waypoints.Count >= 2;
         }
 
+        private static bool TryResolveEnd(
+            int objectId,
+            bool isStart,
+            Dictionary<int, FeatureChain> chainsByObjectId,
+            Dictionary<int, object> byId,
+            out TrEndNode end)
+        {
+            end = null;
+            if (!chainsByObjectId.TryGetValue(objectId, out FeatureChain chain))
+                return false;
+            if (!byId.TryGetValue(chain.VectorNodeId, out object vectorObj)
+                || !(vectorObj is TrackNode vector)
+                || vector.Pins.Count < 2)
+                return false;
+
+            int neighborId = isStart ? vector.Pins[0].Node : vector.Pins[1].Node;
+            if (!byId.TryGetValue(neighborId, out object neighbor) || !(neighbor is TrEndNode tip))
+                return false;
+
+            end = tip;
+            return true;
+        }
+
         private static Dictionary<int, object> IndexNodes(IReadOnlyList<object> allNodes)
         {
             var byId = new Dictionary<int, object>();
@@ -137,10 +238,6 @@ namespace TdbDump
             return byId;
         }
 
-        /// <summary>
-        /// BFS for fewest node hops between two ends (through line, not spur out-and-back).
-        /// Among end pairs we keep the path with the most waypoints.
-        /// </summary>
         private static bool TryShortestHopPath(
             TrEndNode start,
             TrEndNode goal,
@@ -217,9 +314,6 @@ namespace TdbDump
             Dictionary<int, object> byId,
             Dictionary<int, FeatureChain> vectorsById)
         {
-            // Do not put the free-end TrEndNode first: it coincides with the first
-            // section start, and OR's Traveller then cannot pick a path direction
-            // (zero distance to the next PDP), so the train faces off the tip.
             var waypoints = new List<PathWaypoint>();
             int vectorCount = 0;
 
@@ -230,7 +324,11 @@ namespace TdbDump
 
                 if (node is TrJunctionNode junction)
                 {
-                    AppendUnique(waypoints, FromJunction(junction));
+                    // Never drop junction PDPs: section tips often sit on the
+                    // same coordinates, and Near-dedupe would leave flag 1 1.
+                    // Without a TrackPDP ( … 2 0 ), OR keeps the default main
+                    // at facing points and ignores the spur.
+                    AppendJunction(waypoints, FromJunction(junction));
                     continue;
                 }
 
@@ -267,6 +365,24 @@ namespace TdbDump
             waypoints.Add(next);
         }
 
+        private static void AppendJunction(List<PathWaypoint> waypoints, PathWaypoint junction)
+        {
+            if (waypoints.Count > 0 && Near(waypoints[waypoints.Count - 1], junction))
+            {
+                PathWaypoint prev = waypoints[waypoints.Count - 1];
+                prev.TileX = junction.TileX;
+                prev.TileZ = junction.TileZ;
+                prev.X = junction.X;
+                prev.Y = junction.Y;
+                prev.Z = junction.Z;
+                prev.JunctionFlag = 2;
+                prev.InvalidFlag = 0;
+                prev.PathFlags = 0;
+                return;
+            }
+            waypoints.Add(junction);
+        }
+
         private static bool Near(PathWaypoint a, PathWaypoint b)
         {
             if (a.TileX != b.TileX || a.TileZ != b.TileZ)
@@ -282,7 +398,6 @@ namespace TdbDump
 
         private static bool TravelForward(TrackNode vector, int prevId, int nextId)
         {
-            // WireVectorSide adds start pin then end pin → Pins[0]=start, Pins[1]=end.
             if (vector.Pins.Count == 0)
                 return true;
             int startNeighbor = vector.Pins[0].Node;

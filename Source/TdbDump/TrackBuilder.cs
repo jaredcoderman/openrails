@@ -433,34 +433,44 @@ namespace TdbDump
                 }
             }
 
-            // Prefer the End-side of the through pair as stem (arrival into points).
+            // Through pair is a/b; remaining tip is the diverge.
             ClusterEndpoint a = cluster[bestI];
             ClusterEndpoint b = cluster[bestJ];
-            if (a.IsStart && !b.IsStart)
+            ClusterEndpoint divEp = default;
+            for (int i = 0; i < 3; i++)
             {
-                stem = b;
-                main = a;
+                if (i != bestI && i != bestJ)
+                {
+                    divEp = cluster[i];
+                    break;
+                }
             }
-            else if (!a.IsStart && b.IsStart)
+
+            // Stem must be the facing/points end: arriving from stem, both main
+            // and diverge continue forward. Picking the wrong through-end as stem
+            // makes MAIN↔DIV the "shortest" graph path to the spur — invalid on a
+            // real switch, so OR keeps the default main and never takes the branch.
+            float ScoreStem(ClusterEndpoint candidateStem, ClusterEndpoint candidateMain)
+            {
+                float inX = -OutX(candidateStem);
+                float inZ = -OutZ(candidateStem);
+                float mainDot = OutX(candidateMain) * inX + OutZ(candidateMain) * inZ;
+                float divDot = OutX(divEp) * inX + OutZ(divEp) * inZ;
+                return mainDot + divDot;
+            }
+
+            if (ScoreStem(a, b) >= ScoreStem(b, a))
             {
                 stem = a;
                 main = b;
             }
             else
             {
-                stem = a;
-                main = b;
+                stem = b;
+                main = a;
             }
 
-            for (int i = 0; i < 3; i++)
-            {
-                if (i != bestI && i != bestJ)
-                {
-                    diverging = cluster[i];
-                    break;
-                }
-            }
-
+            diverging = divEp;
             return true;
         }
 
