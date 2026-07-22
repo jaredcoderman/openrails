@@ -257,6 +257,10 @@ namespace TdbDump
         public int TileX { get; set; }
         public int TileZ { get; set; }
 
+        /// <summary>
+        /// One DynTrack per TDB TrVectorSection, same tile / UiD / SectionIndex
+        /// so OR's WFName+UiD lookup finds the mesh for that section.
+        /// </summary>
         public static List<DynamicTrack> MakeDynamicTrackObjects(
             IReadOnlyList<FeatureChain> chains,
             IReadOnlyCollection<TrackPrimitive> primitives)
@@ -267,10 +271,9 @@ namespace TdbDump
 
             var dynamicTracks = new List<DynamicTrack>();
 
-            // One DynTrack per section, placed at that section's reconstructed
-            // start. Packing multiple sections into one DynTrack makes OR chain
-            // them with its own math, which disagrees with our poses and causes
-            // group-boundary gaps / overshooting straights.
+            // One DynTrack per section at that section's reconstructed start.
+            // Packing multiple sections into one DynTrack makes OR chain them
+            // with its own math, which disagrees with our poses.
             foreach (var chain in chains)
             {
                 if (chain.Sections == null)
@@ -282,12 +285,18 @@ namespace TdbDump
                     if (nodeSection == null)
                         continue;
 
+                    if (!primitiveLookup.TryGetValue(nodeSection.SectionIndex, out var primitive))
+                    {
+                        throw new InvalidOperationException(
+                            "TDB section index " + nodeSection.SectionIndex
+                            + " has no TrackPrimitive for DynTrack (oid "
+                            + chain.ObjectId + ").");
+                    }
+
                     var track = new DynamicTrack
                     {
-                        // Keep tile-local X as stored on the section. WorldWriter
-                        // converts to world and applies the MSTS X negation once.
-                        // Negating here as well breaks continuity across tile seams
-                        // (false km-scale gaps / overshooting straights).
+                        // Same tile-local X/Z as the TDB TrVectorSection. WorldWriter
+                        // writes them as Position; OR/TSRE only flip Z (and Qz) on load.
                         X = nodeSection.X,
                         Y = nodeSection.Y,
                         Z = nodeSection.Z,
@@ -301,12 +310,12 @@ namespace TdbDump
                         Elevation = 0,
                     };
 
-                    // OR DynTrack meshes advance along local -Z. Our section AY
-                    // advances in +Z for heading 0, so the world quaternion must
-                    // be rotated 180° or every section draws backward (visual
-                    // gaps ahead + overshoot into the previous section).
+                    // Same MSTS SetAngles(heading) convention as TrackObj. Do not
+                    // add π here — OR maps MSTS→XNA with Z flips so DynTrack
+                    // Forward (−Z_xna) already matches TDB travel (+Z_msts), and
+                    // TSRE applies its own π when building the GL matrix.
                     ConvertEulerToQuaternion(
-                        nodeSection.AY + (float)Math.PI,
+                        nodeSection.AY,
                         nodeSection.AX,
                         out float qx,
                         out float qy,
@@ -317,20 +326,17 @@ namespace TdbDump
                     track.Qz = qz;
                     track.Qw = qw;
 
-                    if (primitiveLookup.TryGetValue(nodeSection.SectionIndex, out var primitive))
+                    track.TrackSections.Add(new TrackPrimitive
                     {
-                        track.TrackSections.Add(new TrackPrimitive
-                        {
-                            SectionIndex = primitive.SectionIndex,
-                            Type = primitive.Type,
-                            Length = primitive.Length,
-                            Radius = primitive.Radius,
-                            Angle = primitive.Angle,
-                            Clockwise = primitive.Clockwise,
-                            param1 = primitive.param1,
-                            param2 = primitive.param2,
-                        });
-                    }
+                        SectionIndex = primitive.SectionIndex,
+                        Type = primitive.Type,
+                        Length = primitive.Length,
+                        Radius = primitive.Radius,
+                        Angle = primitive.Angle,
+                        Clockwise = primitive.Clockwise,
+                        param1 = primitive.param1,
+                        param2 = primitive.param2,
+                    });
 
                     while (track.TrackSections.Count < 5)
                     {

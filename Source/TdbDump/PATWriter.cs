@@ -5,41 +5,56 @@ using Orts.Parsers.Msts;
 
 namespace TdbDump
 {
+    public sealed class PathWaypoint
+    {
+        public int TileX;
+        public int TileZ;
+        public float X;
+        public float Y;
+        public float Z;
+        /// <summary>2 = junction, 1 = start/end/intermediate vector point.</summary>
+        public int JunctionFlag;
+        /// <summary>0 = normal; 1 = intermediate (non start/end).</summary>
+        public int InvalidFlag;
+        /// <summary>Optional TrPathNode hex flags (e.g. 4 for intermediate).</summary>
+        public uint PathFlags;
+    }
+
     public static class PATWriter
     {
         private const uint NoNextNode = uint.MaxValue;
 
         public static void Write(
             string filePath,
-            IReadOnlyList<TrackNode> sectionNodes,
-            TrEndNode endNode,
-            string pathId = "TestPat",
-            string pathName = "Test Track",
+            IReadOnlyList<PathWaypoint> waypoints,
+            string pathId = "GeneratedTrack",
+            string pathName = "Generated Track",
             string startName = "Start",
             string endName = "End")
         {
-            if (sectionNodes == null)
-                throw new ArgumentNullException(nameof(sectionNodes));
-            if (endNode == null)
-                throw new ArgumentNullException(nameof(endNode));
-            if (sectionNodes.Count == 0)
-                throw new ArgumentException("At least one track section is required.", nameof(sectionNodes));
+            if (waypoints == null)
+                throw new ArgumentNullException(nameof(waypoints));
+            if (waypoints.Count < 2)
+                throw new ArgumentException("At least two waypoints are required.", nameof(waypoints));
 
             using (var writer = new STFWriter(filePath, "P0t"))
             {
                 writer.WriteProperty("Serial", 1);
 
                 writer.WriteBlockStart("TrackPDPs");
-                foreach (var node in sectionNodes)
+                foreach (var wp in waypoints)
                 {
-                    if (node != null && node.Section != null)
-                        WriteTrackPdp(writer, node.Section, 2, 0);
+                    writer.WriteNoLabel(string.Format(
+                        CultureInfo.InvariantCulture,
+                        "TrackPDP ( {0} {1} {2} {3} {4} {5} {6} )",
+                        wp.TileX,
+                        wp.TileZ,
+                        wp.X.ToString(CultureInfo.InvariantCulture),
+                        wp.Y.ToString(CultureInfo.InvariantCulture),
+                        wp.Z.ToString(CultureInfo.InvariantCulture),
+                        wp.JunctionFlag,
+                        wp.InvalidFlag));
                 }
-
-                // Section nodes describe section starts. Add the final end
-                // node so the path reaches the end of the generated track.
-                // The reference path uses 2 0 for the endpoint as well.
-                WriteTrackPdp(writer, endNode, 2, 0);
                 writer.WriteBlockEnd();
 
                 writer.WriteBlockStart("TrackPath");
@@ -48,17 +63,17 @@ namespace TdbDump
                 writer.WriteProperty("TrPathStart", startName);
                 writer.WriteProperty("TrPathEnd", endName);
 
-                int waypointCount = sectionNodes.Count + 1;
-                writer.WriteBlockStart("TrPathNodes", waypointCount);
-                for (int i = 0; i < waypointCount; i++)
+                writer.WriteBlockStart("TrPathNodes", waypoints.Count);
+                for (int i = 0; i < waypoints.Count; i++)
                 {
-                    uint nextMainNode = i == waypointCount - 1
+                    uint nextMainNode = i == waypoints.Count - 1
                         ? NoNextNode
                         : (uint)(i + 1);
 
                     writer.WriteNoLabel(string.Format(
                         CultureInfo.InvariantCulture,
-                        "TrPathNode ( 00000000 {0} {1} {2} )",
+                        "TrPathNode ( {0:X8} {1} {2} {3} )",
+                        waypoints[i].PathFlags,
                         nextMainNode,
                         NoNextNode,
                         i));
@@ -66,42 +81,6 @@ namespace TdbDump
                 writer.WriteBlockEnd();
                 writer.WriteBlockEnd();
             }
-        }
-
-        private static void WriteTrackPdp(
-            STFWriter writer,
-            TrVectorSection section,
-            int flag1,
-            int flag2)
-        {
-            writer.WriteNoLabel(string.Format(
-                CultureInfo.InvariantCulture,
-                "TrackPDP ( {0} {1} {2} {3} {4} {5} {6} )",
-                section.TileX,
-                section.TileZ,
-                section.X,
-                section.Y,
-                section.Z,
-                flag1,
-                flag2));
-        }
-
-        private static void WriteTrackPdp(
-            STFWriter writer,
-            TrEndNode node,
-            int flag1,
-            int flag2)
-        {
-            writer.WriteNoLabel(string.Format(
-                CultureInfo.InvariantCulture,
-                "TrackPDP ( {0} {1} {2} {3} {4} {5} {6} )",
-                node.TileX,
-                node.TileZ,
-                node.X,
-                node.Y,
-                node.Z,
-                flag1,
-                flag2));
         }
 
         private static string Quote(string value)

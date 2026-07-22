@@ -99,14 +99,22 @@ namespace TdbDump
                     "Junctions: " + junctionsCreated + " TrJunctionNode(s) for 3-way clusters");
             }
 
-            foreach (var chain in activeChains)
+            // WFName + UiD must match the Dyntrack Open Rails loads: world file
+            // w{TileX}{TileZ}.w, object UiD. UiDs are unique within each tile.
+            var sectionsByTile = activeChains
+                .SelectMany(c => c.Sections)
+                .Select(n => n.Section)
+                .Where(s => s != null)
+                .GroupBy(s => (s.TileX, s.TileZ));
+            foreach (var tileGroup in sectionsByTile)
             {
-                foreach (var sectionNode in chain.Sections)
+                int tileUiD = 1;
+                foreach (var section in tileGroup)
                 {
-                    var section = sectionNode.Section;
                     section.WFNameX = section.TileX.ToString();
                     section.WFNameZ = section.TileZ.ToString();
-                    section.WorldFileUiD = worldUiD++;
+                    section.WorldFileUiD = tileUiD++;
+                    worldUiD++;
                 }
             }
 
@@ -156,17 +164,20 @@ namespace TdbDump
             List<object> allNodes,
             ref int nextId)
         {
+            // TrPin.Direction selects which side of the LINKED node holds the
+            // reciprocal: OR looks at (Direction == 0 ? 1 : 0). So Direction
+            // must be (1 - otherSide).
             if (junctionSides.TryGetValue(key, out var junction))
             {
-                // Junction pin Direction is 0 for the stem (in) and 1 for either out.
-                int directionOnJunction = junction.JunctionSide == 0 ? 0 : 1;
-                vector.Pins.Add(new TrPin(junction.JunctionId, directionOnJunction));
+                // Stem is junction side 0 → Direction 1; outs (1/2) → Direction 0.
+                int direction = junction.JunctionSide == 0 ? 1 : 0;
+                vector.Pins.Add(new TrPin(junction.JunctionId, direction));
                 return;
             }
 
             if (links.TryGetValue(key, out EndpointLink link))
             {
-                vector.Pins.Add(new TrPin(link.OtherVectorId, link.OtherIsStart ? 0 : 1));
+                vector.Pins.Add(new TrPin(link.OtherVectorId, link.OtherIsStart ? 1 : 0));
                 return;
             }
 
@@ -269,7 +280,7 @@ namespace TdbDump
                 var junction = new TrJunctionNode
                 {
                     Id = junctionId,
-                    ShapeIndex = 0,
+                    ShapeIndex = 1,
                     TileX = tileX,
                     TileZ = tileZ,
                     X = localX,
@@ -279,9 +290,10 @@ namespace TdbDump
                 };
 
                 // Pin order: in (stem), out0 (main), out1 (diverging).
-                junction.Pins.Add(new TrPin(stem.Chain.VectorNodeId, stem.IsStart ? 0 : 1));
-                junction.Pins.Add(new TrPin(main.Chain.VectorNodeId, main.IsStart ? 0 : 1));
-                junction.Pins.Add(new TrPin(diverging.Chain.VectorNodeId, diverging.IsStart ? 0 : 1));
+                // Direction = opposite of the linked vector's connection side.
+                junction.Pins.Add(new TrPin(stem.Chain.VectorNodeId, stem.IsStart ? 1 : 0));
+                junction.Pins.Add(new TrPin(main.Chain.VectorNodeId, main.IsStart ? 1 : 0));
+                junction.Pins.Add(new TrPin(diverging.Chain.VectorNodeId, diverging.IsStart ? 1 : 0));
                 allNodes.Add(junction);
 
                 junctionSides[new EndpointKey(stem.ObjectId, stem.IsStart)] = (junctionId, 0);

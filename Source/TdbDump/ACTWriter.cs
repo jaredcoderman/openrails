@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using Orts.Parsers.Msts;
 
 namespace TdbDump
@@ -15,6 +14,8 @@ namespace TdbDump
             string serviceId,
             string pathId)
         {
+            // startNode / endNode kept for API compatibility with ScenarioWriter;
+            // player placement comes from the path, not from restricted zones.
             if (startNode == null)
                 throw new ArgumentNullException(nameof(startNode));
             if (endNode == null)
@@ -55,28 +56,13 @@ namespace TdbDump
                 writer.WriteProperty("NextActivityObjectUID", 32768);
                 writer.WriteProperty("ORTSAIHornAtCrossings", 1);
                 writer.WriteProperty("ORTSAICrossingHornPattern", "US");
-
-                writer.WriteBlockStart("ActivityRestrictedSpeedZones");
-                writer.WriteBlockStart("ActivityRestrictedSpeedZone");
-                writer.WriteNoLabel("StartPosition ( " + FormatPosition(startNode) + " )");
-                writer.WriteNoLabel("EndPosition ( " + FormatPosition(endNode) + " )");
-                writer.WriteBlockEnd();
-                writer.WriteBlockEnd();
+                // No ActivityRestrictedSpeedZones: OR places those via Traveller
+                // and crashes if the coords are off the TDB (common with stale
+                // test activities). Speed zones are optional for a player run.
 
                 writer.WriteBlockEnd();
                 writer.WriteBlockEnd();
             }
-        }
-
-        private static string FormatPosition(TrEndNode node)
-        {
-            return string.Format(
-                CultureInfo.InvariantCulture,
-                "{0} {1} {2} {3}",
-                node.TileX,
-                node.TileZ,
-                node.X,
-                node.Z);
         }
 
         private static string Quote(string value)

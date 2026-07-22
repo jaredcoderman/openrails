@@ -336,11 +336,31 @@ namespace Orts.Viewer3D.Debugging
 
                             foreach (TrPin pin in currNode.TrPins)
                             {
-
+                                if (pin.Link < 0 || pin.Link >= nodes.Length)
+                                    continue;
                                 TrackNode connectedNode = nodes[pin.Link];
+                                if (connectedNode == null)
+                                    continue;
 
                                 dVector A = new dVector(s.TileX, s.X, s.TileZ, +s.Z);
-                                dVector B = new dVector(connectedNode.UiD.TileX, connectedNode.UiD.X, connectedNode.UiD.TileZ, connectedNode.UiD.Z);
+                                dVector B;
+                                if (connectedNode.UiD != null)
+                                {
+                                    B = new dVector(connectedNode.UiD.TileX, connectedNode.UiD.X, connectedNode.UiD.TileZ, connectedNode.UiD.Z);
+                                }
+                                else if (connectedNode.TrVectorNode?.TrVectorSections != null
+                                         && connectedNode.TrVectorNode.TrVectorSections.Length > 0)
+                                {
+                                    // Vector↔vector: no UiD on real MST S vectors. Use the
+                                    // section end selected by TrPin.Direction (1=start, 0=end),
+                                    // same convention as the junction branch below.
+                                    var vs = connectedNode.TrVectorNode.TrVectorSections;
+                                    TrVectorSection item = pin.Direction == 1 ? vs.First() : vs.Last();
+                                    B = new dVector(item.TileX, item.X, item.TileZ, item.Z);
+                                }
+                                else
+                                    continue;
+
                                 segments.Add(new LineSegment(A, B, /*s.InterlockingTrack.IsOccupied*/ false, null));
                             }
                         }

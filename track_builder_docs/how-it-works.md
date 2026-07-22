@@ -37,8 +37,8 @@ Junction reshape runs **before** vector sections are snapshotted for the TDB. Th
 
 | File | Contents |
 |------|----------|
-| `*.tdb` | Vector nodes (one per OBJECTID), ends, junctions |
+| `*.tdb` | Vector nodes (one per OBJECTID), ends, junctions. Each `TrVectorSection` stores `WFName` + `UiD` |
 | `tsection.dat` | Dynamic section definitions |
-| `WORLD/w-*.w` | DynTrack visuals from the same chains |
+| `WORLD/w{tileX}{tileZ}.w` | One DynTrack per TDB section in that tile (same UiD / pose / curve params) |
 
-Base tile for the current BNSF Scenic setup: `(-12842, 14734)`.
+Open Rails resolves visuals with `(WFNameX, WFNameZ, WorldFileUiD)` → Dyntrack in that world file.

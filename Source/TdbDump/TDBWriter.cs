@@ -36,6 +36,27 @@ namespace TdbDump
                 writer.WriteBlockEnd();
 
                 writer.WriteBlockEnd();
+
+                // MapViewer.InitializeData assumes pin targets have a UiD (ends /
+                // junctions). Vector↔vector links on 1-section nodes dereference
+                // UiD and NullRef → silent exit on first frame. Give every vector
+                // a UiD at its first section so installed OR survives too.
+                var uidSection = sections[0];
+                writer.WriteBlockStart("uid");
+                writer.WriteNoLabel(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                    "{0} {1} {2} 1 {3} {4} {5} {6} {7} {8} {9} {10}",
+                    uidSection.TileX,
+                    uidSection.TileZ,
+                    node.Id,
+                    uidSection.TileX,
+                    uidSection.TileZ,
+                    uidSection.X.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    uidSection.Y.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    uidSection.Z.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    uidSection.AX.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    uidSection.AY.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    uidSection.AZ.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+                writer.WriteBlockEnd();
             }
 
             // Write TrPins in side order. Inpins/Outpins identify the parent
