@@ -525,19 +525,19 @@
 <tbody>
 <tr>
 <td><code>*.tdb</code></td>
-<td>Vector nodes (one per OBJECTID), ends, junctions</td>
+<td>Vector nodes (one per OBJECTID), ends, junctions. Each <code>TrVectorSection</code> stores <code>WFName</code> + <code>UiD</code></td>
 </tr>
 <tr>
 <td><code>tsection.dat</code></td>
 <td>Dynamic section definitions</td>
 </tr>
 <tr>
-<td><code>WORLD/w-*.w</code></td>
-<td>DynTrack visuals from the same chains</td>
+<td><code>WORLD/w{tileX}{tileZ}.w</code></td>
+<td>One DynTrack per TDB section in that tile (same UiD / pose / curve params)</td>
 </tr>
 </tbody>
 </table>
-<p>Base tile for the current BNSF Scenic setup: <code>(-12842, 14734)</code>.</p>
+<p>Open Rails resolves visuals with <code>(WFNameX, WFNameZ, WorldFileUiD)</code> → Dyntrack in that world file.</p>
 
 
 
