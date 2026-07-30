@@ -17,6 +17,7 @@ from pyproj import Transformer
 import config
 from circle_fitter import (
     calculate_chained_reconstruction_errors,
+    is_overfragmented_segmentation,
     refine_segments_chained,
     remove_consecutive_duplicates,
     segment_polyline_model_selection,
@@ -42,6 +43,9 @@ from extract_primitives import (
     split_long_straights,
 )
 
+# Max tip drift before falling back to polyline chords (junction-critical).
+MAX_ENDPOINT_ERROR_M = 5.0
+
 OBJECTID_LIST_FILE = "bbox_objectids.txt"
 GEOJSON_OUTPUT = "bbox_network.geojson"
 LOCAL_JSON_OUTPUT = "bbox_network_local.json"
@@ -53,6 +57,53 @@ CORNER_B = (46.36949, -109.26755)
 
 def _script_dir():
     return Path(__file__).resolve().parent
+
+
+def _parse_args(argv=None):
+    import argparse
+
+    p = argparse.ArgumentParser(
+        description="Fit selected GeoJSON OBJECTIDs into bbox_network_local.json"
+    )
+    p.add_argument("--geojson", type=Path, default=None, help="Source WGS84 GeoJSON")
+    p.add_argument(
+        "--objectids",
+        type=Path,
+        default=None,
+        help="Text file of OBJECTIDs (one per line)",
+    )
+    p.add_argument(
+        "--output-local",
+        type=Path,
+        default=None,
+        help="Output bbox_network_local.json path",
+    )
+    p.add_argument(
+        "--output-geojson",
+        type=Path,
+        default=None,
+        help="Output WGS84 verification GeoJSON path",
+    )
+    p.add_argument(
+        "--corner-a",
+        default=None,
+        help="BBox corner A as lat,lon (metadata only)",
+    )
+    p.add_argument(
+        "--corner-b",
+        default=None,
+        help="BBox corner B as lat,lon (metadata only)",
+    )
+    return p.parse_args(argv)
+
+
+def _parse_latlon(text):
+    if not text:
+        return None
+    parts = [p.strip() for p in text.split(",")]
+    if len(parts) != 2:
+        raise SystemExit(f"Expected lat,lon got: {text}")
+    return float(parts[0]), float(parts[1])
 
 
 def _load_objectids(path):
@@ -94,17 +145,14 @@ def _shared_utm_epsg(lat, lon):
 
 def _build_shared_frame(all_lonlats, flip_x):
     """Build one UTM transform and local origin for every feature."""
-    lons = [lon for lon, _ in all_lonlats]
-    lats = [lat for _, lat in all_lonlats]
-    center_lon = 0.5 * (min(lons) + max(lons))
-    center_lat = 0.5 * (min(lats) + max(lats))
+    coords = np.asarray(all_lonlats, dtype=float)
+    center_lon = 0.5 * (float(coords[:, 0].min()) + float(coords[:, 0].max()))
+    center_lat = 0.5 * (float(coords[:, 1].min()) + float(coords[:, 1].max()))
     epsg = _shared_utm_epsg(center_lat, center_lon)
     transformer = Transformer.from_crs("EPSG:4326", f"EPSG:{epsg}", always_xy=True)
 
-    utm_points = np.asarray(
-        [transformer.transform(lon, lat) for lon, lat in all_lonlats],
-        dtype=float,
-    )
+    easting, northing = transformer.transform(coords[:, 0], coords[:, 1])
+    utm_points = np.column_stack((easting, northing))
     if flip_x:
         utm_points[:, 0] *= -1.0
 
@@ -122,10 +170,9 @@ def _build_shared_frame(all_lonlats, flip_x):
 
 
 def _to_local_points(lonlats, frame):
-    points = np.asarray(
-        [frame["transformer"].transform(lon, lat) for lon, lat in lonlats],
-        dtype=float,
-    )
+    coords = np.asarray(lonlats, dtype=float)
+    easting, northing = frame["transformer"].transform(coords[:, 0], coords[:, 1])
+    points = np.column_stack((easting, northing))
     if frame["flip_x"]:
         points[:, 0] *= -1.0
     points[:, 0] -= frame["origin_easting"]
@@ -139,6 +186,60 @@ def _heading(points):
     delta = points[1] - points[0]
     # Open Rails-style yaw: 0 looks +Z / north-ish; atan2(x, z).
     return float(np.arctan2(delta[0], delta[1]))
+
+
+def _fallback_chord_primitives(points):
+    """Build straight chords through every source polyline vertex.
+
+    Used when the circle/straight model-selection fit drifts too far from the
+    tip — better to follow GPS chords than leave a 100m gap at a junction.
+
+    Stats are exact-by-construction (chords hit vertices). Do not score these
+    with G1 chained reconstruction: corner kinks look like huge drift there,
+    but TrackBuilder can adopt each chord's start_ay while keeping position
+    continuous.
+    """
+    pts = remove_consecutive_duplicates(np.asarray(points, dtype=float))
+    if len(pts) < 2:
+        raise ValueError("Need at least 2 points for chord fallback")
+
+    segments = []
+    for i in range(len(pts) - 1):
+        a = pts[i]
+        b = pts[i + 1]
+        length = float(np.linalg.norm(b - a))
+        if length < 1e-3:
+            continue
+        segment = {
+            "type": "straight",
+            "length": length,
+            "radius": 0.0,
+            "angle": length,
+            "clockwise": False,
+            "rms_error": 0.0,
+            "max_error": 0.0,
+            "point_count": 2,
+            "points": np.asarray([a, b], dtype=float),
+            "start_index": i,
+            "end_index": i + 1,
+        }
+        segments.append(segment)
+
+    if not segments:
+        raise ValueError("Degenerate polyline for chord fallback")
+
+    segments = split_long_straights(segments, MAX_STRAIGHT_LENGTH)
+    primitives = []
+    for number, seg in enumerate(segments, 1):
+        primitive = extract_primitive_from_segment(seg, number)
+        segment_points = np.asarray(seg["points"], dtype=float)
+        primitive["start_x"] = float(segment_points[0, 0])
+        primitive["start_z"] = float(segment_points[0, 1])
+        primitive["start_ay"] = _heading(segment_points)
+        primitives.append(primitive)
+
+    fit_stats = {"rms_error": 0.0, "max_error": 0.0, "final_endpoint_error": 0.0}
+    return primitives, fit_stats
 
 
 def _fit_feature(points):
@@ -196,7 +297,7 @@ def _fit_feature(points):
     )
 
     before = calculate_chained_reconstruction_errors(points, segments)
-    if CHAINED_REFINEMENT:
+    if CHAINED_REFINEMENT and not is_overfragmented_segmentation(segments, points):
         refined = refine_segments_chained(
             points,
             copy.deepcopy(segments),
@@ -216,6 +317,15 @@ def _fit_feature(points):
         primitive["start_z"] = float(segment_points[0, 1])
         primitive["start_ay"] = _heading(segment_points)
         primitives.append(primitive)
+
+    # Tip drift breaks junctions (tangled DynTracks). Mid-path RMS alone is not
+    # enough to chordify — long features like 1732 can have high RMS yet a
+    # usable tip, and vertex chords look worse than a connected curve fit.
+    ep = float(before.get("final_endpoint_error", 0.0))
+    if ep > MAX_ENDPOINT_ERROR_M:
+        fallback, fb_stats = _fallback_chord_primitives(points)
+        return fallback, fb_stats
+
     return primitives, before
 
 
@@ -241,15 +351,21 @@ def _export_primitive(primitive):
     return payload
 
 
-def main():
+def main(argv=None):
+    args = _parse_args(argv)
     root = _script_dir()
-    objectid_path = root / OBJECTID_LIST_FILE
-    geojson_path = root / config.GEOJSON_FILE
+    objectid_path = args.objectids or (root / OBJECTID_LIST_FILE)
+    geojson_path = args.geojson or (root / config.GEOJSON_FILE)
+    qgis_path = args.output_geojson or (root / GEOJSON_OUTPUT)
+    local_path = args.output_local or (root / LOCAL_JSON_OUTPUT)
     flip_x = bool(getattr(config, "FLIP_X_COORDINATES", False))
+    corner_a = _parse_latlon(args.corner_a) or CORNER_A
+    corner_b = _parse_latlon(args.corner_b) or CORNER_B
 
     objectids = _load_objectids(objectid_path)
     wanted = set(objectids)
-    print(f"Loaded {len(objectids)} OBJECTIDs from {objectid_path.name}")
+    print(f"Loaded {len(objectids)} OBJECTIDs from {objectid_path}")
+    print(f"Source GeoJSON: {geojson_path}")
 
     with open(geojson_path, "r", encoding="utf-8") as handle:
         source = json.load(handle)
@@ -283,7 +399,7 @@ def main():
             }
         )
 
-    qgis_path = root / GEOJSON_OUTPUT
+    qgis_path.parent.mkdir(parents=True, exist_ok=True)
     with open(qgis_path, "w", encoding="utf-8") as handle:
         json.dump({"type": "FeatureCollection", "features": qgis_features}, handle)
     print(f"Wrote QGIS layer: {qgis_path} ({len(qgis_features)} features)")
@@ -350,7 +466,8 @@ def main():
             print(
                 f"OBJECTID {object_id}: {len(local_points)} pts, "
                 f"{len(primitives)} primitives, "
-                f"RMS={errors['rms_error']:.3f}m"
+                f"RMS={errors['rms_error']:.3f}m, "
+                f"endpoint={errors['final_endpoint_error']:.3f}m"
             )
         except Exception as exc:
             entry["error"] = str(exc)
@@ -358,7 +475,7 @@ def main():
 
         features_out.append(entry)
 
-    local_path = root / LOCAL_JSON_OUTPUT
+    local_path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "crs": {
             "epsg": frame["epsg"],
@@ -370,9 +487,9 @@ def main():
             "axes": "x=easting-ish (after flip), z=northing",
         },
         "source": {
-            "geojson": config.GEOJSON_FILE,
-            "objectid_list": OBJECTID_LIST_FILE,
-            "bbox_corners_latlon": [list(CORNER_A), list(CORNER_B)],
+            "geojson": str(geojson_path.name),
+            "objectid_list": str(objectid_path.name),
+            "bbox_corners_latlon": [list(corner_a), list(corner_b)],
         },
         "features": features_out,
     }

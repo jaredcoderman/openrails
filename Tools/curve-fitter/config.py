@@ -51,3 +51,6 @@ FLIP_X_COORDINATES = False
 # Open Rails tile limit is typically 2048m
 MAX_STRAIGHT_LENGTH = 2048
 
+# Reject near-infinite radius "curves" (almost straight); treat as straight instead.
+MAX_CIRCLE_RADIUS = 8000.0
+

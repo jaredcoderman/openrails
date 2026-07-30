@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace TrackBuilderGui;
 
 /// <summary>
-/// Free ends = tips with no other tip within SnapMeters (same idea as TrackBuilder).
-/// Junction clusters and snapped joints are therefore not selectable.
+/// Free ends = tips with no other tip within SnapMeters at a real joint.
+/// Nearby tips on parallel tracks or hairpin double-track ends do not count.
 /// </summary>
 public static class FreeEndpointFinder
 {
@@ -14,8 +14,10 @@ public static class FreeEndpointFinder
     public static List<NetworkEndpoint> Find(NetworkLocalFile network)
     {
         var all = new List<NetworkEndpoint>();
+        var features = new Dictionary<int, NetworkFeature>();
         foreach (var feature in network.Features)
         {
+            features[feature.ObjectId] = feature;
             if (TryPoint(feature, isStart: true, out var start))
                 all.Add(start);
             if (TryPoint(feature, isStart: false, out var end))
@@ -23,19 +25,24 @@ public static class FreeEndpointFinder
         }
 
         var free = new List<NetworkEndpoint>();
-        double snap2 = SnapMeters * SnapMeters;
         for (int i = 0; i < all.Count; i++)
         {
             var a = all[i];
+            if (!features.TryGetValue(a.ObjectId, out var fa))
+                continue;
+
             bool linked = false;
             for (int j = 0; j < all.Count; j++)
             {
                 if (i == j)
                     continue;
                 var b = all[j];
-                double dx = a.X - b.X;
-                double dz = a.Z - b.Z;
-                if (dx * dx + dz * dz <= snap2)
+                if (a.ObjectId == b.ObjectId)
+                    continue;
+                if (!features.TryGetValue(b.ObjectId, out var fb))
+                    continue;
+
+                if (ParallelTrackTips.ShouldSnapTips(fa, a.IsStart, fb, b.IsStart, SnapMeters))
                 {
                     linked = true;
                     break;

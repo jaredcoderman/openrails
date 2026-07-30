@@ -3,164 +3,378 @@
         xmlns:local="using:TrackBuilderGui"
         x:Class="TrackBuilderGui.MainWindow"
         Title="Track Builder"
-        Width="1280"
-        Height="800"
+        Width="1360"
+        Height="840"
+        Background="#0B0E12"
         WindowStartupLocation="CenterScreen">
-  <Grid ColumnDefinitions="300,4,*">
-    <Border Grid.Column="0"
-            Background="#121820"
-            Padding="16">
-      <DockPanel LastChildFill="True">
-        <StackPanel DockPanel.Dock="Top" Spacing="10">
-          <TextBlock Text="Track Builder"
-                     FontSize="20"
-                     FontWeight="SemiBold"
-                     Foreground="#F2F4F8" />
-          <TextBlock Text="Preview fitted network, then generate path/TDB from selected ends."
-                     TextWrapping="Wrap"
-                     Foreground="#9AA3B2"
-                     FontSize="12" />
-          <Button Name="LoadButton"
-                  Content="Load network JSON…"
-                  HorizontalAlignment="Stretch"
-                  Click="OnLoadClicked" />
-          <Button Name="FitButton"
-                  Content="Fit to view"
-                  HorizontalAlignment="Stretch"
-                  Click="OnFitClicked" />
+  <Window.Styles>
+    <!-- Base ghost / secondary controls -->
+    <Style Selector="Button.ghost">
+      <Setter Property="Background" Value="#1A212B" />
+      <Setter Property="Foreground" Value="#D7DEE8" />
+      <Setter Property="BorderBrush" Value="#2C3542" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="10,7" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.ghost:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#232B37" />
+      <Setter Property="BorderBrush" Value="#3A4556" />
+    </Style>
+    <Style Selector="Button.ghost:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="#141A22" />
+    </Style>
+    <Style Selector="Button.ghost:disabled /template/ ContentPresenter">
+      <Setter Property="Background" Value="#141920" />
+      <Setter Property="Foreground" Value="#5A6574" />
+      <Setter Property="BorderBrush" Value="#222A35" />
+    </Style>
 
-          <TextBlock Text="Endpoints"
-                     FontWeight="SemiBold"
-                     Foreground="#F2F4F8"
-                     Margin="0,12,0,0" />
-          <TextBlock Text="Cyan = free end · click start then goal"
-                     Foreground="#6B7380"
-                     FontSize="11"
-                     TextWrapping="Wrap" />
-          <TextBlock Name="StartLabel"
-                     Foreground="#EF9A9A"
-                     FontSize="12"
-                     Text="Start: (none)" />
-          <TextBlock Name="GoalLabel"
-                     Foreground="#A5D6A7"
-                     FontSize="12"
-                     Text="Goal: (none)" />
-          <Button Name="ClearSelectionButton"
-                  Content="Clear selection"
-                  HorizontalAlignment="Stretch"
-                  Click="OnClearSelectionClicked" />
-          <Button Name="GenerateButton"
-                  Content="Generate path…"
-                  HorizontalAlignment="Stretch"
-                  IsEnabled="False"
-                  Click="OnGenerateClicked" />
+    <Style Selector="Button.ghost-left">
+      <Setter Property="Background" Value="#1A212B" />
+      <Setter Property="Foreground" Value="#D7DEE8" />
+      <Setter Property="BorderBrush" Value="#2C3542" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="10,7" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+    </Style>
+    <Style Selector="Button.ghost-left:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#232B37" />
+    </Style>
+    <Style Selector="Button.ghost-left:disabled /template/ ContentPresenter">
+      <Setter Property="Background" Value="#141920" />
+      <Setter Property="Foreground" Value="#5A6574" />
+      <Setter Property="BorderBrush" Value="#222A35" />
+    </Style>
 
-          <TextBlock Text="Switch roles"
-                     FontWeight="SemiBold"
-                     Foreground="#F2F4F8"
-                     Margin="0,12,0,0" />
-          <TextBlock Text="POINTS (blue) = facing approach — take the spur from this side
-MAIN (yellow) = default through
-SPUR (orange) = diverging branch"
-                     Foreground="#9AA3B2"
-                     FontSize="11"
-                     TextWrapping="Wrap" />
-          <Border Background="#1A222E"
-                  CornerRadius="4"
-                  Padding="8"
-                  Margin="0,4,0,0">
-            <TextBlock TextWrapping="Wrap"
+    <Style Selector="Button.danger">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="#E57373" />
+      <Setter Property="BorderBrush" Value="#4A3030" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="10,7" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#2A1A1A" />
+      <Setter Property="BorderBrush" Value="#6B3A3A" />
+    </Style>
+    <Style Selector="Button.danger:disabled /template/ ContentPresenter">
+      <Setter Property="Foreground" Value="#5A4040" />
+      <Setter Property="BorderBrush" Value="#2A2222" />
+    </Style>
+
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="#1E6BB8" />
+      <Setter Property="Foreground" Value="#F5F8FC" />
+      <Setter Property="BorderBrush" Value="#2B7BC9" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="14,11" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#2678C9" />
+    </Style>
+    <Style Selector="Button.primary:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="#165A9C" />
+    </Style>
+    <Style Selector="Button.primary:disabled /template/ ContentPresenter">
+      <Setter Property="Background" Value="#1A2A3A" />
+      <Setter Property="Foreground" Value="#5A6574" />
+      <Setter Property="BorderBrush" Value="#243040" />
+    </Style>
+
+    <Style Selector="Button.success">
+      <Setter Property="Background" Value="#2F7A45" />
+      <Setter Property="Foreground" Value="#F5F8FC" />
+      <Setter Property="BorderBrush" Value="#3B8F54" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="14,11" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.success:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#378A50" />
+    </Style>
+    <Style Selector="Button.success:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="#246338" />
+    </Style>
+    <Style Selector="Button.success:disabled /template/ ContentPresenter">
+      <Setter Property="Background" Value="#1A2A22" />
+      <Setter Property="Foreground" Value="#5A6574" />
+      <Setter Property="BorderBrush" Value="#243028" />
+    </Style>
+
+    <Style Selector="TextBlock.section">
+      <Setter Property="Foreground" Value="#8B95A5" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="LetterSpacing" Value="0.6" />
+      <Setter Property="Margin" Value="2,0,0,8" />
+    </Style>
+
+    <Style Selector="TextBlock.hint">
+      <Setter Property="Foreground" Value="#6B7380" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="#12171F" />
+      <Setter Property="BorderBrush" Value="#222A35" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="12" />
+      <Setter Property="Margin" Value="0,0,0,10" />
+    </Style>
+  </Window.Styles>
+
+  <Grid ColumnDefinitions="320,1,*">
+    <!-- Sidebar -->
+    <Border Grid.Column="0" Background="#0E1218">
+      <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Brand / title -->
+        <Border Grid.Row="0"
+                BorderBrush="#1C2430"
+                BorderThickness="0,0,0,1"
+                Padding="18,16,18,14">
+          <StackPanel Spacing="4">
+            <TextBlock Text="TRACK BUILDER"
                        FontSize="11"
-                       Foreground="#F2F4F8"
-                       Text="In Open Rails the path can be correct while the switch still sits on MAIN. Before the junction: press G to throw the next switch for your path (Shift+G behind). If needed, Ctrl+M toggles Manual mode — stay in Auto when you can. Alt+click the switch also works." />
-          </Border>
+                       FontWeight="Bold"
+                       LetterSpacing="1.4"
+                       Foreground="#7A8798" />
+            <TextBlock Text="Clip · fit · build"
+                       FontSize="15"
+                       FontWeight="SemiBold"
+                       Foreground="#EEF2F7" />
+          </StackPanel>
+        </Border>
 
-          <TextBlock Text="Route paths"
-                     FontWeight="SemiBold"
-                     Foreground="#F2F4F8"
-                     Margin="0,12,0,0" />
-          <TextBlock Text="Check paths to delete (.pat + matching .srv/.act)"
-                     Foreground="#6B7380"
-                     FontSize="11"
-                     TextWrapping="Wrap" />
-          <Grid ColumnDefinitions="*,8,Auto">
-            <Button Name="PathsDropDownButton"
-                    Grid.Column="0"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Left">
-              <Button.Flyout>
-                <Flyout Placement="BottomEdgeAlignedLeft"
-                        ShowMode="Standard"
-                        Opening="OnPathsFlyoutOpening">
-                  <Border Width="260"
-                          MaxHeight="320"
+        <!-- Scrollable body -->
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Padding="14,14,14,8">
+          <StackPanel>
+            <!-- Map source -->
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Classes="section" Text="MAP SOURCE" />
+                <Grid ColumnDefinitions="*,6,*">
+                  <Button Name="LoadGeoButton"
+                          Grid.Column="0"
+                          Classes="ghost"
+                          Content="GeoJSON…"
+                          Click="OnLoadGeoClicked"
+                          ToolTip.Tip="Load full NTAD / GeoJSON preview" />
+                  <Button Name="LoadButton"
+                          Grid.Column="2"
+                          Classes="ghost"
+                          Content="Fitted…"
+                          Click="OnLoadClicked"
+                          ToolTip.Tip="Load a fitted bbox_network_local.json" />
+                </Grid>
+                <Button Name="FitButton"
+                        Classes="ghost"
+                        Content="Fit to view"
+                        Click="OnFitClicked" />
+                <TextBlock Name="BboxSelectionLabel"
+                           Classes="hint"
+                           Foreground="#8FBF9A"
+                           Text="Selection: (none)" />
+              </StackPanel>
+            </Border>
+
+            <!-- Clips -->
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Classes="section" Text="CLIPS" />
+                <Grid ColumnDefinitions="*,6,Auto">
+                  <Button Name="ClipsDropDownButton"
+                          Grid.Column="0"
+                          Classes="ghost-left">
+                    <Button.Flyout>
+                      <Flyout Placement="BottomEdgeAlignedLeft"
+                              ShowMode="Standard"
+                              Opening="OnClipsFlyoutOpening">
+                        <Border Width="280"
+                                MaxHeight="280"
+                                Background="#161C26"
+                                BorderBrush="#2C3542"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10">
+                          <DockPanel LastChildFill="True">
+                            <StackPanel DockPanel.Dock="Top"
+                                        Orientation="Horizontal"
+                                        Spacing="6"
+                                        Margin="0,0,0,8">
+                              <Button Classes="ghost" Content="All" Padding="8,3" Click="OnSelectAllClipsClicked" />
+                              <Button Classes="ghost" Content="None" Padding="8,3" Click="OnSelectNoneClipsClicked" />
+                              <Button Classes="ghost" Content="Refresh" Padding="8,3" Click="OnRefreshClipsClicked" />
+                            </StackPanel>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                              <ItemsControl Name="ClipCheckList">
+                                <ItemsControl.ItemTemplate>
+                                  <DataTemplate x:DataType="local:ClipEntry">
+                                    <CheckBox Content="{Binding ListLabel}"
+                                              IsChecked="{Binding IsChecked}"
+                                              Margin="0,3"
+                                              Foreground="#D7DEE8" />
+                                  </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                              </ItemsControl>
+                            </ScrollViewer>
+                          </DockPanel>
+                        </Border>
+                      </Flyout>
+                    </Button.Flyout>
+                    <TextBlock Name="ClipsDropDownLabel"
+                               Text="No clips yet"
+                               TextTrimming="CharacterEllipsis" />
+                  </Button>
+                  <Button Name="DeleteClipsButton"
+                          Grid.Column="2"
+                          Classes="danger"
+                          Content="Delete"
+                          IsEnabled="False"
+                          Click="OnDeleteClipsClicked" />
+                </Grid>
+                <TextBlock Classes="hint"
+                           Text="Check a clip, then Select below to open it." />
+              </StackPanel>
+            </Border>
+
+            <!-- Path ends -->
+            <Border Classes="card">
+              <StackPanel Spacing="8">
+                <TextBlock Classes="section" Text="PATH ENDS" />
+                <TextBlock Classes="hint"
+                           Text="Click a free-end pin for start (facing in), then a goal. Sharp reversals are rejected." />
+                <Border Background="#0B0F14"
+                        CornerRadius="6"
+                        Padding="10,8">
+                  <StackPanel Spacing="4">
+                    <TextBlock Name="StartLabel"
+                               Foreground="#F0A0A0"
+                               FontSize="12"
+                               Text="Start: (none)" />
+                    <TextBlock Name="GoalLabel"
+                               Foreground="#9CCC9C"
+                               FontSize="12"
+                               Text="Goal: (none)" />
+                  </StackPanel>
+                </Border>
+                <Grid ColumnDefinitions="*">
+                  <Button Name="ClearSelectionButton"
+                          Classes="ghost"
+                          Content="Clear ends"
+                          Click="OnClearSelectionClicked" />
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <!-- Console -->
+            <Border Classes="card" Margin="0">
+              <DockPanel LastChildFill="True">
+                <Grid DockPanel.Dock="Top"
+                      ColumnDefinitions="*,Auto"
+                      Margin="0,0,0,8">
+                  <TextBlock Classes="section"
+                             Text="CONSOLE"
+                             Margin="2,0,0,0"
+                             VerticalAlignment="Center" />
+                  <Border Name="ConsoleBadge"
+                          Grid.Column="1"
                           Background="#1A222E"
-                          Padding="8">
-                    <DockPanel LastChildFill="True">
-                      <StackPanel DockPanel.Dock="Top"
-                                  Orientation="Horizontal"
-                                  Spacing="8"
-                                  Margin="0,0,0,8">
-                        <Button Content="All"
-                                Padding="8,2"
-                                Click="OnSelectAllPathsClicked" />
-                        <Button Content="None"
-                                Padding="8,2"
-                                Click="OnSelectNonePathsClicked" />
-                        <Button Content="Refresh"
-                                Padding="8,2"
-                                Click="OnRefreshPathsClicked" />
-                      </StackPanel>
-                      <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                    HorizontalScrollBarVisibility="Disabled">
-                        <ItemsControl Name="PathCheckList">
-                          <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="local:PathEntry">
-                              <CheckBox Content="{Binding Id}"
-                                        IsChecked="{Binding IsChecked}"
-                                        Margin="0,2"
-                                        Foreground="#F2F4F8" />
-                            </DataTemplate>
-                          </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                      </ScrollViewer>
-                    </DockPanel>
+                          CornerRadius="10"
+                          Padding="9,3"
+                          VerticalAlignment="Center">
+                    <TextBlock Name="ConsoleBadgeText"
+                               Text="Idle"
+                               FontSize="10"
+                               FontWeight="SemiBold"
+                               Foreground="#8B95A5" />
                   </Border>
-                </Flyout>
-              </Button.Flyout>
-              <TextBlock Name="PathsDropDownLabel"
-                         Text="Select paths…"
-                         TextTrimming="CharacterEllipsis" />
-            </Button>
-            <Button Name="DeletePathsButton"
-                    Grid.Column="2"
-                    Content="Delete"
-                    IsEnabled="False"
-                    Click="OnDeletePathsClicked" />
-          </Grid>
+                </Grid>
+                <Border Background="#0B0F14"
+                        CornerRadius="6"
+                        MinHeight="140"
+                        Padding="8">
+                  <ScrollViewer Name="ConsoleScroll"
+                                VerticalScrollBarVisibility="Auto"
+                                HorizontalScrollBarVisibility="Disabled">
+                    <TextBox Name="ConsoleOutput"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             Foreground="#A8B4C4"
+                             CaretBrush="#A8B4C4"
+                             FontFamily="Cascadia Mono, Consolas, Courier New"
+                             FontSize="11"
+                             Text="Ready." />
+                  </ScrollViewer>
+                </Border>
+              </DockPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
 
-          <TextBlock Text="Drag to pan · wheel to zoom · click ends to select"
-                     Foreground="#6B7380"
-                     FontSize="11"
-                     Margin="0,8,0,0"
-                     TextWrapping="Wrap" />
-        </StackPanel>
-        <TextBlock Name="StatusText"
-                   DockPanel.Dock="Bottom"
-                   Margin="0,16,0,0"
-                   TextWrapping="Wrap"
-                   Foreground="#9AA3B2"
-                   FontSize="12"
-                   Text="No network loaded." />
-      </DockPanel>
+        <!-- Primary actions -->
+        <Border Grid.Row="2"
+                Background="#0E1218"
+                BorderBrush="#1C2430"
+                BorderThickness="0,1,0,0"
+                Padding="14,12,14,14">
+          <StackPanel Spacing="8">
+            <TextBlock Name="StatusText"
+                       Classes="hint"
+                       MaxHeight="40"
+                       TextTrimming="CharacterEllipsis"
+                       Text="No network loaded." />
+            <Button Name="ShowGeoButton"
+                    Classes="ghost"
+                    Content="Back to GeoJSON"
+                    IsVisible="False"
+                    Click="OnShowGeoClicked"
+                    ToolTip.Tip="Return to the last full GeoJSON preview" />
+            <Button Name="ExtractSelectionButton"
+                    Classes="primary"
+                    Content="Select"
+                    IsEnabled="False"
+                    Click="OnSelectClicked"
+                    ToolTip.Tip="Extract a Shift+drag box, or open the checked clip" />
+            <Button Name="BuildRouteButton"
+                    Classes="success"
+                    Content="Build route"
+                    IsEnabled="False"
+                    Click="OnBuildRouteClicked"
+                    ToolTip.Tip="Full rebuild + .pat/.srv/.act from the selected start→goal" />
+          </StackPanel>
+        </Border>
+      </Grid>
     </Border>
 
-    <GridSplitter Grid.Column="1"
-                  Width="4"
-                  Background="#2A3342"
-                  ResizeDirection="Columns" />
+    <Border Grid.Column="1" Background="#1C2430" />
 
-    <Border Grid.Column="2" Background="Black">
+    <Border Grid.Column="2" Background="#000000">
       <local:TrackMapControl x:Name="Map" />
     </Border>
   </Grid>

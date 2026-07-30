@@ -7,6 +7,7 @@ import config
 
 from circle_fitter import (
     calculate_chained_reconstruction_errors,
+    is_overfragmented_segmentation,
     latlons_to_cartesian,
     refine_segments_chained,
     segment_polyline_model_selection,
@@ -138,7 +139,7 @@ def extract_primitives():
         f"endpoint={before['final_endpoint_error']:.3f}m"
     )
 
-    if CHAINED_REFINEMENT:
+    if CHAINED_REFINEMENT and not is_overfragmented_segmentation(segments, points):
         refined_segments = refine_segments_chained(
             points,
             copy.deepcopy(segments),
@@ -154,6 +155,11 @@ def extract_primitives():
             segments = refined_segments
         else:
             print("Refinement rejected because it increased chained RMS error")
+    elif CHAINED_REFINEMENT:
+        print(
+            "Skipping chained refinement: over-fragmented segmentation "
+            f"({len(segments)} segments)"
+        )
 
     # Validate before splitting: splitting does not change the rendered geometry.
     segments = split_long_straights(segments, MAX_STRAIGHT_LENGTH)

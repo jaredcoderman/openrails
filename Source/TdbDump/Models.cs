@@ -29,7 +29,7 @@ namespace TdbDump
         public int TileX { get; set; }
         public int TileZ { get; set; }
         public float X { get; set; }
-        public float Y { get; set; }
+        public float Y { get; set; } = TerrainStamper.FlatTerrainY;
         public float Z { get; set; }
         public float AX { get; set; } = 0;
         public float AY { get; set; } = 0;
@@ -53,7 +53,8 @@ namespace TdbDump
         public int TileX { get; set; }
         public int TileZ { get; set; }
         public float X { get; set; }
-        public float Y { get; set; } = 1000;
+        /// <summary>Matches stamped flat TILES elevation (see TerrainStamper.FlatTerrainY).</summary>
+        public float Y { get; set; } = TerrainStamper.FlatTerrainY;
         public float Z { get; set; }
         public float AX { get; set; } = 0;
         public float AY { get; set; } = 0;
@@ -78,7 +79,8 @@ namespace TdbDump
         public int TileX { get; set; } = 0;
         public int TileZ { get; set; } = 0;
         public float X { get; set; }
-        public float Y { get; set; } = 1000;
+        /// <summary>Matches stamped flat TILES elevation (see TerrainStamper.FlatTerrainY).</summary>
+        public float Y { get; set; } = TerrainStamper.FlatTerrainY;
         public float Z { get; set; }
 
         public float AX { get; set; } = 0;
@@ -246,7 +248,7 @@ namespace TdbDump
         public uint CollideFlags { get; set; }
         public uint StaticFlags { get; set; }
         public float X { get; set; }
-        public float Y { get; set; }
+        public float Y { get; set; } = TerrainStamper.FlatTerrainY;
         public float Z { get; set; }
         public float Qx { get; set; }
         public float Qy { get; set; }

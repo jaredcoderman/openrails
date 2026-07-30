@@ -1,0 +1,10 @@
+{
+  "id": "clip_20260728_153413",
+  "name": "Clip \u00B7 16 features",
+  "created_utc": "2026-07-28T19:34:13.0480323Z",
+  "feature_count": 16,
+  "objectid_count": 16,
+  "corner_a": "45.95151142830172,-111.55735483542247",
+  "corner_b": "45.85477630348835,-111.36559438849481",
+  "source_geojson": "C:\\Users\\jared\\main\\openrails\\Tools\\curve-fitter\\NTAD_North_American_Rail_Network_Lines_BNSF_2685269841624876744.geojson"
+}

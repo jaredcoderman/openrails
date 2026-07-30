@@ -14,10 +14,15 @@ namespace TdbDump
         /// the same object Open Rails loads for that section.
         /// </summary>
         /// <returns>Number of world files written.</returns>
-        public static int WriteWorldFiles(List<DynamicTrack> tracks, float defaultY = 1000f)
+        public static int WriteWorldFiles(
+            string routeDirectory,
+            List<DynamicTrack> tracks,
+            float defaultY = TerrainStamper.FlatTerrainY)
         {
-            string basePath = @"C:\Users\jared\ORRoutes\BNSF Starter Route - Copy\ROUTES\BNSF_Scenic";
-            string worldDir = Path.Combine(basePath, "WORLD");
+            if (string.IsNullOrWhiteSpace(routeDirectory))
+                throw new ArgumentException("Route directory is required.", nameof(routeDirectory));
+
+            string worldDir = Path.Combine(routeDirectory, "WORLD");
             Directory.CreateDirectory(worldDir);
 
             if (tracks == null || tracks.Count == 0)
@@ -91,7 +96,8 @@ namespace TdbDump
             // Same tile-local X/Z as TDB. OR/TSRE negate Position.Z (and Qz) on
             // load — do not negate X or the mesh mirrors across the tile origin.
             float posX = track.X;
-            float posY = defaultY;
+            // Prefer the TDB section Y (flat terrain); fall back only if unset.
+            float posY = Math.Abs(track.Y) > 1e-3f ? track.Y : defaultY;
             float posZ = track.Z;
 
             // Match TrackObj / WorldObj save convention: store −Qz in the file.

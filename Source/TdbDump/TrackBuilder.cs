@@ -18,6 +18,12 @@ namespace TdbDump
         // translates pairs/clusters, and only tiny leftovers get short fillers.
         private const float EndpointSnapMeters = 25f;
 
+        // Tips this close are always a real shared vertex. Parallel mains are
+        // typically ~12–20 m apart — those must not snap into one rail.
+        private const float HardJoinMeters = 3f;
+        private const float ParallelHeadingAlign = 0.92f;
+        private const float ParallelMaxAlongTrack = 0.45f;
+
         private float _x;
         private float _z;
         private float _ay;
@@ -98,6 +104,23 @@ namespace TdbDump
                 Console.WriteLine(
                     "Junctions: " + junctionsCreated + " TrJunctionNode(s) for 3-way clusters");
             }
+
+            // Junction reshape / tip adjust can open holes between consecutive
+            // DynTrack sections (right heading, missing abutment). Close those,
+            // then re-seat any 1:1 link residuals the reshape disturbed.
+            int abutmentFixes = RepairChainAbutments(activeChains);
+            int postJunctionReseats = CloseLinkedResiduals(activeChains, links);
+            int postJunctionOrphans = CloseSmallResidualGaps(activeChains, links);
+            if (abutmentFixes + postJunctionReseats + postJunctionOrphans > 0)
+            {
+                Console.WriteLine(
+                    "Post-junction close: "
+                    + abutmentFixes + " abutment fix(es), "
+                    + postJunctionReseats + " link reseat(s), "
+                    + postJunctionOrphans + " orphan reseat(s)");
+            }
+
+            ReportResidualGaps(activeChains, links);
 
             // WFName + UiD must match the Dyntrack Open Rails loads: world file
             // w{TileX}{TileZ}.w, object UiD. UiDs are unique within each tile.
@@ -259,17 +282,34 @@ namespace TdbDump
                 // its diverge angle. The diverging leg gets a longer rewrite —
                 // fitted spur curves often swing into the through line before
                 // the tip, which draws as overlapping track at the T.
+                //
+                // Exception: when main and diverge leave nearly parallel (double
+                // track meeting a third rail), a 160 m diverge rewrite chops the
+                // parallel and leaves DynTrack gaps — keep approaches short.
                 float jx = stem.IsStart ? stem.Chain.StartX : stem.Chain.EndX;
                 float jz = stem.IsStart ? stem.Chain.StartZ : stem.Chain.EndZ;
+                float mainAy = main.IsStart ? main.Chain.GeoStartAy : main.Chain.GeoEndAy;
+                float divAy = diverging.IsStart ? diverging.Chain.GeoStartAy : diverging.Chain.GeoEndAy;
+                float mainOutX = main.IsStart ? (float)Math.Sin(mainAy) : -(float)Math.Sin(mainAy);
+                float mainOutZ = main.IsStart ? (float)Math.Cos(mainAy) : -(float)Math.Cos(mainAy);
+                float divOutX = diverging.IsStart ? (float)Math.Sin(divAy) : -(float)Math.Sin(divAy);
+                float divOutZ = diverging.IsStart ? (float)Math.Cos(divAy) : -(float)Math.Cos(divAy);
+                bool parallelLegs =
+                    Math.Abs(mainOutX * divOutX + mainOutZ * divOutZ) > 0.85f;
+
+                float stemApproach = CapJunctionApproach(stem.Chain, 60f);
+                float mainApproach = CapJunctionApproach(main.Chain, parallelLegs ? 40f : 60f);
+                float divApproach = CapJunctionApproach(diverging.Chain, parallelLegs ? 40f : 160f);
+
                 ReshapeJunctionApproach(stem.Chain, stem.IsStart, jx, jz,
                     stem.IsStart ? stem.Chain.GeoStartAy : stem.Chain.GeoEndAy,
-                    approachMeters: 60f);
+                    approachMeters: stemApproach);
                 ReshapeJunctionApproach(main.Chain, main.IsStart, jx, jz,
                     main.IsStart ? main.Chain.GeoStartAy : main.Chain.GeoEndAy,
-                    approachMeters: 60f);
+                    approachMeters: mainApproach);
                 ReshapeJunctionApproach(diverging.Chain, diverging.IsStart, jx, jz,
                     diverging.IsStart ? diverging.Chain.GeoStartAy : diverging.Chain.GeoEndAy,
-                    approachMeters: 160f);
+                    approachMeters: divApproach);
 
                 jx = stem.IsStart ? stem.Chain.StartX : stem.Chain.EndX;
                 jz = stem.IsStart ? stem.Chain.StartZ : stem.Chain.EndZ;
@@ -367,9 +407,11 @@ namespace TdbDump
                 {
                     if (endpoints[i].ObjectId == endpoints[j].ObjectId)
                         continue;
-                    if (Distance(endpoints[i].Gx, endpoints[i].Gz, endpoints[j].Gx, endpoints[j].Gz)
-                        <= EndpointSnapMeters)
-                        Union(i, j);
+                    if (!ShouldSnapTips(
+                            endpoints[i].Chain, endpoints[i].IsStart,
+                            endpoints[j].Chain, endpoints[j].IsStart))
+                        continue;
+                    Union(i, j);
                 }
             }
 
@@ -475,6 +517,106 @@ namespace TdbDump
         }
 
         /// <summary>
+        /// Short crossovers between parallel rails are often a single section
+        /// with both tips in junctions. A normal approach rewrite would replace
+        /// the whole span with a ~40 m stub that never reaches the other rail.
+        /// </summary>
+        private float CapJunctionApproach(FeatureChain chain, float desired)
+        {
+            float len = TotalChainLength(chain);
+            if (len < 1f)
+                return desired;
+            // Keep at least ~55% of the feature as un-rewritten span.
+            float maxApproach = Math.Max(8f, len * 0.35f);
+            if (chain.Sections.Count <= 2)
+                maxApproach = Math.Min(maxApproach, Math.Max(8f, len * 0.2f));
+            return Math.Min(desired, maxApproach);
+        }
+
+        private float TotalChainLength(FeatureChain chain)
+        {
+            float sum = 0f;
+            foreach (var node in chain.Sections)
+                sum += SectionArcLength(node);
+            return sum;
+        }
+
+        /// <summary>
+        /// Pin a short connector's tip to the junction while keeping the far end
+        /// (crossovers between parallel rails).
+        /// </summary>
+        private void SnapShortLegToJunction(
+            FeatureChain chain,
+            bool isStart,
+            float junctionX,
+            float junctionZ,
+            float travelAy)
+        {
+            if (chain.Sections.Count == 0)
+                return;
+
+            if (isStart)
+            {
+                UpdateChainEndFromLastSection(chain);
+                float endX = chain.EndX;
+                float endZ = chain.EndZ;
+                if (Distance(junctionX, junctionZ, endX, endZ) < 1f)
+                    return;
+
+                if (chain.Sections.Count == 1)
+                {
+                    TrackNode node = chain.Sections[0];
+                    if (!_primitives.TryGetValue(node.Section.SectionIndex, out TrackPrimitive prim))
+                        return;
+                    ReseatSectionAsStraight(node, prim, junctionX, junctionZ, endX, endZ);
+                    chain.StartX = junctionX;
+                    chain.StartZ = junctionZ;
+                    chain.StartAy = node.Section.AY;
+                    chain.EndX = endX;
+                    chain.EndZ = endZ;
+                    chain.EndAy = node.Section.AY;
+                    return;
+                }
+
+                if (!AdjustChainStartToTarget(chain, junctionX, junctionZ))
+                    PrependFillerStraight(chain, junctionX, junctionZ);
+                chain.StartX = junctionX;
+                chain.StartZ = junctionZ;
+                chain.StartAy = travelAy;
+                UpdateChainEndFromLastSection(chain);
+                return;
+            }
+
+            UpdateChainStartFromFirstSection(chain);
+            float startX = chain.StartX;
+            float startZ = chain.StartZ;
+            if (Distance(junctionX, junctionZ, startX, startZ) < 1f)
+                return;
+
+            if (chain.Sections.Count == 1)
+            {
+                TrackNode node = chain.Sections[0];
+                if (!_primitives.TryGetValue(node.Section.SectionIndex, out TrackPrimitive prim))
+                    return;
+                ReseatSectionAsStraight(node, prim, startX, startZ, junctionX, junctionZ);
+                chain.StartX = startX;
+                chain.StartZ = startZ;
+                chain.StartAy = node.Section.AY;
+                chain.EndX = junctionX;
+                chain.EndZ = junctionZ;
+                chain.EndAy = node.Section.AY;
+                return;
+            }
+
+            if (!AdjustChainEndToTarget(chain, junctionX, junctionZ))
+                AppendFillerStraight(chain, junctionX, junctionZ);
+            chain.EndX = junctionX;
+            chain.EndZ = junctionZ;
+            chain.EndAy = travelAy;
+            UpdateChainStartFromFirstSection(chain);
+        }
+
+        /// <summary>
         /// Strip tip sections covering <paramref name="approachMeters"/> and
         /// replace them with one straight on the geo approach heading so
         /// turnouts keep their diverge angle (and spur arcs don't cross through).
@@ -489,6 +631,15 @@ namespace TdbDump
         {
             if (chain.Sections.Count == 0 || approachMeters < 1f)
                 return;
+
+            float chainLen = TotalChainLength(chain);
+            // One-section (or tiny) connectors: pin the tip to the junction and
+            // keep the far end — never rewrite the whole feature into a stub.
+            if (chain.Sections.Count == 1 || chainLen < 100f)
+            {
+                SnapShortLegToJunction(chain, isStart, junctionX, junctionZ, travelAy);
+                return;
+            }
 
             float dirX = (float)Math.Sin(travelAy);
             float dirZ = (float)Math.Cos(travelAy);
@@ -519,13 +670,15 @@ namespace TdbDump
             }
 
             if (removeCount == 0)
-            {
-                // Single-section chain: just rewrite it as the tip straight.
-                removeCount = 1;
-                covered = approachMeters;
-            }
+                return;
 
-            float approachLen = Math.Max(40f, Math.Min(approachMeters, Math.Max(covered, approachMeters)));
+            float approachLen = Math.Min(approachMeters, Math.Max(covered, 8f));
+            approachLen = Math.Min(approachLen, chainLen * 0.4f);
+            if (approachLen < 8f)
+            {
+                SnapShortLegToJunction(chain, isStart, junctionX, junctionZ, travelAy);
+                return;
+            }
 
             if (isStart)
             {
@@ -552,9 +705,18 @@ namespace TdbDump
                     return;
                 }
 
+                // Removals leave StartX/Z pointing at the old tip — refresh from
+                // the new first section or Adjust thinks the gap is already closed
+                // and inserts a tiny filler while the remainder starts hundreds
+                // of meters away (visible DynTrack holes with correct headings).
+                UpdateChainStartFromFirstSection(chain);
+
                 // Remainder starts at the former tip-follow joint; pull it onto
-                // the new tip end, then reinsert the tip.
-                AdjustChainStartToTarget(chain, tipEndX, tipEndZ);
+                // the new tip end, then reinsert the tip. If Adjust refuses
+                // (curve reverse / long gap), force a filler so we never leave
+                // a DynTrack hole between tip and remainder.
+                if (!AdjustChainStartToTarget(chain, tipEndX, tipEndZ))
+                    PrependFillerStraight(chain, tipEndX, tipEndZ);
                 ReseatSectionAsStraight(tipNode, tipPrim, junctionX, junctionZ, tipEndX, tipEndZ);
                 chain.Sections.Insert(0, tipNode);
                 chain.StartX = junctionX;
@@ -588,7 +750,8 @@ namespace TdbDump
             }
 
             UpdateChainEndFromLastSection(chain);
-            CloseJointToPose(chain, tipStartX, tipStartZ);
+            if (!AdjustChainEndToTarget(chain, tipStartX, tipStartZ))
+                AppendFillerStraight(chain, tipStartX, tipStartZ);
             ReseatSectionAsStraight(endTip, endPrim, tipStartX, tipStartZ, junctionX, junctionZ);
             chain.Sections.Add(endTip);
             chain.EndX = junctionX;
@@ -617,6 +780,17 @@ namespace TdbDump
                 chain.EndAy = last.Section.AY + prim.SignedAngle;
             else
                 chain.EndAy = last.Section.AY;
+        }
+
+        private void UpdateChainStartFromFirstSection(FeatureChain chain)
+        {
+            if (chain.Sections.Count == 0)
+                return;
+            TrackNode first = chain.Sections[0];
+            SectionWorldStart(first.Section, out float sx, out float sz);
+            chain.StartX = sx;
+            chain.StartZ = sz;
+            chain.StartAy = first.Section.AY;
         }
 
         private static void GetSectionWorldEnd(
@@ -680,6 +854,7 @@ namespace TdbDump
             }
 
             var candidates = new List<(float Dist, Endpoint A, Endpoint B)>();
+            var byId = chains.ToDictionary(c => c.ObjectId);
             for (int i = 0; i < endpoints.Count; i++)
             {
                 for (int j = i + 1; j < endpoints.Count; j++)
@@ -688,10 +863,14 @@ namespace TdbDump
                     Endpoint b = endpoints[j];
                     if (a.ObjectId == b.ObjectId)
                         continue;
+                    if (!byId.TryGetValue(a.ObjectId, out FeatureChain chainA)
+                        || !byId.TryGetValue(b.ObjectId, out FeatureChain chainB))
+                        continue;
+                    if (!ShouldSnapTips(chainA, a.IsStart, chainB, b.IsStart))
+                        continue;
 
                     float dist = Distance(a.X, a.Z, b.X, b.Z);
-                    if (dist <= EndpointSnapMeters)
-                        candidates.Add((dist, a, b));
+                    candidates.Add((dist, a, b));
                 }
             }
 
@@ -835,9 +1014,11 @@ namespace TdbDump
                 {
                     if (endpoints[i].Chain.ObjectId == endpoints[j].Chain.ObjectId)
                         continue;
-                    if (Distance(endpoints[i].Gx, endpoints[i].Gz, endpoints[j].Gx, endpoints[j].Gz)
-                        <= EndpointSnapMeters)
-                        Union(i, j);
+                    if (!ShouldSnapTips(
+                            endpoints[i].Chain, endpoints[i].IsStart,
+                            endpoints[j].Chain, endpoints[j].IsStart))
+                        continue;
+                    Union(i, j);
                 }
             }
 
@@ -950,31 +1131,52 @@ namespace TdbDump
                 if (gap < 0.5f)
                     continue;
 
+                bool closed = false;
                 // Prefer adjusting an end over a start.
                 if (!key.IsStart)
-                {
-                    if (AdjustChainEndToTarget(chain, bx, bz))
-                        reseats++;
-                }
+                    closed = AdjustChainEndToTarget(chain, bx, bz)
+                        || ForceCloseEnd(chain, isStart: false, bx, bz);
                 else if (!link.OtherIsStart)
-                {
-                    if (AdjustChainEndToTarget(other, ax, az))
-                        reseats++;
-                }
-                else if (AdjustChainStartToTarget(chain, bx, bz))
-                {
+                    closed = AdjustChainEndToTarget(other, ax, az)
+                        || ForceCloseEnd(other, isStart: false, ax, az);
+                else
+                    closed = AdjustChainStartToTarget(chain, bx, bz)
+                        || ForceCloseEnd(chain, isStart: true, bx, bz);
+
+                if (closed)
                     reseats++;
-                }
             }
 
             return reseats;
         }
 
         /// <summary>
+        /// When Adjust refuses (curve reverse / long gap), still bridge with a
+        /// filler so linked tips don't leave a visible DynTrack hole.
+        /// </summary>
+        private bool ForceCloseEnd(FeatureChain chain, bool isStart, float targetX, float targetZ)
+        {
+            float sx = isStart ? chain.StartX : chain.EndX;
+            float sz = isStart ? chain.StartZ : chain.EndZ;
+            float gap = Distance(sx, sz, targetX, targetZ);
+            if (gap < 0.5f)
+                return false;
+
+            if (isStart)
+            {
+                PrependFillerStraight(chain, targetX, targetZ);
+                return true;
+            }
+
+            AppendFillerStraight(chain, targetX, targetZ);
+            return true;
+        }
+
+        /// <summary>
         /// Only close leftover geo-matched gaps that are already small. Large
         /// unmatched residuals are real corridor gaps or junctions (Step 4).
         /// </summary>
-        private const float MaxOrphanFillerMeters = 50f;
+        private const float MaxOrphanFillerMeters = 120f;
 
         /// <summary>
         /// Append a short forward filler only when the last section is a curve
@@ -1027,6 +1229,8 @@ namespace TdbDump
                     float ogz = otherIsStart ? other.GeoStartZ : other.GeoEndZ;
                     float geoDist = Distance(gx, gz, ogx, ogz);
                     if (geoDist > EndpointSnapMeters || geoDist >= bestGeo)
+                        continue;
+                    if (!ShouldSnapTips(chain, isStart, other, otherIsStart))
                         continue;
 
                     bestGeo = geoDist;
@@ -1274,9 +1478,7 @@ namespace TdbDump
                 // Convert tile-local back to world, translate, then re-tile.
                 float worldX = (section.TileX - BaseTileX) * 2048f + section.X;
                 float worldZ = (section.TileZ - BaseTileZ) * 2048f + section.Z;
-                worldX += dx;
-                worldZ += dz;
-                PlaceWorld(worldX, worldZ, out int tileX, out int tileZ, out float localX, out float localZ);
+                PlaceWorld(worldX + dx, worldZ + dz, out int tileX, out int tileZ, out float localX, out float localZ);
                 section.TileX = tileX;
                 section.TileZ = tileZ;
                 section.X = localX;
@@ -1286,11 +1488,241 @@ namespace TdbDump
             }
         }
 
+        /// <summary>
+        /// Translate sections [fromIndex..] so DynTrack abutments stay intact.
+        /// </summary>
+        private static void TranslateChainFromSection(FeatureChain chain, int fromIndex, float dx, float dz)
+        {
+            if (Math.Abs(dx) < 1e-4f && Math.Abs(dz) < 1e-4f)
+                return;
+
+            for (int j = fromIndex; j < chain.Sections.Count; j++)
+            {
+                var section = chain.Sections[j].Section;
+                float worldX = (section.TileX - BaseTileX) * 2048f + section.X;
+                float worldZ = (section.TileZ - BaseTileZ) * 2048f + section.Z;
+                PlaceWorld(worldX + dx, worldZ + dz, out int tileX, out int tileZ, out float localX, out float localZ);
+                section.TileX = tileX;
+                section.TileZ = tileZ;
+                section.X = localX;
+                section.Z = localZ;
+                section.WFNameX = tileX.ToString();
+                section.WFNameZ = tileZ.ToString();
+            }
+
+            if (fromIndex == 0)
+            {
+                chain.StartX += dx;
+                chain.StartZ += dz;
+            }
+            chain.EndX += dx;
+            chain.EndZ += dz;
+        }
+
+        /// <summary>
+        /// Fix DynTrack holes where consecutive sections have the right heading
+        /// but don't meet (common after junction tip rewrite). Slide the remainder
+        /// of the chain so section i+1 starts exactly at section i's end.
+        /// </summary>
+        private int RepairChainAbutments(List<FeatureChain> chains)
+        {
+            const float minGap = 0.15f;
+            int fixes = 0;
+
+            foreach (var chain in chains)
+            {
+                if (chain.Sections == null || chain.Sections.Count < 2)
+                    continue;
+
+                for (int i = 0; i < chain.Sections.Count - 1; i++)
+                {
+                    TrackNode a = chain.Sections[i];
+                    TrackNode b = chain.Sections[i + 1];
+                    if (!_primitives.TryGetValue(a.Section.SectionIndex, out TrackPrimitive pa))
+                        continue;
+                    if (!_primitives.TryGetValue(b.Section.SectionIndex, out TrackPrimitive _))
+                        continue;
+
+                    GetSectionWorldEnd(a, pa, out float ex, out float ez);
+                    SectionWorldStart(b.Section, out float sx, out float sz);
+                    float gap = Distance(ex, ez, sx, sz);
+                    if (gap < minGap)
+                        continue;
+
+                    Console.WriteLine(
+                        "  Abutment gap oid " + chain.ObjectId
+                        + " [" + i + "->" + (i + 1) + "]: " + gap.ToString("0.00") + "m — sliding remainder");
+
+                    TranslateChainFromSection(chain, i + 1, ex - sx, ez - sz);
+                    fixes++;
+                }
+
+                if (chain.Sections.Count > 0)
+                {
+                    TrackNode first = chain.Sections[0];
+                    SectionWorldStart(first.Section, out float fx, out float fz);
+                    chain.StartX = fx;
+                    chain.StartZ = fz;
+                    chain.StartAy = first.Section.AY;
+                    UpdateChainEndFromLastSection(chain);
+                }
+            }
+
+            return fixes;
+        }
+
+        private void ReportResidualGaps(
+            List<FeatureChain> chains,
+            Dictionary<EndpointKey, EndpointLink> links)
+        {
+            var byObjectId = chains.ToDictionary(c => c.ObjectId);
+            int linkGaps = 0;
+            int freeGaps = 0;
+
+            var reported = new HashSet<EndpointKey>();
+            foreach (var kv in links)
+            {
+                EndpointKey key = kv.Key;
+                if (reported.Contains(key))
+                    continue;
+                EndpointLink link = kv.Value;
+                var otherKey = new EndpointKey(link.OtherObjectId, link.OtherIsStart);
+                reported.Add(key);
+                reported.Add(otherKey);
+
+                if (!byObjectId.TryGetValue(key.ObjectId, out FeatureChain chain))
+                    continue;
+                if (!byObjectId.TryGetValue(link.OtherObjectId, out FeatureChain other))
+                    continue;
+
+                float ax = key.IsStart ? chain.StartX : chain.EndX;
+                float az = key.IsStart ? chain.StartZ : chain.EndZ;
+                float bx = link.OtherIsStart ? other.StartX : other.EndX;
+                float bz = link.OtherIsStart ? other.StartZ : other.EndZ;
+                float gap = Distance(ax, az, bx, bz);
+                if (gap < 0.5f)
+                    continue;
+                linkGaps++;
+                Console.WriteLine(
+                    "  Residual LINK gap "
+                    + key.ObjectId + (key.IsStart ? "S" : "E")
+                    + "<->"
+                    + link.OtherObjectId + (link.OtherIsStart ? "S" : "E")
+                    + ": " + gap.ToString("0.00") + "m");
+            }
+
+            // Within-chain abutments still open
+            foreach (var chain in chains)
+            {
+                for (int i = 0; i < chain.Sections.Count - 1; i++)
+                {
+                    TrackNode a = chain.Sections[i];
+                    TrackNode b = chain.Sections[i + 1];
+                    if (!_primitives.TryGetValue(a.Section.SectionIndex, out TrackPrimitive pa))
+                        continue;
+                    GetSectionWorldEnd(a, pa, out float ex, out float ez);
+                    SectionWorldStart(b.Section, out float sx, out float sz);
+                    float gap = Distance(ex, ez, sx, sz);
+                    if (gap < 0.5f)
+                        continue;
+                    freeGaps++;
+                    Console.WriteLine(
+                        "  Residual ABUT oid " + chain.ObjectId
+                        + " [" + i + "->" + (i + 1) + "]: " + gap.ToString("0.00") + "m");
+                }
+            }
+
+            if (linkGaps + freeGaps == 0)
+                Console.WriteLine("Residual gaps: none (>0.5m)");
+            else
+                Console.WriteLine(
+                    "Residual gaps: " + linkGaps + " link, " + freeGaps + " abutment");
+        }
+
         private static float Distance(float x0, float z0, float x1, float z1)
         {
             float dx = x0 - x1;
             float dz = z0 - z1;
             return (float)Math.Sqrt(dx * dx + dz * dz);
+        }
+
+        /// <summary>
+        /// True when two tips within snap range sit on parallel tracks (lateral
+        /// offset) rather than at a joint. Prevents double-track centerlines
+        /// from being merged / translated onto each other.
+        /// </summary>
+        private static bool IsLateralParallelGap(
+            float ax, float az, float aAy,
+            float bx, float bz, float bAy,
+            float dist)
+        {
+            if (dist <= HardJoinMeters || dist < 1e-6f)
+                return false;
+
+            float axh = (float)Math.Sin(aAy);
+            float azh = (float)Math.Cos(aAy);
+            float bxh = (float)Math.Sin(bAy);
+            float bzh = (float)Math.Cos(bAy);
+
+            float align = Math.Abs(axh * bxh + azh * bzh);
+            if (align < ParallelHeadingAlign)
+                return false;
+
+            float sx = (bx - ax) / dist;
+            float sz = (bz - az) / dist;
+            float along = Math.Abs(sx * axh + sz * azh);
+            return along < ParallelMaxAlongTrack;
+        }
+
+        private static float TipLeaveAy(FeatureChain chain, bool isStart)
+        {
+            // Leave into the feature from this tip (matches GUI ParallelTrackTips).
+            if (isStart)
+                return chain.GeoStartAy;
+            return chain.GeoEndAy + (float)Math.PI;
+        }
+
+        private static bool IsHairpinConnection(
+            float aArriveX, float aArriveZ,
+            float bLeaveX, float bLeaveZ)
+            => aArriveX * bLeaveX + aArriveZ * bLeaveZ < -0.5f;
+
+        private static void TipArrivalDir(FeatureChain chain, bool isStart, out float hx, out float hz)
+        {
+            // Opposite of leave-into-feature.
+            float leaveAy = TipLeaveAy(chain, isStart);
+            hx = -(float)Math.Sin(leaveAy);
+            hz = -(float)Math.Cos(leaveAy);
+        }
+
+        private static bool ShouldSnapTips(FeatureChain a, bool aIsStart, FeatureChain b, bool bIsStart)
+        {
+            float ax = aIsStart ? a.GeoStartX : a.GeoEndX;
+            float az = aIsStart ? a.GeoStartZ : a.GeoEndZ;
+            float bx = bIsStart ? b.GeoStartX : b.GeoEndX;
+            float bz = bIsStart ? b.GeoStartZ : b.GeoEndZ;
+            float dist = Distance(ax, az, bx, bz);
+            if (dist > EndpointSnapMeters)
+                return false;
+
+            float aLeaveAy = TipLeaveAy(a, aIsStart);
+            float bLeaveAy = TipLeaveAy(b, bIsStart);
+            if (IsLateralParallelGap(ax, az, aLeaveAy, bx, bz, bLeaveAy, dist))
+                return false;
+
+            TipArrivalDir(a, aIsStart, out float aArrX, out float aArrZ);
+            float bLeaveX = (float)Math.Sin(bLeaveAy);
+            float bLeaveZ = (float)Math.Cos(bLeaveAy);
+            if (IsHairpinConnection(aArrX, aArrZ, bLeaveX, bLeaveZ))
+                return false;
+
+            TipArrivalDir(b, bIsStart, out float bArrX, out float bArrZ);
+            float aLeaveX = (float)Math.Sin(aLeaveAy);
+            float aLeaveZ = (float)Math.Cos(aLeaveAy);
+            if (IsHairpinConnection(bArrX, bArrZ, aLeaveX, aLeaveZ))
+                return false;
+
+            return true;
         }
 
         private void BuildFromNetwork(string path)
@@ -1330,15 +1762,48 @@ namespace TdbDump
 
                 foreach (var primitive in feature.Primitives)
                 {
-                    // Place from a continuous running pose. Snapping each section to
-                    // its independent fitted Start inserted angled joint fillers
-                    // (visible zigzags on T approaches like OBJECTID 2017). Endpoint
-                    // align + reseat still pin features together after the chain.
+                    // Continuous X/Z along the chain — snapping every section to
+                    // its fitted Start created angled joint fillers (OBJECTID 2017).
+                    //
+                    // Heading: never override before a curve (Start.Ay is a
+                    // polyline-chord estimate and fights the fitted tangent —
+                    // that produced the wild DynTrack oscillations). For
+                    // straights, adopt Start.Ay so corner chords / polyline
+                    // fallbacks can change direction without a curve.
                     if (firstPrimitive && primitive.Start != null)
                     {
                         _x = primitive.Start.X;
                         _z = primitive.Start.Z;
                         _ay = primitive.Start.Ay;
+                    }
+                    else if (primitive.Type == "straight" && primitive.Start != null)
+                    {
+                        _ay = primitive.Start.Ay;
+                        // Split long straights / chord halves can leave the running
+                        // pose a few meters short of the next fitted start — stretch
+                        // the previous straight to meet so DynTracks don't show a
+                        // collinear hole.
+                        if (!firstPrimitive && chain.Sections.Count > 0)
+                        {
+                            float gapToStart = Distance(
+                                _x, _z, primitive.Start.X, primitive.Start.Z);
+                            if (gapToStart > 0.2f && gapToStart < 40f)
+                            {
+                                TrackNode prev = chain.Sections[chain.Sections.Count - 1];
+                                if (_primitives.TryGetValue(
+                                        prev.Section.SectionIndex, out TrackPrimitive prevPrim)
+                                    && !prevPrim.IsCurve)
+                                {
+                                    SectionWorldStart(prev.Section, out float psx, out float psz);
+                                    ReseatSectionAsStraight(
+                                        prev, prevPrim, psx, psz,
+                                        primitive.Start.X, primitive.Start.Z);
+                                    _x = primitive.Start.X;
+                                    _z = primitive.Start.Z;
+                                    _ay = primitive.Start.Ay;
+                                }
+                            }
+                        }
                     }
 
                     sectionIndex = NextSectionIndex();

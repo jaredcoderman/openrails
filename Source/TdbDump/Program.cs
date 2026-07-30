@@ -133,15 +133,22 @@ namespace TdbDump
                 return 1;
             }
 
-            // Player path across the snapped network.
-            try
+            // Player path only when start/end were requested (or --path-only above).
+            if (cli.StartObjectId.HasValue && cli.GoalObjectId.HasValue)
             {
-                ScenarioWriter.Write(routeDirectory, track.Chains, allNodes, pathOptions);
+                try
+                {
+                    ScenarioWriter.Write(routeDirectory, track.Chains, allNodes, pathOptions);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error writing scenario files: " + ex.Message);
+                    return 1;
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine("Error writing scenario files: " + ex.Message);
-                return 1;
+                Console.WriteLine("Skipping .pat/.srv/.act (no --start/--end).");
             }
 
             // Write DynamicTracks to World Files
@@ -207,11 +214,16 @@ namespace TdbDump
                     }
                 }
 
-                int worldFiles = WorldWriter.WriteWorldFiles(dynamicTracks);
+                int worldFiles = WorldWriter.WriteWorldFiles(routeDirectory, dynamicTracks);
                 Console.WriteLine(
                     "World sync: " + tdbSectionCount + " TDB sections, "
                     + dynamicTracks.Count + " DynTracks, "
                     + worldFiles + " world file(s)");
+
+                TerrainStamper.StampFlatTiles(
+                    routeDirectory,
+                    TerrainStamper.CollectTilesFromChains(track.Chains),
+                    borderTiles: 1);
 
                 return 0;
             }

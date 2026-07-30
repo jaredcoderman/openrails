@@ -141,11 +141,15 @@ def _taubin_svd_initial_guess(points):
     return centroid + center_local, float(np.sqrt(radius_sq))
 
 
-def fit_circle_taubin(points, robust=False):
-    """Fit a circle using Taubin initialization plus geometric refinement.
+def fit_circle_taubin(points, robust=False, refine=True, max_nfev=2000):
+    """Fit a circle using Taubin initialization plus optional geometric refinement.
 
     Coordinates are normalized before optimization, which is important for UTM
     coordinates and for shallow, large-radius railway arcs.
+
+    ``refine=False`` returns the algebraic (Taubin/Kasa) seed only. That is much
+    cheaper and is used while greedily growing candidates; accepted segments are
+    re-fit with ``refine=True`` so final geometry stays geometrically refined.
     """
     points = np.asarray(points, dtype=float)
     if len(points) < 3:
@@ -163,6 +167,13 @@ def fit_circle_taubin(points, robust=False):
     except (ValueError, np.linalg.LinAlgError):
         center0, radius0 = _kasa_initial_guess(normalized)
 
+    if not refine:
+        return {
+            "center": origin + scale * np.asarray(center0, dtype=float),
+            "radius": float(scale * radius0),
+            "optimizer_success": False,
+        }
+
     def residuals(parameters):
         cx, cy, log_radius = parameters
         radius = np.exp(log_radius)
@@ -175,7 +186,7 @@ def fit_circle_taubin(points, robust=False):
         x_scale="jac",
         loss="soft_l1" if robust else "linear",
         f_scale=max(1.0 / scale, 1e-6),
-        max_nfev=2000,
+        max_nfev=max_nfev,
     )
     if not result.success or not np.all(np.isfinite(result.x)):
         raise ValueError(f"Circle refinement failed: {result.message}")
@@ -267,9 +278,9 @@ def _straight_result(points, indices):
     }
 
 
-def _curve_result(points, indices, robust=False):
+def _curve_result(points, indices, robust=False, refine=True):
     pts = points[indices]
-    fit = fit_circle_taubin(pts, robust=robust)
+    fit = fit_circle_taubin(pts, robust=robust, refine=refine)
     rms, errors = calculate_rms_error(pts, fit)
     arc = compute_arc_parameters(fit["center"], fit["radius"], pts[0], pts[-1], pts)
     return {
@@ -316,11 +327,18 @@ def _grow_curve(
     first_end = start + max(3, minimum_points) - 1
     for end in range(first_end, len(points)):
         try:
-            candidate = _curve_result(points, range(start, end + 1), robust=robust)
+            # Algebraic-only during growth: full geometric LS is the hot path and
+            # is re-run once on the accepted index range.
+            candidate = _curve_result(
+                points, range(start, end + 1), robust=robust, refine=False
+            )
         except (ValueError, np.linalg.LinAlgError, OverflowError):
-            # A tiny/shallow prefix can be algebraically degenerate even though
-            # a stable circle becomes identifiable after more points arrive.
-            continue
+            # Before the first valid circle, keep looking — shallow prefixes are
+            # often degenerate. After a valid best exists, stop: later ends are
+            # not worth O(n) failed fits on noisy/fragmented polylines.
+            if best is None:
+                continue
+            break
 
         radius = candidate["radius"]
         sweep = candidate["angle"]
@@ -458,6 +476,16 @@ def segment_polyline_model_selection(
 
             winner = min(boundary_candidates, key=join_mismatch)
 
+        # Growth used algebraic circle seeds; lock in a geometric refine for the
+        # accepted index range so exported primitives stay as accurate as before.
+        if winner["type"] == "curve":
+            try:
+                winner = _curve_result(
+                    points, winner["indices"], robust=robust_circle_fit, refine=True
+                )
+            except (ValueError, np.linalg.LinAlgError, OverflowError):
+                pass
+
         indices = winner.pop("indices")
         segment = {
             "segment_number": len(segments) + 1,
@@ -519,7 +547,13 @@ def _render_from_parameters(start, heading, segment, values, fractions):
     return rendered, rendered[-1], heading + sign * sweep
 
 
-def refine_segments_chained(points, segments, robust_scale=2.0, regularization=0.03):
+def refine_segments_chained(
+    points,
+    segments,
+    robust_scale=2.0,
+    regularization=0.03,
+    max_nfev=500,
+):
     """Jointly refine primitive lengths/radii/sweeps as one connected track.
 
     The first source point is fixed. The initial heading and every primitive
@@ -551,27 +585,28 @@ def refine_segments_chained(points, segments, robust_scale=2.0, regularization=0
     lower = np.asarray(lower)
     upper = np.maximum(np.asarray(upper), lower + 1e-9)
 
+    # Precompute once — used on every residual evaluation.
+    segment_fractions = [_fractions_along(segment["points"]) for segment in segments]
+    source_stack = np.vstack([segment["points"] for segment in segments])
+
     def render_all(parameters):
         position = points[0].copy()
         heading = parameters[0]
         cursor = 1
         rendered_parts = []
-        source_parts = []
-        for segment in segments:
+        for segment, fractions in zip(segments, segment_fractions):
             count = 1 if segment["type"] == "straight" else 2
             values = parameters[cursor:cursor + count]
             cursor += count
-            fractions = _fractions_along(segment["points"])
             rendered, position, heading = _render_from_parameters(
                 position, heading, segment, values, fractions
             )
             rendered_parts.append(rendered)
-            source_parts.append(segment["points"])
-        return np.vstack(rendered_parts), np.vstack(source_parts)
+        return np.vstack(rendered_parts)
 
     def objective(parameters):
-        rendered, source = render_all(parameters)
-        geometric = (rendered - source).ravel()
+        rendered = render_all(parameters)
+        geometric = (rendered - source_stack).ravel()
         penalty = np.sqrt(regularization) * (parameters - x0)
         return np.r_[geometric, penalty]
 
@@ -582,7 +617,7 @@ def refine_segments_chained(points, segments, robust_scale=2.0, regularization=0
         loss="soft_l1",
         f_scale=max(float(robust_scale), 1e-3),
         x_scale="jac",
-        max_nfev=4000,
+        max_nfev=max_nfev,
     )
 
     parameters = result.x
@@ -597,9 +632,32 @@ def refine_segments_chained(points, segments, robust_scale=2.0, regularization=0
             segment["angle"] = float(np.exp(parameters[cursor + 1]))
             segment["arc_length"] = segment["radius"] * segment["angle"]
             cursor += 2
-    for number, segment in enumerate(segments, 1):
-        segment["segment_number"] = number
+
     return segments
+
+
+def is_overfragmented_segmentation(segments, points=None):
+    """True when model selection shattered into mostly 2-point stubs.
+
+    Chained least-squares is O(segments * points * nfev) and does not recover
+    useful geometry on these cases (RMS often stays tens of meters). Skipping
+    it keeps extract/fit responsive without hurting well-segmented features.
+    """
+    if not segments:
+        return False
+    short = 0
+    for segment in segments:
+        count = segment.get("point_count")
+        if count is None:
+            count = len(segment.get("points", []))
+        if int(count) <= 2:
+            short += 1
+    n = len(segments)
+    if short >= max(8, int(0.4 * n)):
+        return True
+    if points is not None and n > max(40, int(0.4 * len(points))):
+        return True
+    return False
 
 
 def calculate_chained_reconstruction_errors(points, segments):
